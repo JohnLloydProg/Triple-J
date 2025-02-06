@@ -105,8 +105,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-AUTH_USER_MODEL = 'gym.Member'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

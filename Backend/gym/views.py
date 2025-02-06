@@ -44,7 +44,7 @@ class EmailValidation(View):
             html = f"""
             <html>
                 <body>
-                    <p>Hello, this is the link for the account registration: <a href='http://127.0.0.1:8000/account-registration/{str(validationSession.validationCode)}'>http://127.0.0.1:8000/account-registration/{str(validationSession.validationCode)}</a></p>
+                    <p>Hello, this is the link for the account registration: <a href='http://127.0.0.1:8000/api/account-registration/{str(validationSession.validationCode)}'>http://127.0.0.1:8000/api/account-registration/{str(validationSession.validationCode)}</a></p>
                 </body>
             </html>
             """
@@ -81,7 +81,7 @@ class AccountRegistration(View):
         return JsonResponse(data=data)
     
 
-class LogIn(View):
+class Authentication(View):
     def get(self, request:HttpRequest):
         token = request.GET.get('token')
         member = authenticate(token=token)

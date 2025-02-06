@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import BaseBackend
 from .models import Member, RefreshToken
+from datetime import date
 
 
 class MemberAuthentication(BaseBackend):
@@ -10,6 +11,9 @@ class MemberAuthentication(BaseBackend):
         if (token):
             try:
                 refreshToken = RefreshToken.objects.get(token=token)
+                if (date.today() > refreshToken.expirationDate):
+                    refreshToken.delete()
+                    return None
             except RefreshToken.DoesNotExist:
                 return None
             return refreshToken.member

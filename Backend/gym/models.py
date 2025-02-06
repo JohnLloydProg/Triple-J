@@ -43,14 +43,17 @@ class MonthlyMembership(Membership):
 
 
 class Member(AbstractBaseUser):
-    USERNAME_FIELD = 'email'
-
     email = models.EmailField(unique=True, blank=False)
     password = models.CharField(max_length=30)
     firstName = models.CharField(max_length=30)
     lastName = models.CharField(max_length=30)
+    birthDate = models.DateField(blank=True, null=True)
+    height = models.FloatField(blank=True, null=True)
+    weight = models.FloatField(blank=True, null=True)
     mobileNumber = models.CharField(max_length=10)
-    membership = models.OneToOneField(Membership, on_delete=models.CASCADE)
+    address = models.CharField(max_length=200, blank=True, null=True)
+    membership = models.OneToOneField(Membership, on_delete=models.PROTECT)
+    sex = models.CharField(max_length=30, default='NA')
     
 
     def json(self):
@@ -60,7 +63,7 @@ class Member(AbstractBaseUser):
             'firstName' : self.firstName,
             'lastName' : self.lastName,
             'mobileNumber' : self.mobileNumber,
-            'membership' : self.membership.json()
+            'membership' : {self.membership.pk : self.membership.json()}
         }
 
 
