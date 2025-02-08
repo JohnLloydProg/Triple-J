@@ -8,6 +8,8 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+import colors from '../constants/globalStyles';
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +17,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    KeanieOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -27,11 +30,19 @@ export default function RootLayout() {
     return null;
   }
 
+  
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{headerTitle: "Triple J", headerTintColor: colors.redAccent, headerTitleAlign:'center' }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="index" options={{
+          headerTitle: "Triple J", 
+          headerTintColor: colors.redAccent, 
+          headerTitleAlign:'center',
+          headerStyle: {backgroundColor: colors.headerColor}, 
+          headerTitleStyle: {fontFamily:'KeaniaOne'} }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
