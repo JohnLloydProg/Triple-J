@@ -17,7 +17,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    KeanieOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
+    KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
   useEffect(() => {

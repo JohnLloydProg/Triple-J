@@ -1,12 +1,30 @@
 import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
 import colors from '../constants/globalStyles';
 import React, { useState } from 'react';
+import { useFonts } from 'expo-font';
+import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+
 
 import { CheckBox, withTheme } from '@rneui/themed';
+import {Link} from 'expo-router';
 
 
 
 export default function HomeScreen() {
+  const [loaded] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
+  });
+    useEffect(() => {
+      if (loaded) {
+        SplashScreen.hideAsync();
+      }
+    }, [loaded]);
+  
+    if (!loaded) {
+      return null;
+    }
   const [check1, setCheck1] = useState(false);
 
   return (
@@ -44,7 +62,7 @@ export default function HomeScreen() {
         checked={check1}
         onPress={() => setCheck1(!check1)}
         containerStyle={{backgroundColor: colors.primaryBackground, height: 30, padding: 0}}
-        textStyle={{color: 'white', opacity: 0.6, right: 5, fontSize: 12}}
+        textStyle={styles.checkText}
       />
 
       <View>
@@ -55,11 +73,14 @@ export default function HomeScreen() {
 
     </View>
 
-    <TouchableOpacity style={styles.loginBtn}>
-      <Text style={styles.loginBtnTxt}>
-        Login
-      </Text>
-    </TouchableOpacity>
+    <Link href="/home" asChild>
+      <TouchableOpacity style={styles.loginBtn}>
+        <Text style={styles.loginBtnTxt}>
+          Login
+        </Text>
+      </TouchableOpacity>
+    
+    </Link>
 
     <View>
       <Text style={[styles.titleSubText, {fontSize:12}]}
@@ -76,17 +97,17 @@ const styles = StyleSheet.create({
  titleText:{
     color: colors.redAccent,
     fontSize: 30,
-    fontWeight: 'bold',
+    fontFamily: 'KeaniaOne',
  },
  titleSubText:{
     color: 'white',
     opacity: 0.6,
-    fontWeight: 'bold',
+    fontFamily: 'KeaniaOne',
  },
  inputFieldText:{
     color: colors.redAccent,
     left: 20,
-    fontWeight: 'bold',
+    fontFamily: 'KeaniaOne',
     marginBottom: 8,
  },
  container:{
@@ -103,9 +124,9 @@ const styles = StyleSheet.create({
   paddingRight: 20,
  },
  forgotButtonText:{
+  fontFamily: 'KeaniaOne',
   color: '#4259CA', 
-  opacity: 0.6, 
-  fontWeight: 'bold', 
+  opacity: 0.6,  
   textAlign: 'right', 
   fontSize: 12, 
   bottom: 2, 
@@ -119,8 +140,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
 },
  loginBtnTxt:{
+    fontFamily: 'KeaniaOne',
     color: 'white',
-    fontWeight: 'bold',
     fontSize: 14,
-}
+},
+ checkText:
+  { color: 'white', 
+    opacity: 0.6, 
+    right: 5, 
+    fontSize: 12,
+    fontFamily: 'KeaniaOne',
+    fontWeight: 'normal'
+  },
 });
