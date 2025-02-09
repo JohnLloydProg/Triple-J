@@ -1,8 +1,9 @@
 from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.models import User
 from .models import Member, RefreshToken
 from datetime import date
 
-
+#REMINDER: TEST AUTHENTICATION
 class MemberAuthentication(BaseBackend):
     def authenticate(self, request, **kwargs):
         email = kwargs.get('email')
@@ -17,14 +18,15 @@ class MemberAuthentication(BaseBackend):
             except RefreshToken.DoesNotExist:
                 return None
             return refreshToken.member
+        
         try:
             member = Member.objects.get(email=email)
         except Member.DoesNotExist:
             return None
-        return member if (member.password == password) else None
+        return member if (member.check_password(password)) else None
 
     def get_user(self, user_id):
         try:
-            return Member.objects.get(pk=user_id)
+            return Member.objects.get(user=user_id)
         except Member.DoesNotExist:
             return None

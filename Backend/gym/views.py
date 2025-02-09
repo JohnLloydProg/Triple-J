@@ -1,5 +1,6 @@
 
 from django.contrib.auth import authenticate, get_user
+from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, HttpRequest, JsonResponse
@@ -26,6 +27,12 @@ class MyView(View):
 
 
 class EmailValidation(View):
+    """
+    View responsible for sending and creating the validation session to the user's email address for validation and account registration.
+    The get method simple provides the form for providing the user's email. The post method uses that email to check if an account is already linked to the email.
+    If not, create a validation and send a message to that email for registration.
+    """
+
     context = ssl.create_default_context()
 
     def get(self, request:HttpRequest):
@@ -34,9 +41,10 @@ class EmailValidation(View):
     def post(self, request:HttpRequest):
         memberEmail = request.POST.get('email')
         try:
-            models.Member.objects.get(email=memberEmail)
+            member = models.Member.objects.get(email=memberEmail)
         except models.Member.DoesNotExist:
             validationSession = models.ValidationSession(email=memberEmail)
+            validationSession.setExpirationDate()
             validationSession.save()
 
             validationMSG = MIMEMultipart()
@@ -57,31 +65,51 @@ class EmailValidation(View):
             return HttpResponse("Email sent successfully")
         return HttpResponse("Email is already registered in the system")
 
+
+#REMINDER TEST REGISTRATION
 class AccountRegistration(View):
+    """
+    View that handles the account registration. The get method checks if the validation session is still valid and gives the registration form.
+    The post method handles the registration of the account into the database.
+    """
+
     def get(self, request:HttpRequest, validationCode:str):
-        validationSession = models.ValidationSession.objects.get(validationCode=validationCode)
-        if (date.today() > validationSession.dueDate):
-            return HttpResponse('Validation Session Expired!')
-        return render(request, 'register.html')
+        try:
+            validationSession = models.ValidationSession.objects.get(validationCode=validationCode)
+            if (date.today() > validationSession.expirationDate):
+                return HttpResponse('Validation Session Expired!')
+            return render(request, 'register.html')
+        except models.ValidationSession.DoesNotExist:
+            return HttpResponse('Validation Code does not exist!')
     
     def post(self, request:HttpRequest, validationCode:str):
         email = models.ValidationSession.objects.get(pk=validationCode).email
+        username = request.POST.get('username')
         firstName = request.POST.get('firstName')
         lastName = request.POST.get('lastName')
         password = request.POST.get('password')
         mobileNumber = request.POST.get('mobileNumber')
+
         membership = models.MonthlyMembership(membershipType='Monthly')
+        membership.extendExpirationDate()
         membership.save()
 
-        member = models.Member(email=email, firstName=firstName, lastName=lastName, password=password, mobileNumber=mobileNumber, membership=membership)
+        member = models.Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membership=membership)
+        member.set_password(password)
         member.save()
 
         data = {member.pk : member.json()}
 
         return JsonResponse(data=data)
     
-
+#REMINDER TEST AUTHENTICATION
 class Authentication(View):
+    """
+    The view that handles the authentication system. The get method could have two outcomes. The first one is the ordinary login page.
+    The second one is where the refresh token was provided and tested to use for authentication. The post method provides the account details of the user upon
+    authentication in JSON format.
+    """
+
     def get(self, request:HttpRequest):
         token = request.GET.get('token')
         member = authenticate(token=token)
@@ -97,7 +125,17 @@ class Authentication(View):
         member = authenticate(request, email=email, password=password)
         if (member):
             refreshToken = models.RefreshToken(member=member)
+            refreshToken.setExpirationDate()
             refreshToken.save()
             data = {member.pk : member.json(), 'refreshToken': refreshToken.token}
             return JsonResponse(data)
         return HttpResponse("Login Unsuccessful")
+
+
+class QRCodeGeneration(View):
+    def get(self, request:HttpRequest):
+        member = get_user(request)
+        print(member)
+
+    def post(self, request:HttpRequest):
+        pass
