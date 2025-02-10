@@ -7,6 +7,12 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Fontisto from '@expo/vector-icons/Fontisto';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+
+
+
 
 
 export default function TabLayout() {
@@ -27,20 +33,39 @@ export default function TabLayout() {
           default: {},
         }),
       }}>
+
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome6 name="house" size={24} color="white" />,
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="program"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Program',
+          tabBarIcon: ({ color }) => <FontAwesome6 name="dumbbell" size={24} color="white" />,
         }}
       />
+
+      <Tabs.Screen
+        name="diet"
+        options={{
+          title: 'Diet',
+          tabBarIcon: ({ color }) => <FontAwesome5 name="utensils" size={24} color="white" />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Fontisto name="player-settings" size={24} color="white" />,
+        }}
+      />
+
     </Tabs>
   );
 }
