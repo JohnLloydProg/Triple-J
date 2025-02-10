@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'gym',
+    'gym', 'account', 'attendance',
 ]
 
 MIDDLEWARE = [
@@ -101,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'gym.backends.MemberAuthentication',
+    'account.backends.MemberAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
