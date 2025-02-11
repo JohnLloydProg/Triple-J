@@ -19,6 +19,9 @@ class QRCode(models.Model):
 
     def setExpirationDate(self):
         self.expirationDate = now().date() + timedelta(days=7)
+    
+    def isExpired(self):
+        return now().date() > self.expirationDate
 
 
 class Attendance(models.Model):
