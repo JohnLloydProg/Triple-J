@@ -66,7 +66,7 @@ export default function HomeScreen() {
       />
 
       <View>
-        <Text onPress={() => Linking.openURL('https://www.youtube.com/watch?v=pRJNfgPO188')} style={styles.forgotButtonText}>
+        <Text onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')} style={styles.forgotButtonText}>
           Forgot Password?
         </Text>
       </View>
@@ -84,7 +84,7 @@ export default function HomeScreen() {
 
     <View>
       <Text style={[styles.titleSubText, {fontSize:12}]}
-      onPress={() => Linking.openURL('https://www.youtube.com/watch?v=pRJNfgPO188')}>
+      onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}>
         Don't have an account yet? <Text style={[styles.forgotButtonText, {fontSize:12}]}>Sign Up</Text> 
       </Text>
     </View>
