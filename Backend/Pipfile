@@ -8,6 +8,8 @@ django = "*"
 requests = "*"
 qrcode = "*"
 pillow = "*"
+gunicorn = "*"
+uvicorn = "*"
 
 [dev-packages]
 
