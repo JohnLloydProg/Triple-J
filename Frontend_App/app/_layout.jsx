@@ -7,10 +7,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-
 import colors from '../constants/globalStyles';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -30,19 +28,22 @@ export default function RootLayout() {
     return null;
   }
 
-  
-
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{headerTitle: "Triple J", headerTintColor: colors.redAccent, headerTitleAlign:'center' }} />
+      <Stack
+        screenOptions={{
+          headerTitleStyle: {
+            fontFamily: 'KeaniaOne',
+            fontSize: 24,
+          },
+          headerTintColor: colors.redAccent,
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: colors.headerColor },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerTitle: 'Triple J' }} />
         <Stack.Screen name="+not-found" />
-        <Stack.Screen name="index" options={{
-          headerTitle: "Triple J", 
-          headerTintColor: colors.redAccent, 
-          headerTitleAlign:'center',
-          headerStyle: {backgroundColor: colors.headerColor}, 
-          headerTitleStyle: {fontFamily:'KeaniaOne'} }} />
+        <Stack.Screen name="index" options={{ headerTitle: 'Triple J' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
