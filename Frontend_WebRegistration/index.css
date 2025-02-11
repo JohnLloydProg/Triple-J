@@ -28,6 +28,7 @@ header{
 .inputText{
     color: white;
     font-family: Keania One, serif;
+    
 }
 
 .iconStyle{
@@ -46,17 +47,27 @@ header{
     display: flex; 
     flex-direction: row; 
     align-items: center;
+    position: relative;
+    left: 15px;
 }
 
-.submitBtn{
+.nextBtn{
     width: 300px;
-        margin-top: 40px;
-        background-color: #EA4444; 
-        color: #313030;
-        font-size: 20px;
-        font-family: Keania One, serif;
+    margin-top: 40px;
+    background-color: #EA4444; 
+    color: #313030;
+    font-size: 20px;
+    font-family: Keania One, serif;
+    display: flex;
+    justify-content: center;
+    text-decoration: none;
+    align-items: center;
 }
 
+.nextBtn:hover{
+    background-color: #EA4444;
+    opacity: .6;
+}
 
 
 @media all and (max-width: 600px) {
