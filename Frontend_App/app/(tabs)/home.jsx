@@ -19,7 +19,7 @@ const initialExercises = [
 
 const HomeScreen = () => {
   const [fontsLoaded] = useFonts({
-    KeaniaOne: require('C:/Users/spade/Desktop/Triple-J/Frontend_App/assets/fonts/KeaniaOne-Regular.ttf'),
+    KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
   if (!fontsLoaded) {
