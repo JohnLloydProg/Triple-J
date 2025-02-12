@@ -104,7 +104,7 @@ class Authentication(View):
         token = request.GET.get('token')
         member = authenticate(token=token)
         if (member):
-            data = {member.pk : member.json()}
+            data = {member.pk : member.json(), 'sessionId': request.session.session_key}
             return JsonResponse(data)
         else:
             return render(request, 'login.html')
