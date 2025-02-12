@@ -110,13 +110,13 @@ class Authentication(View):
             return render(request, 'login.html')
 
     def post(self, request:HttpRequest):
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        email = request.headers.get('Email')
+        password = request.headers.get('Password')
         member = authenticate(request, email=email, password=password)
         if (member):
             refreshToken = models.RefreshToken(member=member)
             refreshToken.setExpirationDate()
             refreshToken.save()
-            data = {member.pk : member.json(), 'refreshToken': refreshToken.token}
+            data = {member.pk : member.json(), 'refreshToken': refreshToken.token, 'sessionId': request.session.session_key}
             return JsonResponse(data)
-        return HttpResponse("Login Unsuccessful")
+        return JsonResponse({'details' : 'Authentication failed!'})

@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpRequest, FileResponse
 from account.models import Member, Membership
+from django.contrib.sessions.backends.db import SessionStore
 from attendance.models import QRCode
 from django.views import View
 import qrcode
@@ -13,6 +14,7 @@ import qrcode
 @method_decorator(csrf_exempt, name='dispatch')
 class QRCodeGeneration(View):
     def get(self, request:HttpRequest):
+        request.session = SessionStore(session_key=request.headers.get('sessionId'))
         member = get_user(request)
         if (not member):
             return HttpResponse("You are not logged in", status=401)
@@ -29,6 +31,7 @@ class QRCodeGeneration(View):
             return HttpResponse('There is no QRCode Yet', status=401)
 
     def post(self, request:HttpRequest):
+        request.session = SessionStore(session_key=request.headers.get('sessionId'))
         member = get_user(request)
         if (not member):
             return HttpResponse('You are not logged in', status=401)
