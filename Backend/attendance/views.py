@@ -32,10 +32,9 @@ class QRCodeGeneration(View):
 
     def post(self, request:HttpRequest):
         request.session = SessionStore(session_key=request.headers.get('sessionId'))
-        member = get_user(request)
-        print(member.email)
-        if (member):
+        if (not request.user.is_authenticated):
             return JsonResponse({'details' : 'You are not logged in'}, status=401)
+        member = get_user(request)
         try:
             qrObject = QRCode.objects.get(member=member)
             return JsonResponse({'details' : 'The account already has a QR Code'})
