@@ -70,6 +70,8 @@ CORS_ALLOW_HEADERS = (
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+CSRF_COOKIE_DOMAIN = 'triple-j.onrender.com'
+
 
 ROOT_URLCONF = 'TripleJ.urls'
 
