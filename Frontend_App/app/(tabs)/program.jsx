@@ -170,19 +170,19 @@ const styles = StyleSheet.create({
     marginBottom: 5,
    },
    addBtn:{
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#76D09C',
     padding: 5,
     borderRadius: 22,
-    alignItems: 'center',
     width: 60,
     height: 60,
     position: 'absolute',
-    top: 532,
-    left: 280,
-    zIndex: 1,
+    alignSelf: 'flex-end',
+    bottom:10,
+    right: 20
+    
+    
 },
 
 });
