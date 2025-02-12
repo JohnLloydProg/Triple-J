@@ -3,7 +3,7 @@ import json
 
 
 data = {'email':'johnlloydunida0@gmail.com', 'password':'Unida12345'}
-r = requests.post('http://127.0.0.1:8000/api/account/authentication', data=data)
+r = requests.post('https://triple-j.onrender.com/api/account/authentication', data=data)
 print(r.text)
-r = requests.get(f'http://127.0.0.1:8000/api/attendance/qr-code', cookies=r.cookies)
+r = requests.get(f'https://triple-j.onrender.com/api/attendance/qr-code', cookies=r.cookies)
 print(r.text)

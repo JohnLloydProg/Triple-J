@@ -10,6 +10,7 @@ qrcode = "*"
 pillow = "*"
 gunicorn = "*"
 uvicorn = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 
