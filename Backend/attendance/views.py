@@ -65,6 +65,7 @@ class AttendanceView(View):
         try:
             attendance = Attendance.objects.get(member=member, date=now().date())
             attendance.logOut()
+            attendance.save()
             return JsonResponse({'details' : 'Successfuly logged out'})
         except Attendance.DoesNotExist:
             attendance = Attendance(member=member)
