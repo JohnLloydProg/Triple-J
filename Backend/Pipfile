@@ -4,6 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+django = "*"
+requests = "*"
+qrcode = "*"
+pillow = "*"
+gunicorn = "*"
+uvicorn = "*"
 
 [dev-packages]
 
