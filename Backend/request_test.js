@@ -7,7 +7,8 @@ r = fetch("https://triple-j.onrender.com/api/account/authentication", {
         "Content-Type" : "application/json",
         "email" : "gclm4002@gmail.com",
         "password" : "gian12345"
-    }
+    },
+    credentials: 'same-origin',
 }).then((response) => {
     if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -21,7 +22,8 @@ r = fetch("https://triple-j.onrender.com/api/account/authentication", {
         headers : {
             "Content-Type" : "application/json",
             "sessionId" : data["sessionId"],
-        }
+        },
+        credentials: 'same-origin',
     }).then((response) => {
         if (!response.ok) {
             throw new Error("Network response was not ok");

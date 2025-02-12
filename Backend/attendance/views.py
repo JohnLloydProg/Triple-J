@@ -33,6 +33,7 @@ class QRCodeGeneration(View):
     def post(self, request:HttpRequest):
         request.session = SessionStore(session_key=request.headers.get('sessionId'))
         member = get_user(request)
+        print(member.email)
         if (member):
             return JsonResponse({'details' : 'You are not logged in'}, status=401)
         try:
