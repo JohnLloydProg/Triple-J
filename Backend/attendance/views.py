@@ -51,6 +51,7 @@ class QRCodeGeneration(View):
             return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class AttendanceView(View):
     def get(self, request:HttpRequest):
         attendances = Attendance.objects.filter(timeOut=None)

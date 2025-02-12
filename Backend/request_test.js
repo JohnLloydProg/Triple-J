@@ -17,7 +17,7 @@ r = fetch("https://triple-j.onrender.com/api/account/authentication", {
     return response.json();
 }).then((data) => {
     console.log(data)
-    fetch("https://triple-j.onrender.com/api/attendance/qr-code", {
+    fetch("https://triple-j.onrender.com/api/attendance/attendance", {
         method : "POST",
         headers : {
             "Content-Type" : "application/json",
