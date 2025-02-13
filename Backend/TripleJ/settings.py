@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-_ltan28p7(*t91xsuym!nqb8lt8vqwa@qm*tlp(0&8qv8zx0v6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['triple-j.onrender.com']
+ALLOWED_HOSTS = ['triple-j.onrender.com', '127.0.0.1']
 
 
 # Application definition
@@ -52,9 +52,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:5500/',
-]
 
 CORS_ALLOW_HEADERS = (
     "accept",
@@ -65,7 +62,7 @@ CORS_ALLOW_HEADERS = (
     "x-requested-with",
     "credentials",
     "access-control-allow-credentials",
-    "email", "password", "sessionId"
+    "email", "password", "sessionId", "username"
 )
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -132,7 +129,7 @@ AUTHENTICATION_BACKENDS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Singapore'
 
 USE_I18N = True
 

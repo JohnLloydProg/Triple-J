@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -80,13 +80,13 @@ class AccountRegistration(View):
         password = request.POST.get('password')
         mobileNumber = request.POST.get('mobileNumber')
 
-        membership = models.MonthlyMembership(membershipType='Monthly')
-        membership.extendExpirationDate()
-        membership.save()
-
-        member = models.Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membership=membership)
+        member = models.Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membershipType="Monthly")
         member.set_password(password)
         member.save()
+
+        membership = models.MonthlyMembership(member=member)
+        membership.extendExpirationDate()
+        membership.save()
 
         data = {member.pk : member.json()}
 
@@ -112,6 +112,12 @@ class Authentication(View):
     def post(self, request:HttpRequest):
         email = request.headers.get('Email')
         password = request.headers.get('Password')
+        username = request.headers.get('Username')
+        if (username):
+            admin = authenticate(request, username=username, password=password)
+            if (admin):
+                login(request, admin)
+                return JsonResponse({'sessionId' : request.session.session_key})
         member = authenticate(request, email=email, password=password)
         if (member):
             refreshToken = models.RefreshToken(member=member)

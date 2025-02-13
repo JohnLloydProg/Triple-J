@@ -13,7 +13,7 @@ class QRCode(models.Model):
     Model used to store the QR code for logging purposes.
     """
 
-    content = models.UUIDField(primary_key=True, default=uuid.uuid1)
+    content = models.UUIDField(primary_key=True, default=uuid.uuid1, editable=False)
     member = models.OneToOneField(Member, on_delete=models.CASCADE)
     expirationDate = models.DateField(null=True)
 

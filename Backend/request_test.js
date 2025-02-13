@@ -1,24 +1,23 @@
+let baseURL = "http://127.0.0.1:8000/";
 
-let result
-
-r = fetch("https://triple-j.onrender.com/api/account/authentication", {
+fetch(baseURL + "api/account/authentication", {
     method : "POST",
     headers : {
         "Content-Type" : "application/json",
-        "email" : "gclm4002@gmail.com",
-        "password" : "gian12345"
+        "username" : "admin",
+        "password" : "admin12345"
     },
     credentials: 'same-origin',
 }).then((response) => {
     if (!response.ok) {
         throw new Error("Network response was not ok");
     }
-
     return response.json();
 }).then((data) => {
-    console.log(data)
-    fetch("https://triple-j.onrender.com/api/attendance/attendance", {
-        method : "POST",
+    console.log(data);
+
+    fetch(baseURL + "api/attendance/logging", {
+        method : "GET",
         headers : {
             "Content-Type" : "application/json",
             "sessionId" : data["sessionId"],
@@ -28,7 +27,13 @@ r = fetch("https://triple-j.onrender.com/api/account/authentication", {
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
-
-        return response.blob();
-    }).then((data) => console.log(data));
-}).catch((error) => console.error("Fetch error", error));
+    
+        if (response.headers.get('Content-Type') == "application/json") {
+            return response.json();
+        }else {
+            return response.blob();
+        }
+    }).then((data) => console.log(data)).catch((error) => console.error("Fetch error", error));
+}).catch(
+    (error) => console.error("Fetch error", error)
+);

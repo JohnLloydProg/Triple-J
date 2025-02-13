@@ -20,19 +20,44 @@ class ValidationSession(models.Model):
         self.expirationDate = now().date() + timedelta(days=1)
 
 
+class Member(User):
+    """
+    Model used for member accounts. Also used for authentication. Inherits from the User class from django.
+    """
+
+    birthDate = models.DateField(null=True)
+    height = models.FloatField(null=True)
+    weight = models.FloatField(null=True)
+    mobileNumber = models.CharField(max_length=10)
+    address = models.CharField(max_length=200, null=True)
+    membershipType = models.CharField(max_length=15)
+    sex = models.CharField(max_length=30, default='NA')
+    
+
+    def json(self):
+        return {
+            'email' : self.email,
+            'firstName' : self.first_name,
+            'lastName' : self.last_name,
+            'mobileNumber' : self.mobileNumber,
+        }
+
+
 class Membership(models.Model):
     """
     Model for the membership details. Also the parent model for daily and monthly memberships
     """
 
-    membershipType = models.CharField(max_length=30)
     startDate = models.DateField(auto_now_add=True, editable=False)
+    member = models.OneToOneField(Member, on_delete=models.CASCADE, editable=False)
+    price = models.FloatField()
+
+    class Meta:
+        abstract = True
+        ordering = ['startDate']
 
     def json(self):
-        return {
-            'membershipType' : self.membershipType,
-            'startDate' : self.startDate.isoformat()
-        }
+        return {'startDate' : self.startDate.isoformat()}
 
 
 class DailyMembership(Membership):
@@ -40,7 +65,7 @@ class DailyMembership(Membership):
     Model for daily membership. Does not contain an expiration date
     """
     
-    price = models.FloatField(default=50.00)
+    price = 50.00
 
     def json(self):
         data = super().json()
@@ -54,7 +79,7 @@ class MonthlyMembership(Membership):
     """
 
     expirationDate = models.DateField(default=now)
-    price = models.FloatField(default=1000.00)
+    price = 1000.00
 
     def extendExpirationDate(self):
         self.expirationDate += timedelta(days=30)
@@ -64,30 +89,6 @@ class MonthlyMembership(Membership):
         data['dueDate'] = self.expirationDate.isoformat()
         data['price'] = str(self.price)
         return data
-
-
-class Member(User):
-    """
-    Model used for member accounts. Also used for authentication. Inherits from the User class from django.
-    """
-
-    birthDate = models.DateField(null=True)
-    height = models.FloatField(null=True)
-    weight = models.FloatField(null=True)
-    mobileNumber = models.CharField(max_length=10)
-    address = models.CharField(max_length=200, null=True)
-    membership = models.OneToOneField(Membership, on_delete=models.PROTECT)
-    sex = models.CharField(max_length=30, default='NA')
-    
-
-    def json(self):
-        return {
-            'email' : self.email,
-            'firstName' : self.first_name,
-            'lastName' : self.last_name,
-            'mobileNumber' : self.mobileNumber,
-            'membership' : {self.membership.pk : self.membership.json()}
-        }
 
 
 class RefreshToken(models.Model):
