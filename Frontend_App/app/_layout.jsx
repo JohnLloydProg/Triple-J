@@ -1,10 +1,11 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationIndependentTree, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import {NavigationContainer} from '@react-navigation/native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import colors from '../constants/globalStyles';
@@ -29,6 +30,7 @@ export default function RootLayout() {
   }
 
   return (
+    <NavigationIndependentTree>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack
         screenOptions={{
@@ -47,5 +49,7 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
+
+    </NavigationIndependentTree>
   );
 }
