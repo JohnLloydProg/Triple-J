@@ -130,6 +130,16 @@ export default function HomeScreen() {
       </Text>
     </View>
 
+
+    <Link href="/home" asChild>
+      <TouchableOpacity onPress={()=>{validateInfo()}}  style={styles.loginBtn}>
+        <Text style={styles.loginBtnTxt}>
+          Temporary: go to home page
+        </Text>
+      </TouchableOpacity>
+    
+    </Link>
+
     </View>
   );
 }
