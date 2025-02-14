@@ -57,12 +57,12 @@ const Item = ({title, workouts, img}) => (
 
     <View>
       {workouts.type.map((type, index) => (
-        <View  style={styles.indivWorkCont}>
-          <Image key={index} source={img} style={{width: 40, height: 40, marginRight:10}} />
+        <View key={`${title}-${type}-${index}`} style={styles.indivWorkCont}>
+          <Image  source={img} style={{width: 40, height: 40, marginRight:10}} />
 
           <View>
-          <Text key={index} style={{color:'white', fontFamily: 'KeaniaOne', marginBottom: 3}}>{type}</Text>
-          <Text key={index} style={{color:'white', fontFamily: 'KeaniaOne'}}>{workouts.description[index]}</Text>
+          <Text style={{color:'white', fontFamily: 'KeaniaOne', marginBottom: 3}}>{type}</Text>
+          <Text style={{color:'white', fontFamily: 'KeaniaOne'}}>{workouts.description[index]}</Text>
           </View> 
         </View>
       ))}
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#1E1F26',
     padding: 20,
-    borderRadius: 30,
+    borderRadius: 10,
     marginBottom: 20,
     maxHeight: 140
     
