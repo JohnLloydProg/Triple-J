@@ -1,9 +1,11 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
+import { Image, StyleSheet, Platform, View, Alert, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
 import colors from '../constants/globalStyles';
 import React, { useState } from 'react';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { useNavigation } from '@react-navigation/native';
+
 
 
 import { CheckBox, withTheme } from '@rneui/themed';
@@ -12,6 +14,9 @@ import {Link} from 'expo-router';
 
 
 export default function HomeScreen() {
+
+  const navigation = useNavigation();  
+
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
@@ -26,6 +31,42 @@ export default function HomeScreen() {
       return null;
     }
   const [check1, setCheck1] = useState(false);
+
+  const [email, setEmail] = useState('');
+  const [password, setPass] = useState('');
+
+  function validateInfo() {
+    fetch("https://triple-j.onrender.com/api/account/authentication", {
+      method: "POST",
+      body: JSON.stringify({
+      }),
+      credentials: 'same-origin',
+      headers: {
+       "Content-Type": "application/json;",
+        "Email": email,
+        "Password": password,
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Login failed with status: " + response.status);
+      }
+      return response.json(); 
+    })
+    .then(data => {
+      if(data.details === 'Authentication failed!'){
+        console.log('mali');
+        Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.')
+      }
+      else{
+        console.log(data)
+        navigation.navigate('(tabs)')
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+    });
+  }
 
   return (
     <View style={styles.container}>
@@ -44,16 +85,16 @@ export default function HomeScreen() {
 
       <View  style={{marginBottom: 20}}>
         <Text style={styles.inputFieldText}>
-          E-mail/Username
+          E-mail
         </Text>
-        <TextInput cursorColor={colors.redAccent} style={styles.inputField} />
+        <TextInput  onChangeText={newText => setEmail(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
       </View>
 
       <View style={{marginBottom: 20}}>
         <Text style={styles.inputFieldText}>
           Password
         </Text>
-        <TextInput cursorColor={colors.redAccent} style={styles.inputField} />
+        <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
       </View>
 
     <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
@@ -73,8 +114,8 @@ export default function HomeScreen() {
 
     </View>
 
-    <Link href="/home" asChild>
-      <TouchableOpacity style={styles.loginBtn}>
+    <Link href="#" asChild>
+      <TouchableOpacity onPress={()=>{validateInfo()}}  style={styles.loginBtn}>
         <Text style={styles.loginBtnTxt}>
           Login
         </Text>
@@ -88,6 +129,16 @@ export default function HomeScreen() {
         Don't have an account yet? <Text style={[styles.forgotButtonText, {fontSize:12}]}>Sign Up</Text> 
       </Text>
     </View>
+
+
+    <Link href="/home" asChild>
+      <TouchableOpacity onPress={()=>{validateInfo()}}  style={styles.loginBtn}>
+        <Text style={styles.loginBtnTxt}>
+          Temporary: go to home page
+        </Text>
+      </TouchableOpacity>
+    
+    </Link>
 
     </View>
   );
