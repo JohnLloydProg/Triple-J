@@ -1,7 +1,10 @@
 from django.contrib import admin
-from .models import Member, Membership, DailyMembership, MonthlyMembership
+from .models import Member, DailyMembership, MonthlyMembership
 
 # Register your models here.
-admin.site.register(Member)
-admin.site.register(DailyMembership)
-admin.site.register(MonthlyMembership)
+
+
+models = [Member, DailyMembership, MonthlyMembership]
+
+for model in models:
+    admin.site.register(model)

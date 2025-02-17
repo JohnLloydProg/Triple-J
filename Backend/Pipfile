@@ -11,6 +11,8 @@ pillow = "*"
 gunicorn = "*"
 uvicorn = "*"
 django-cors-headers = "*"
+djangorestframework = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 

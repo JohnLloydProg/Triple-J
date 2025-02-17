@@ -3,46 +3,43 @@ from django.contrib.auth import get_user
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpRequest, JsonResponse
-from account.models import MonthlyMembership, DailyMembership
+from account.models import MonthlyMembership, DailyMembership, Member
 from attendance.models import Attendance
 from django.utils.timezone import now
-from django.contrib.sessions.backends.db import SessionStore
 from attendance.models import QRCode
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from django.views import View
 import qrcode
 import json
 
 # Create your views here.
 
-@method_decorator(csrf_exempt, name='dispatch')
-class QRCodeGeneration(View):
-    def get(self, request:HttpRequest):
-        request.session = SessionStore(session_key=request.headers.get('sessionId'))
-        if (not request.user.is_authenticated):
-            return JsonResponse({'details' : 'You are not logged in'}, status=401)
-        member = get_user(request)
+class QRCodeView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        member = self.request.user
         try:
             qrObject = QRCode.objects.get(member=member)
             if (qrObject.isExpired()):
                 qrObject.delete()
-                return JsonResponse({'details' : 'QR code is expired'}, status=401)
+                return JsonResponse({'details' : 'QR code is expired'})
+            
             response = HttpResponse(content_type='image/jpg')
             qrImage = qrcode.make(qrObject.content)
             qrImage.save(response, 'JPEG')
             return response
         except QRCode.DoesNotExist:
-            return JsonResponse({'details' : 'There is no QRCode Yet'}, status=401)
-
-    def post(self, request:HttpRequest):
-        request.session = SessionStore(session_key=request.headers.get('sessionId'))
-        if (not request.user.is_authenticated):
-            return JsonResponse({'details' : 'You are not logged in'}, status=401)
-        member = get_user(request)
+            return JsonResponse({'details':'Account does not have any QR code'})
+    
+    def post(self, request):
+        member = self.request.user
         try:
             qrObject = QRCode.objects.get(member=member)
             return JsonResponse({'details' : 'The account already has a QR Code'})
         except:
-            qrObject = QRCode(member=member)
+            qrObject = QRCode(member=Member.objects.get(pk=member))
             qrObject.setExpirationDate()
             qrObject.save()
 
@@ -52,16 +49,16 @@ class QRCodeGeneration(View):
             return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class Logging(View):
-    def get(self, request:HttpRequest):
+class LoggingView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
         attendances = Attendance.objects.filter(timeOut=None, date=now())
         return JsonResponse({'Number' : len(attendances.all())})
         
-    def post(self, request:HttpRequest):
-        request.session = SessionStore(session_key=request.headers.get('sessionId'))
-        qrCode = json.loads(request.body.decode()).get('qrCode')
-        if (not request.user.is_superuser):
+    def post(self, request):
+        qrCode = request.data.get('qrCode')
+        if (not self.request.user.is_superuser):
             return JsonResponse({'details' : 'You are not the owner!'}, status=401)
         
         try:

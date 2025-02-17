@@ -89,16 +89,3 @@ class MonthlyMembership(Membership):
         data['dueDate'] = self.expirationDate.isoformat()
         data['price'] = str(self.price)
         return data
-
-
-class RefreshToken(models.Model):
-    """
-    Model used to store the refresh token of each account for token-based authentication.
-    """
-
-    token = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid1)
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    expirationDate = models.DateField(null=True)
-
-    def setExpirationDate(self):
-        self.expirationDate = now().date() + timedelta(days=7)

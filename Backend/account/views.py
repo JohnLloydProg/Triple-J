@@ -1,16 +1,17 @@
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, HttpRequest, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from email.mime.multipart import MIMEMultipart
+from rest_framework import generics
+from account.serializers import MemberSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
-from . import models
+from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership
 import smtplib
-import uuid
 import ssl
 
 # Create your views here.
@@ -31,9 +32,9 @@ class EmailValidation(View):
     def post(self, request:HttpRequest):
         memberEmail = request.POST.get('email')
         try:
-            member = models.Member.objects.get(email=memberEmail)
-        except models.Member.DoesNotExist:
-            validationSession = models.ValidationSession(email=memberEmail)
+            member = Member.objects.get(email=memberEmail)
+        except Member.DoesNotExist:
+            validationSession = ValidationSession(email=memberEmail)
             validationSession.setExpirationDate()
             validationSession.save()
 
@@ -65,26 +66,27 @@ class AccountRegistration(View):
 
     def get(self, request:HttpRequest, validationCode:str):
         try:
-            validationSession = models.ValidationSession.objects.get(validationCode=validationCode)
+            validationSession = ValidationSession.objects.get(validationCode=validationCode)
             if (date.today() > validationSession.expirationDate):
+                validationSession.delete()
                 return HttpResponse('Validation Session Expired!')
             return render(request, 'register.html')
-        except models.ValidationSession.DoesNotExist:
+        except ValidationSession.DoesNotExist:
             return HttpResponse('Validation Code does not exist!')
     
     def post(self, request:HttpRequest, validationCode:str):
-        email = models.ValidationSession.objects.get(pk=validationCode).email
+        email = ValidationSession.objects.get(pk=validationCode).email
         username = request.POST.get('username')
         firstName = request.POST.get('firstName')
         lastName = request.POST.get('lastName')
         password = request.POST.get('password')
         mobileNumber = request.POST.get('mobileNumber')
 
-        member = models.Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membershipType="Monthly")
+        member = Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membershipType="Monthly")
         member.set_password(password)
         member.save()
 
-        membership = models.MonthlyMembership(member=member)
+        membership = MonthlyMembership(member=member)
         membership.extendExpirationDate()
         membership.save()
 
@@ -102,7 +104,7 @@ class Authentication(View):
 
     def get(self, request:HttpRequest):
         token = request.GET.get('token')
-        member = authenticate(token=token)
+        member = authenticate(request, token=token)
         if (member):
             data = {member.pk : member.json(), 'sessionId': request.session.session_key}
             return JsonResponse(data)
@@ -120,7 +122,7 @@ class Authentication(View):
                 return JsonResponse({'sessionId' : request.session.session_key})
         member = authenticate(request, email=email, password=password)
         if (member):
-            refreshToken = models.RefreshToken(member=member)
+            refreshToken = RefreshToken(member=member)
             refreshToken.setExpirationDate()
             refreshToken.save()
             data = {member.pk : member.json(), 'refreshToken': refreshToken.token, 'sessionId': request.session.session_key}

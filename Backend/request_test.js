@@ -1,12 +1,14 @@
 let baseURL = "http://127.0.0.1:8000/";
 
-fetch(baseURL + "api/account/authentication", {
+fetch(baseURL + "api/account/token", {
     method : "POST",
     headers : {
-        "Content-Type" : "application/json",
-        "username" : "admin",
-        "password" : "admin12345"
+        "Content-Type" : "application/json"
     },
+    body : JSON.stringify({
+        'username':'its_lloyd',
+        'password':'Unida12345'
+    }),
     credentials: 'same-origin',
 }).then((response) => {
     if (!response.ok) {
@@ -16,13 +18,13 @@ fetch(baseURL + "api/account/authentication", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/attendance/logging", {
-        method : "GET",
+    fetch(baseURL + "api/gym/workout/2/delete/5", {
+        method : "DELETE",
         headers : {
             "Content-Type" : "application/json",
-            "sessionId" : data["sessionId"],
+            "Authorization": `Bearer ${data['access']}`
         },
-        credentials: 'same-origin',
+        credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {
             throw new Error("Network response was not ok");

@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/gym/', include('gym.urls')),
     path('api/account/', include('account.urls')),
-    path('api/attendance/', include('attendance.urls'))
+    path('api/attendance/', include('attendance.urls')),
+    path('api-auth/', include('rest_framework.urls'))
 ]
