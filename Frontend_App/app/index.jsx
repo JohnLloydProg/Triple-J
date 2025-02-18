@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { useNavigation } from '@react-navigation/native';
+import { router, useRouter } from 'expo-router';
 
 
 
@@ -15,8 +15,7 @@ import {Link} from 'expo-router';
 
 export default function HomeScreen() {
 
-  const navigation = useNavigation();  
-
+  //loads the appropriate fonts
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
@@ -30,38 +29,44 @@ export default function HomeScreen() {
     if (!loaded) {
       return null;
     }
-  const [check1, setCheck1] = useState(false);
 
+  //store variables for the login credentials
+  const [check1, setCheck1] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPass] = useState('');
 
+
+  //handles the appropriate http request to validate login credentials
+
+    const route = useRouter();
+
   function validateInfo() {
-    fetch("https://triple-j.onrender.com/api/account/authentication", {
+    fetch("https://triple-j.onrender.com/api/account/token", {
       method: "POST",
       body: JSON.stringify({
+        "username": email,
+        "password": password,
       }),
       credentials: 'same-origin',
       headers: {
        "Content-Type": "application/json;",
-        "Email": email,
-        "Password": password,
       }
     })
     .then(response => {
       if (!response.ok) {
+        console.log('mali');
+        Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.')
+      
         throw new Error("Login failed with status: " + response.status);
+        
       }
       return response.json(); 
     })
     .then(data => {
-      if(data.details === 'Authentication failed!'){
-        console.log('mali');
-        Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.')
-      }
-      else{
+    
         console.log(data)
-        navigation.navigate('(tabs)')
-      }
+        router.push('/(tabs)/home');
+      
     })
     .catch(error => {
       console.error("Error:", error);
