@@ -30,7 +30,7 @@ export default function RootLayout() {
   }
 
   return (
-    <NavigationIndependentTree>
+    
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack
         screenOptions={{
@@ -49,7 +49,5 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
-
-    </NavigationIndependentTree>
   );
 }
