@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import Member
+from account.models import Member, DailyMembership, MonthlyMembership
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -16,3 +16,26 @@ class MemberSerializer(serializers.ModelSerializer):
         member = Member(**validated_data)
         member.save()
         return member
+
+
+class DailyMembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyMembership
+        fields = ['startDate', 'member', 'price']
+        extra_kwargs = {
+            'startDate':{'read_only':True},
+            'member':{'read_only':True},
+            'price':{'read_only':True}
+            }
+
+
+class MonthlyMembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MonthlyMembership
+        fields = ['startDate', 'member', 'price', 'expirationDate']
+        extra_kwargs = {
+            'startDate':{'read_only':True},
+            'member':{'read_only':True},
+            'price':{'read_only':True},
+            'expirationDate':{'read_only':True}
+            }

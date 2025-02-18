@@ -32,15 +32,6 @@ class Member(User):
     address = models.CharField(max_length=200, null=True)
     membershipType = models.CharField(max_length=15)
     sex = models.CharField(max_length=30, default='NA')
-    
-
-    def json(self):
-        return {
-            'email' : self.email,
-            'firstName' : self.first_name,
-            'lastName' : self.last_name,
-            'mobileNumber' : self.mobileNumber,
-        }
 
 
 class Membership(models.Model):
@@ -56,9 +47,6 @@ class Membership(models.Model):
         abstract = True
         ordering = ['startDate']
 
-    def json(self):
-        return {'startDate' : self.startDate.isoformat()}
-
 
 class DailyMembership(Membership):
     """
@@ -66,11 +54,6 @@ class DailyMembership(Membership):
     """
     
     price = 50.00
-
-    def json(self):
-        data = super().json()
-        data['price'] = str(self.price)
-        return data
 
 
 class MonthlyMembership(Membership):
@@ -84,8 +67,3 @@ class MonthlyMembership(Membership):
     def extendExpirationDate(self):
         self.expirationDate += timedelta(days=30)
 
-    def json(self):
-        data = super().json()
-        data['dueDate'] = self.expirationDate.isoformat()
-        data['price'] = str(self.price)
-        return data

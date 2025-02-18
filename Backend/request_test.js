@@ -18,8 +18,8 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/gym/workout/2/delete/5", {
-        method : "DELETE",
+    fetch(baseURL + "api/account/membership", {
+        method : "GET",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`

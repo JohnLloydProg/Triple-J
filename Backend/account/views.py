@@ -5,8 +5,9 @@ from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import render
 from email.mime.multipart import MIMEMultipart
 from rest_framework import generics
-from account.serializers import MemberSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
 from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
@@ -15,6 +16,37 @@ import smtplib
 import ssl
 
 # Create your views here.
+
+html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified</title>
+</head>
+<body style="font-family: 'Keania One', sans-serif;display: flex;justify-content: center;align-items: center;min-height: 100vh;
+background-color: #313030;margin: 0 auto;overflow: hidden;font-size: 20px;">
+
+    <div class="container" style="text-align: center;background-color: #313030;padding: 20px;border-radius: 8px;
+    box-shadow: 0 0 10px rgba(49, 48, 48, 0.1);width: 100%;height: 100%;box-sizing: border-box;display: flex;
+    flex-direction: column;justify-content: center;align-items: center;">
+        <div class="checkmark-container" style="width: 80px;height: 80px;border-radius: 50%; background-color: #76D09C; 
+        display: flex; justify-content: center;align-items: center;margin-bottom: 20px;">
+            <div class="checkmark" style="width: 60%;height: 60%;">
+                <svg viewBox="0 0 52 52" preserveAspectRatio="xMidYMid meet">
+                    <path d="M4 32 L16 48 L48 8" style="fill: none;stroke: #fff; stroke-width: 8;stroke-linecap: round;stroke-linejoin: round;animation: checkmark 1s ease-in-out forwards;"/>
+                </svg>
+            </div>
+        </div>
+        <h1 style="color: #4CAF50;font-size: 2em;">Email Verified!</h1>
+        <p style="font-size: 1.1em;margin-bottom: 20px;color: #fff;max-width: 320px;">Your email address has been successfully verified.</p>
+        <a style="display: inline-block;padding: 10px 20px;background-color: #76D09C;color: #fff;text-decoration: none;border-radius: 5px;font-size: 1em;"href="/">Proceed to registration</a>
+    </div>
+
+</body>
+</html>
+"""
 
 
 class EmailValidation(View):
@@ -40,13 +72,6 @@ class EmailValidation(View):
 
             validationMSG = MIMEMultipart()
             validationMSG['Subject'] = "Email Validation for Tripple J System"
-            html = f"""
-            <html>
-                <body>
-                    <p>Hello, this is the link for the account registration: <a href='http://127.0.0.1:8000/api/account/registration/{str(validationSession.validationCode)}'>http://127.0.0.1:8000/api/account/registration/{str(validationSession.validationCode)}</a></p>
-                </body>
-            </html>
-            """
             validationMSG.attach(MIMEText(html, 'html'))
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=self.context) as smtp:
@@ -57,7 +82,6 @@ class EmailValidation(View):
         return HttpResponse("Email is already registered in the system")
 
 
-#REMINDER TEST REGISTRATION
 class AccountRegistration(View):
     """
     View that handles the account registration. The get method checks if the validation session is still valid and gives the registration form.
@@ -93,6 +117,43 @@ class AccountRegistration(View):
         data = {member.pk : member.json()}
 
         return JsonResponse(data=data)
+
+
+class MembershipView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        member = Member.objects.get(pk=self.request.user)
+        if (member.membershipType == 'Daily'):
+            membership = DailyMembership.objects.get(member=member)
+            serializer = DailyMembershipSerializer(membership)
+        else:
+            membership = MonthlyMembership.objects.get(member=member)
+            serializer = MonthlyMembershipSerializer(membership)
+        return Response(serializer.data)
+
+
+class MembershipChangeView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request, user):
+        member = Member.objects.get(pk=user)
+        if (request.data.get('changeTo') == 'Monthly'):
+            oldMembership = DailyMembership.objects.get(member=member)
+            newMembership = MonthlyMembership(startDate=oldMembership.startDate, member=member)
+            newMembership.extendExpirationDate()
+            newMembership.save()
+            member.membershipType = 'Monthly'
+            member.save()
+            oldMembership.delete()
+        else:
+            oldMembership = MonthlyMembership.objects.get(member=member)
+            newMembership = DailyMembership(startDate=oldMembership.startDate, member=member)
+            newMembership.save()
+            member.membershipType = 'Daily'
+            member.save()
+            oldMembership.delete()
+        return JsonResponse({'details':'Membership successfully changed'})
     
 @method_decorator(csrf_exempt, name='dispatch')
 class Authentication(View):
