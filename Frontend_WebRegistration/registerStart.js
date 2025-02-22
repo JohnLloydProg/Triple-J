@@ -9,6 +9,13 @@ function continueRegister(){
     console.log(rePassword);
     
    if(username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
+
+    localStorage.setItem("username", username);
+    localStorage.setItem("email", email);
+    localStorage.setItem("password", password);
+
+
+
     window.location.href = "registerNext.html" 
    }else{
     alert("mali ka");

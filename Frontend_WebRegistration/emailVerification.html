@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="forms.css">
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Keania+One&family=Poppins&display=swap" rel="stylesheet">
+
+    
+
+    <title>Triple J Systems</title>
+</head>
+<body style="margin: 0; background-color: #313030;">
+    <header>
+            Triple J
+    </header>
+    <div id="inputContainer" style="margin-top: 50%;">
+
+        <div id="mainTitle">
+            Register an email
+        </div>
+    
+        <form style="display: flex; flex-direction:column; align-items: center;">
+
+            <div>
+                <div class="subContainer">
+                    <div style="margin-right: 1em;">
+                        <i class="fa-solid fa-envelope iconStyle"></i>
+                    </div>
+                    <p class="inputText">E-mail</p>
+                </div>
+                <input id="email" class="mainInputs" type="text" placeholder="johndoe@email.com">
+            </div>
+
+            <a class="mainInputs nextBtn" onclick="verifyEmail()"> 
+                Send registration link to email
+            </a>
+
+            
+        </form>   
+        
+        
+            
+
+    </div>
+    
+    <script src="https://kit.fontawesome.com/154b347a8c.js" crossorigin="anonymous"></script>
+
+    <script src="emailVerification.js"></script>
+
+</body>
+</html>

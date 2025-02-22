@@ -32,7 +32,7 @@ export default function HomeScreen() {
 
   //store variables for the login credentials
   const [check1, setCheck1] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPass] = useState('');
 
 
@@ -44,7 +44,7 @@ export default function HomeScreen() {
     fetch("https://triple-j.onrender.com/api/account/token", {
       method: "POST",
       body: JSON.stringify({
-        "username": email,
+        "username": username,
         "password": password,
       }),
       credentials: 'same-origin',
@@ -90,9 +90,9 @@ export default function HomeScreen() {
 
       <View  style={{marginBottom: 20}}>
         <Text style={styles.inputFieldText}>
-          E-mail
+          Username
         </Text>
-        <TextInput  onChangeText={newText => setEmail(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
+        <TextInput  onChangeText={newText => setUsername(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
       </View>
 
       <View style={{marginBottom: 20}}>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="forms.css">
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +29,26 @@
             <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
+                        <i class="fa-solid fa-user iconStyle"></i>
+                    </div>
+                    <p class="inputText">First Name</p>
+                </div>
+                <input id="firstName" class="mainInputs" type="text" placeholder="Type your first name">
+            </div>
+
+            <div>
+                <div class="subContainer">
+                    <div style="margin-right: 1em;">
+                        <i class="fa-solid fa-user iconStyle"></i>
+                    </div>
+                    <p class="inputText">Last Name</p>
+                </div>
+                <input id="lastName" class="mainInputs" type="text" placeholder="Type your last name">
+            </div>
+
+            <div>
+                <div class="subContainer">
+                    <div style="margin-right: 1em;">
                         <i class="fa-solid fa-phone iconStyle"></i>
                     </div>
                     <p class="inputText">Contact Number</p>
@@ -36,7 +56,7 @@
                 <input id="contactNum" class="mainInputs" type="text" placeholder="e.g. 999-999-9999">
             </div>
 
-            <div>
+            <!-- <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-calendar iconStyle"></i>
@@ -44,9 +64,9 @@
                     <p class="inputText">Date of Birth</p>
                 </div>
                 <input class="mainInputs" type="date">
-            </div>
+            </div> -->
 
-            <div>
+            <!-- <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-house iconStyle"></i>
@@ -54,9 +74,9 @@
                     <p class="inputText">Address</p>
                 </div>
                 <input class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
-            </div>
+            </div> -->
 
-            <div>
+            <!-- <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-weight-scale iconStyle"></i>
@@ -64,9 +84,9 @@
                     <p class="inputText">Weight</p>
                 </div>
                 <input class="mainInputs" type="text" placeholder="Enter your weight">
-            </div>
+            </div> -->
             
-            <div>
+            <!-- <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-ruler iconStyle"></i>
@@ -74,10 +94,10 @@
                     <p class="inputText">Height</p>
                 </div>
                 <input class="mainInputs" type="text" placeholder="Enter your height">
-            </div>
+            </div> -->
 
-            <a class="mainInputs nextBtn" > 
-                Complete
+            <a class="mainInputs nextBtn" onclick="completeForm()"> 
+                Create Account
             </a>
 
             
@@ -89,6 +109,8 @@
     </div>
     
     <script src="https://kit.fontawesome.com/154b347a8c.js" crossorigin="anonymous"></script>
+
+    <script src="registerNext.js"></script>
     
 </body>
 </html>
