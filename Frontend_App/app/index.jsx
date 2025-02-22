@@ -6,10 +6,20 @@ import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { router, useRouter } from 'expo-router';
 
-
-
 import { CheckBox, withTheme } from '@rneui/themed';
 import {Link} from 'expo-router';
+
+import * as Keychain from 'react-native-keychain';
+import * as SecureStore from 'expo-secure-store';
+
+async function saveToken(key, value) {
+
+  try{
+  await SecureStore.setItemAsync(key,value);
+  }catch(error){
+    console.log(error);
+  }
+}
 
 
 
@@ -29,6 +39,9 @@ export default function HomeScreen() {
     if (!loaded) {
       return null;
     }
+
+
+    
 
   //store variables for the login credentials
   const [check1, setCheck1] = useState(false);
@@ -63,7 +76,15 @@ export default function HomeScreen() {
       return response.json(); 
     })
     .then(data => {
-    
+
+
+        let accessToken = data.access;
+        let refreshToken = data.refresh;
+
+
+        saveToken("accessToken", accessToken);
+        saveToken("refreshToken", refreshToken);
+
         console.log(data)
         router.push('/(tabs)/home');
       

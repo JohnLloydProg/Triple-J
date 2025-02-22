@@ -1,16 +1,13 @@
 import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
-import kotsIcon from '@/assets/images/Coach-icon.png';
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { FlatList } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import jwtDecode from "jwt-decode";
+import { useEffect } from 'react';
 
 const DATA = [
   {
@@ -44,8 +41,7 @@ const DATA = [
 ];
 
 
-
-
+//function for creating each component of programs and its necessary workouts
 const Item = ({title, workouts, img}) => (
   <View style={{backgroundColor: '#1E1F26', marginBottom:10,borderRadius: 10, padding:15}}>
     
@@ -71,13 +67,60 @@ const Item = ({title, workouts, img}) => (
   </View>
 );
 
-export default function program() {
+//function for getting the localized variables for the access tokens
+async function getToken(key) {
+  return await SecureStore.getItemAsync(key);
+}  
+
+
+//function to get the necessary info to display the programs and workouts
+async function testApi() {
+
+  let accessToken = await getToken("accessToken");
+  let refreshToken = await getToken("refreshToken");
+
+  console.log("access: " + accessToken);
+  console.log("refresh: " + refreshToken);
 
   
-    const [fontsLoaded] = useFonts({
-      KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
-    });
+  fetch("https://triple-j.onrender.com/api/gym/program", {
+    method: "GET",
+    headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+    }
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error("Error:", error));
 
+fetch("https://triple-j.onrender.com/api/gym/workout/1", {
+  method: "GET",
+  headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error("Error:", error));
+
+
+}
+
+
+export default function program() {
+  //loads the needed custom font styles
+  const [fontsLoaded] = useFonts({
+    KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
+  });
+
+  //loads the information for programs and workouts during the first loading of the programs page
+  useEffect(()=>{
+    testApi();
+  },[]);
+
+  
   return(
     <View style={styles.container}>
 
@@ -115,15 +158,12 @@ export default function program() {
 
 
       <Link href="/home" asChild>
-            <TouchableOpacity style={styles.addBtn}>
+            <TouchableOpacity style={styles.addBtn} onPress={()=>{testApi()}} >
               <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
                 +
               </Text>
             </TouchableOpacity>
       </Link>
-
-
-
 
     </View>
  
