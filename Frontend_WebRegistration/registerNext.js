@@ -3,6 +3,7 @@ function completeForm(){
     let username = localStorage.getItem("username");
     let email = localStorage.getItem("email");
     let password = localStorage.getItem("password");
+    let membershipType = localStorage.getItem("membershipType")
 
 
     //values from the current form
@@ -11,7 +12,7 @@ function completeForm(){
     let contactNum = document.querySelector("#contactNum").value;
 
 
-    console.log(username, email, password,firstName,lastName,contactNum);
+    console.log(username, email, password, membershipType, firstName,lastName,contactNum);
 
     //window.location.href = "accountRegistered.html" 
 

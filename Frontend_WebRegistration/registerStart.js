@@ -4,15 +4,17 @@ function continueRegister(){
     let email= document.querySelector("#email").value;
     let password = document.querySelector("#password").value;
     let rePassword= document.querySelector("#rePassword").value;
+    let membershipType = document.getElementById("frequency").value;
 
     console.log(password);
     console.log(rePassword);
     
-   if(username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
+   if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
 
     localStorage.setItem("username", username);
     localStorage.setItem("email", email);
     localStorage.setItem("password", password);
+    localStorage.setItem("membershipType", membershipType);
 
 
 
