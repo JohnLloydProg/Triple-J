@@ -3,6 +3,29 @@ import { useFonts } from 'expo-font';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
+import * as SecureStore from 'expo-secure-store';
+import { router, useRouter } from 'expo-router';
+
+
+//deletes the tokens for authentication and redirects to login page
+ async function logoutDetails() {
+  try {
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
+
+    console.log(`Item with key  access: '${"accessToken"}' has been deleted.`);
+    console.log(`Item with key  refresh: '${"refreshToken"}' has been deleted.`);
+
+    router.push('/');
+    
+  } catch (error) {
+    console.error('Error deleting item:', error);
+  }
+}
+
+
+
+
 
 export default function Settings() {
   const [fontsLoaded] = useFonts({
@@ -10,8 +33,6 @@ export default function Settings() {
   });
 
  return(
-
-  
 
   <View style={styles.container}>
 
@@ -75,8 +96,8 @@ export default function Settings() {
     <View style={styles.logoutCont}>
       
         <FontAwesome6 name="right-from-bracket" size={24} color="white" />
-        <Text style={[styles.titleText, {fontSize: 20}]} onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}>
-          Loguout</Text>
+        <Text style={[styles.titleText, {fontSize: 20}]} onPress={() => {logoutDetails()}}>
+          Logout</Text>
       
     </View>
 

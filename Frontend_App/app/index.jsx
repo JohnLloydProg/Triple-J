@@ -8,6 +8,7 @@ import { router, useRouter } from 'expo-router';
 
 import { CheckBox, withTheme } from '@rneui/themed';
 import {Link} from 'expo-router';
+import jwtDecode from "jwt-decode";
 
 import * as Keychain from 'react-native-keychain';
 import * as SecureStore from 'expo-secure-store';
@@ -21,6 +22,10 @@ async function saveToken(key, value) {
   }
 }
 
+async function getToken(key) {
+  return await SecureStore.getItemAsync(key);
+}  
+
 
 
 export default function HomeScreen() {
@@ -30,17 +35,6 @@ export default function HomeScreen() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
   });
-    useEffect(() => {
-      if (loaded) {
-        SplashScreen.hideAsync();
-      }
-    }, [loaded]);
-  
-    if (!loaded) {
-      return null;
-    }
-
-
     
 
   //store variables for the login credentials
@@ -48,12 +42,28 @@ export default function HomeScreen() {
   const [username, setUsername] = useState('');
   const [password, setPass] = useState('');
 
+  useEffect(() => {
+    const checkToken = async () => {
+      let accessToken = await getToken("accessToken");
+      let refreshToken = await getToken("refreshToken");
+
+      if (accessToken && refreshToken) {
+        router.push('/(tabs)/home');
+      }
+    };
+
+    checkToken();
+  }, []);
 
   //handles the appropriate http request to validate login credentials
 
     const route = useRouter();
 
   function validateInfo() {
+
+    
+
+
     fetch("https://triple-j.onrender.com/api/account/token", {
       method: "POST",
       body: JSON.stringify({
@@ -158,7 +168,7 @@ export default function HomeScreen() {
 
 
     <Link href="/home" asChild>
-      <TouchableOpacity onPress={()=>{validateInfo()}}  style={styles.loginBtn}>
+      <TouchableOpacity style={styles.loginBtn}>
         <Text style={styles.loginBtnTxt}>
           Temporary: go to home page
         </Text>

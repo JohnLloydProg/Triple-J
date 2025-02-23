@@ -83,27 +83,27 @@ async function testApi() {
   console.log("refresh: " + refreshToken);
 
   
-  fetch("https://triple-j.onrender.com/api/gym/program", {
-    method: "GET",
-    headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-    }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
+//   fetch("https://triple-j.onrender.com/api/gym/program", {
+//     method: "GET",
+//     headers: {
+//         "Authorization": `Bearer ${accessToken}`,
+//         "Content-Type": "application/json"
+//     }
+// })
+// .then(response => response.json())
+// .then(data => console.log(data))
+// .catch(error => console.error("Error:", error));
 
-fetch("https://triple-j.onrender.com/api/gym/workout/1", {
-  method: "GET",
-  headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-  }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
+// fetch("https://triple-j.onrender.com/api/gym/workout/1", {
+//   method: "GET",
+//   headers: {
+//       "Authorization": `Bearer ${accessToken}`,
+//       "Content-Type": "application/json"
+//   }
+// })
+// .then(response => response.json())
+// .then(data => console.log(data))
+// .catch(error => console.error("Error:", error));
 
 
 }
