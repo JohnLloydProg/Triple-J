@@ -20,16 +20,27 @@ class ValidationSession(models.Model):
         self.expirationDate = now().date() + timedelta(days=1)
 
 
+class Trainer(User):
+    class Meta:
+        verbose_name = 'Trainer'
+
+    is_trainer = models.BooleanField(default=True)
+    mobileNumber = models.CharField(max_length=15)
+    facebookAccount = models.URLField()
+
 class Member(User):
     """
     Model used for member accounts. Also used for authentication. Inherits from the User class from django.
     """
+    class Meta:
+        verbose_name = 'Member'
 
     birthDate = models.DateField(null=True)
     height = models.FloatField(null=True)
     weight = models.FloatField(null=True)
-    mobileNumber = models.CharField(max_length=10, null=True)
+    mobileNumber = models.CharField(max_length=15, null=True)
     address = models.CharField(max_length=200, null=True)
+    gymTrainer = models.ForeignKey(Trainer, null=True, on_delete=models.SET_NULL, blank=True)
     membershipType = models.CharField(max_length=15)
     sex = models.CharField(max_length=30, default='NA')
 

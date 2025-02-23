@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'gym', 'account', 'attendance',
+    'scheduling',
     'corsheaders', 'rest_framework'
 ]
 
