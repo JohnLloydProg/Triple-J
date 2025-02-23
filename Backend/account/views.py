@@ -2,10 +2,11 @@ from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse, HttpRequest, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from email.mime.multipart import MIMEMultipart
 from rest_framework import generics
-from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer
+from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from email.mime.text import MIMEText
@@ -41,7 +42,7 @@ background-color: #313030;margin: 0 auto;overflow: hidden;font-size: 20px;">
         </div>
         <h1 style="color: #4CAF50;font-size: 2em;">Email Verified!</h1>
         <p style="font-size: 1.1em;margin-bottom: 20px;color: #fff;max-width: 320px;">Your email address has been successfully verified.</p>
-        <a style="display: inline-block;padding: 10px 20px;background-color: #76D09C;color: #fff;text-decoration: none;border-radius: 5px;font-size: 1em;"href="/">Proceed to registration</a>
+        <a style="display: inline-block;padding: 10px 20px;background-color: #76D09C;color: #fff;text-decoration: none;border-radius: 5px;font-size: 1em;" href="{link}">Proceed to registration</a>
     </div>
 
 </body>
@@ -59,7 +60,7 @@ class EmailValidation(View):
     context = ssl.create_default_context()
 
     def get(self, request:HttpRequest):
-        return render(request, 'form.html')
+        return render(request, 'emailVerification.html')
 
     def post(self, request:HttpRequest):
         memberEmail = request.POST.get('email')
@@ -72,14 +73,15 @@ class EmailValidation(View):
 
             validationMSG = MIMEMultipart()
             validationMSG['Subject'] = "Email Validation for Tripple J System"
-            validationMSG.attach(MIMEText(html, 'html'))
+            link = 'https://triple-j.onrender.com/api/account/registration/' + str(validationSession.validationCode)
+            validationMSG.attach(MIMEText(html.format(link=link), 'html'))
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=self.context) as smtp:
                 smtp.login("johnlloydunida0@gmail.com", "hvwm jkkz gamd nvnn")
                 smtp.sendmail("johnlloydunida0@gmail.com", [memberEmail], validationMSG.as_string())
 
-            return HttpResponse("Email sent successfully")
-        return HttpResponse("Email is already registered in the system")
+            return JsonResponse({'details':"Email sent successfully"}, status=200)
+        return JsonResponse({'details':"Email is already registered in the system"}, status=400)
 
 
 class AccountRegistration(View):
@@ -94,29 +96,54 @@ class AccountRegistration(View):
             if (date.today() > validationSession.expirationDate):
                 validationSession.delete()
                 return HttpResponse('Validation Session Expired!')
-            return render(request, 'register.html')
+            return render(request, 'registerStart.html', {'email':validationSession.email})
         except ValidationSession.DoesNotExist:
             return HttpResponse('Validation Code does not exist!')
     
     def post(self, request:HttpRequest, validationCode:str):
-        email = ValidationSession.objects.get(pk=validationCode).email
+        email = request.POST.get('email')
         username = request.POST.get('username')
-        firstName = request.POST.get('firstName')
-        lastName = request.POST.get('lastName')
         password = request.POST.get('password')
-        mobileNumber = request.POST.get('mobileNumber')
 
-        member = Member(username=username, email=email, first_name=firstName, last_name=lastName, mobileNumber=mobileNumber, membershipType="Monthly")
+        member = Member(username=username, email=email, membershipType=request.POST.get('membership'))
         member.set_password(password)
         member.save()
 
-        membership = MonthlyMembership(member=member)
-        membership.extendExpirationDate()
+        if (member.membershipType == 'Monthly'):
+            membership = MonthlyMembership(member=member)
+            membership.extendExpirationDate()
+        else:
+            membership = DailyMembership(member=member)
         membership.save()
 
-        data = {member.pk : member.json()}
+        return redirect(reverse('account registration cont', args=[validationCode]))
 
-        return JsonResponse(data=data)
+
+class AccountRegistrationCont(View):
+    
+    def get(self, request:HttpRequest, validationCode:str):
+        try:
+            validationSession = ValidationSession.objects.get(validationCode=validationCode)
+            if (date.today() > validationSession.expirationDate):
+                validationSession.delete()
+                return HttpResponse('Validation Session Expired!')
+            return render(request, 'registerNext.html')
+        except ValidationSession.DoesNotExist:
+            return HttpResponse('Validation Code does not exist!')
+
+    def post(self, request:HttpRequest, validationCode:str):
+        validationSession = ValidationSession.objects.get(validationCode=validationCode)
+        member = Member.objects.get(email=validationSession.email)
+        for key, value in request.POST.items():
+            setattr(member, key, value)
+        member.save()
+
+        return HttpResponse("You have successfully registered the account")
+
+class AccountUpdate(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
 
 
 class MembershipView(generics.GenericAPIView):

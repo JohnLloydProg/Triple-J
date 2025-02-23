@@ -28,7 +28,7 @@ class Member(User):
     birthDate = models.DateField(null=True)
     height = models.FloatField(null=True)
     weight = models.FloatField(null=True)
-    mobileNumber = models.CharField(max_length=10)
+    mobileNumber = models.CharField(max_length=10, null=True)
     address = models.CharField(max_length=200, null=True)
     membershipType = models.CharField(max_length=15)
     sex = models.CharField(max_length=30, default='NA')

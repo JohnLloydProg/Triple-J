@@ -1,9 +1,11 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="forms.css">
+    <link rel="stylesheet" href="{% static 'forms.css'%}">
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +26,8 @@
             Create an account
         </div>
     
-        <form style="display: flex; flex-direction:column; align-items: center;">
+        <form style="display: flex; flex-direction:column; align-items: center;" method="POST" action="#">
+            {% csrf_token %}
 
             <div>
                 <div class="subContainer">
@@ -33,7 +36,7 @@
                     </div>
                     <p class="inputText">First Name</p>
                 </div>
-                <input id="firstName" class="mainInputs" type="text" placeholder="Type your first name">
+                <input id="firstName" name='first_name' class="mainInputs" type="text" placeholder="Type your first name">
             </div>
 
             <div>
@@ -43,7 +46,7 @@
                     </div>
                     <p class="inputText">Last Name</p>
                 </div>
-                <input id="lastName" class="mainInputs" type="text" placeholder="Type your last name">
+                <input id="lastName" name='last_name' class="mainInputs" type="text" placeholder="Type your last name">
             </div>
 
             <div>
@@ -53,7 +56,7 @@
                     </div>
                     <p class="inputText">Contact Number</p>
                 </div>
-                <input id="contactNum" class="mainInputs" type="text" placeholder="e.g. 999-999-9999">
+                <input id="contactNum" name='mobileNumber' class="mainInputs" type="text" placeholder="e.g. 999-999-9999">
             </div>
 
             <div>
@@ -64,8 +67,9 @@
                     <p class="inputText">Sex</p>
                 </div>
                 <select id="sex" name="sex">
-                    <option class="inputText" value="Male"  style="color: black;">Male</option>
-                    <option class="inputText" value="Female"  style="color: black;">Female</option>
+                    <option class="inputText" value="M"  style="color: black;">Male</option>
+                    <option class="inputText" value="F"  style="color: black;">Female</option>
+                    <option class="inputText" value="NA"  style="color: black;">Don't want to specify</option>
                 </select>
             </div>
 
@@ -76,7 +80,7 @@
                     </div>
                     <p  class="inputText">Date of Birth</p>
                 </div>
-                <input id="dob" class="mainInputs" type="date">
+                <input id="dob" name="birthDate" class="mainInputs" type="date">
             </div> 
 
             <div>
@@ -86,7 +90,7 @@
                     </div>
                     <p class="inputText">Address</p>
                 </div>
-                <input id="address" class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
+                <input id="address" name="address" class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
             </div>
 
             <div>
@@ -96,7 +100,7 @@
                     </div>
                     <p class="inputText">Weight</p>
                 </div>
-                <input id="weight" class="mainInputs" type="text" placeholder="Enter your weight">
+                <input id="weight" name="weight" class="mainInputs" type="text" placeholder="Enter your weight">
             </div>
             
              <div>
@@ -106,12 +110,10 @@
                     </div>
                     <p class="inputText">Height</p>
                 </div>
-                <input id="height" class="mainInputs" type="text" placeholder="Enter your height">
+                <input id="height" name="height" class="mainInputs" type="text" placeholder="Enter your height">
             </div> 
 
-            <a class="mainInputs nextBtn" onclick="completeForm()"> 
-                Create Account
-            </a>
+            <button class="mainInputs nextBtn" type="submit"></button>
 
             
         </form>   
@@ -123,7 +125,7 @@
     
     <script src="https://kit.fontawesome.com/154b347a8c.js" crossorigin="anonymous"></script>
 
-    <script src="registerNext.js"></script>
+    <script src="{% static 'registerNext.js'%}"></script>
     
 </body>
 </html>

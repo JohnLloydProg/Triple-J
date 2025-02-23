@@ -9,14 +9,10 @@ from account.models import Member
 
 
 class Program(models.Model):
-    day = models.CharField(
-        max_length=3, 
+    day = models.IntegerField(
         choices={
-            "M" : "Monday", 
-            "T":"Tuesday", 
-            "W":"Wednesday", 
-            "TH":"Thursday", 
-            "F":"Friday"
+            0 : "Monday", 1:"Tuesday", 2:"Wednesday", 3:"Thursday", 
+            4:"Friday", 5:'Saturday', 6:'Sunday'
             },
         null=True
     )
