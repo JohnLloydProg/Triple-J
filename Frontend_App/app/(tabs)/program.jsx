@@ -2,66 +2,46 @@ import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, L
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
+import treadmillIcon from '@/assets/images/Treadmill.png';
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
 import { FlatList } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import jwtDecode from "jwt-decode";
-import { useEffect } from 'react';
-
-const DATA = [
-  {
-    id: '1',
-    date: 'Monday',
-    workouts: {
-      type: ['core', 'leg', 'upper'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)'],
-    },
-    img: bicepIcon,
-  },
-  {
-    id: '2',
-    date: 'Tuesday',
-    workouts: {
-      type: ['core', 'leg', 'upper', 'cardio'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)', '10 min'],
-    },
-    img: bicepIcon,
-  },
-  {
-    id: '3',
-    date: 'Wednesday',
-    workouts: {
-      type: ['core', 'leg', 'upper'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)'],
-    },
-    img: bicepIcon,
-  },
-
-];
+import { useEffect, useState } from 'react';
 
 
-//function for creating each component of programs and its necessary workouts
-const Item = ({title, workouts, img}) => (
-  <View style={{backgroundColor: '#1E1F26', marginBottom:10,borderRadius: 10, padding:15}}>
+
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const workoutTypes = {
+  'U': bicepIcon,
+  'L': 'Lower Body',
+  'C': treadmillIcon,
+  'F': 'Full Body',
+  'M': 'Mobility',
+  'N/A': 'Rest Day'
+};
+
+
+const WorkoutItem = ({ title, workouts }) => (
+  <View style={styles.mainProgramsCont}>
     
-    <View style={{borderBottomColor:'white', borderBottomWidth: 1, marginBottom: 10, paddingBottom: 8}}> 
-
-    <Text style={{color:'white', fontFamily: 'KeaniaOne'}}>{title}</Text>
-
+    <View style={styles.programCont}>
+      <Text style={styles.programText}>{title}</Text>
     </View>
 
     <View>
-      {workouts.type.map((type, index) => (
-        <View key={`${title}-${type}-${index}`} style={styles.indivWorkCont}>
-          <Image  source={img} style={{width: 40, height: 40, marginRight:10}} />
-
+      {workouts.length > 0 ? workouts.map((workout, index) => (
+        <View style={styles.indivProgCont} key={`${title}-${index}`}>
+          <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
           <View>
-          <Text style={{color:'white', fontFamily: 'KeaniaOne', marginBottom: 3}}>{type}</Text>
-          <Text style={{color:'white', fontFamily: 'KeaniaOne'}}>{workouts.description[index]}</Text>
-          </View> 
+            <Text style={styles.workoutName}>{workout.name}</Text>
+          </View>
         </View>
-      ))}
+      )) : (
+        <Text style={styles.noWorkout}>No workouts today</Text>
+      )}
     </View>
 
   </View>
@@ -73,7 +53,12 @@ async function getToken(key) {
 }  
 
 
-//function to get the necessary info to display the programs and workouts
+
+export default function program() {
+
+  const [programData, setProgramData] = useState([]);
+
+  //function to get the necessary info to display the programs and workouts
 async function testApi() {
 
   let accessToken = await getToken("accessToken");
@@ -83,33 +68,22 @@ async function testApi() {
   console.log("refresh: " + refreshToken);
 
   
-//   fetch("https://triple-j.onrender.com/api/gym/program", {
-//     method: "GET",
-//     headers: {
-//         "Authorization": `Bearer ${accessToken}`,
-//         "Content-Type": "application/json"
-//     }
-// })
-// .then(response => response.json())
-// .then(data => console.log(data))
-// .catch(error => console.error("Error:", error));
 
-// fetch("https://triple-j.onrender.com/api/gym/workout/1", {
-//   method: "GET",
-//   headers: {
-//       "Authorization": `Bearer ${accessToken}`,
-//       "Content-Type": "application/json"
-//   }
-// })
-// .then(response => response.json())
-// .then(data => console.log(data))
-// .catch(error => console.error("Error:", error));
-
-
+  
+fetch("https://triple-j.onrender.com/api/gym/program", {
+    method: "GET",
+    headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+    }
+})
+.then(response => response.json())
+.then(data => {
+  setProgramData(data);
+  console.log(data);})
+.catch(error => console.error("Error:", error));
 }
 
-
-export default function program() {
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -147,23 +121,22 @@ export default function program() {
 
      
       <FlatList
-        data={DATA}
-        renderItem={({item}) => 
-          <Item id={item.id} description={item.description} img={item.img} title={item.date} workouts={item.workouts} />
-      }
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator= {false}
+      data={programData}
+      renderItem={({ item }) => (
+        <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} />
+      )}
+      keyExtractor={item => item.id.toString()}
+      showsVerticalScrollIndicator={false}
+    />
 
-      />
 
-
-      <Link href="/home" asChild>
-            <TouchableOpacity style={styles.addBtn} onPress={()=>{testApi()}} >
-              <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
-                +
-              </Text>
-            </TouchableOpacity>
-      </Link>
+      
+      <TouchableOpacity style={styles.addBtn} onPress={()=>{console.log(programData)}} >
+        <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
+          +
+        </Text>
+      </TouchableOpacity>
+      
 
     </View>
  
@@ -177,6 +150,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryBackground,
     flex: 1,
     padding: 20,
+   },
+   workoutName:{
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    fontSize: 18
+   },
+   noWorkout:{
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    marginTop: 10,
+   },
+   indivProgCont:{
+    flex:1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+   },
+   mainProgramsCont:{
+    backgroundColor: '#1E1F26',
+    padding:20,
+    borderRadius:20,
+    marginBottom: 20,
    },
    progressContainer:{
     flexDirection: 'row',
@@ -192,11 +187,16 @@ const styles = StyleSheet.create({
     maxWidth: 100,
     borderRadius: 20,
    },
-   workoutContainer:{
-    backgroundColor: 'red',
-    flex: 1,
-    borderRadius: 30,
-    padding: 20
+   programCont:{
+    backgroundColor: '#1E1F26',
+    paddingBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: 'white',
+   },
+   programText:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
    }, 
    indivWorkCont:{
     flex: 1,
