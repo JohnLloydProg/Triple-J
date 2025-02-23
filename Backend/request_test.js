@@ -6,8 +6,8 @@ fetch(baseURL + "api/account/token", {
         "Content-Type" : "application/json"
     },
     body : JSON.stringify({
-        'username':'its_lloyd',
-        'password':'Unida12345'
+        'username':'lloyd_dev',
+        'password':'lloyd12345'
     }),
     credentials: 'same-origin',
 }).then((response) => {

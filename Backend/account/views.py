@@ -138,7 +138,7 @@ class AccountRegistrationCont(View):
             setattr(member, key, value)
         member.save()
 
-        return HttpResponse("You have successfully registered the account")
+        return render(request, 'accountRegistered.html')
 
 class AccountUpdate(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
