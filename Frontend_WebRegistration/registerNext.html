@@ -56,45 +56,58 @@
                 <input id="contactNum" class="mainInputs" type="text" placeholder="e.g. 999-999-9999">
             </div>
 
-            <!-- <div>
+            <div>
+                <div class="subContainer">
+                    <div style="margin-right: 1em;">
+                        <i class="fa-solid fa-person-half-dress iconStyle"></i>
+                    </div>
+                    <p class="inputText">Sex</p>
+                </div>
+                <select id="sex" name="sex">
+                    <option class="inputText" value="daily"  style="color: black;">Male</option>
+                    <option class="inputText" value="monthly"  style="color: black;">Female</option>
+                </select>
+            </div>
+
+            <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-calendar iconStyle"></i>
                     </div>
-                    <p class="inputText">Date of Birth</p>
+                    <p  class="inputText">Date of Birth</p>
                 </div>
-                <input class="mainInputs" type="date">
-            </div> -->
+                <input id="dob" class="mainInputs" type="date">
+            </div> 
 
-            <!-- <div>
+            <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-house iconStyle"></i>
                     </div>
                     <p class="inputText">Address</p>
                 </div>
-                <input class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
-            </div> -->
+                <input id="address" class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
+            </div>
 
-            <!-- <div>
+            <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-weight-scale iconStyle"></i>
                     </div>
                     <p class="inputText">Weight</p>
                 </div>
-                <input class="mainInputs" type="text" placeholder="Enter your weight">
-            </div> -->
+                <input id="weight" class="mainInputs" type="text" placeholder="Enter your weight">
+            </div>
             
-            <!-- <div>
+             <div>
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-ruler iconStyle"></i>
                     </div>
                     <p class="inputText">Height</p>
                 </div>
-                <input class="mainInputs" type="text" placeholder="Enter your height">
-            </div> -->
+                <input id="height" class="mainInputs" type="text" placeholder="Enter your height">
+            </div> 
 
             <a class="mainInputs nextBtn" onclick="completeForm()"> 
                 Create Account
