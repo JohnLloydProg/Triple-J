@@ -1,8 +1,10 @@
 import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
+
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
 import treadmillIcon from '@/assets/images/Treadmill.png';
+
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
 import { FlatList } from 'react-native';
@@ -10,10 +12,13 @@ import * as SecureStore from 'expo-secure-store';
 import jwtDecode from "jwt-decode";
 import { useEffect, useState } from 'react';
 
+import {refreshAccessToken} from '../../components/refreshToken';
+
 
 
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 const workoutTypes = {
   'U': bicepIcon,
   'L': 'Lower Body',
@@ -23,7 +28,17 @@ const workoutTypes = {
   'N/A': 'Rest Day'
 };
 
+const daysOfWeekOrder = {
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+  Sunday: 7,
+};
 
+//program and workout component for rendering the flatlist that would display the programs and workouts
 const WorkoutItem = ({ title, workouts }) => (
   <View style={styles.mainProgramsCont}>
     
@@ -52,36 +67,51 @@ async function getToken(key) {
   return await SecureStore.getItemAsync(key);
 }  
 
-
-
 export default function program() {
 
-  const [programData, setProgramData] = useState([]);
 
-  //function to get the necessary info to display the programs and workouts
+const [programData, setProgramData] = useState([]);
+
+//function to fetch the programs and workouts
 async function testApi() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
 
-  let accessToken = await getToken("accessToken");
-  let refreshToken = await getToken("refreshToken");
-
-  console.log("access: " + accessToken);
-  console.log("refresh: " + refreshToken);
-
-  
-
-  
-fetch("https://triple-j.onrender.com/api/gym/program", {
-    method: "GET",
-    headers: {
+    let response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+      method: "GET",
+      headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
     }
-})
-.then(response => response.json())
-.then(data => {
-  setProgramData(data);
-  console.log(data);})
-.catch(error => console.error("Error:", error));
+
+    const data = await response.json();
+    setProgramData(data);
+    console.log(data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }
 
   //loads the needed custom font styles
@@ -93,7 +123,13 @@ fetch("https://triple-j.onrender.com/api/gym/program", {
   useEffect(()=>{
     testApi();
   },[]);
-
+  
+  //sorts the programs from monday-sunday
+  const sortedProgramData = [...programData].sort((a, b) => {
+    const dayA = daysOfWeekOrder[daysOfWeek[a.day]] ?? 0; 
+    const dayB = daysOfWeekOrder[daysOfWeek[b.day]] ?? 0;
+    return dayA - dayB;
+  });
   
   return(
     <View style={styles.container}>
@@ -119,19 +155,22 @@ fetch("https://triple-j.onrender.com/api/gym/program", {
         </View>
       </View>
 
-     
+      
       <FlatList
-      data={programData}
+      data={sortedProgramData}
       renderItem={({ item }) => (
         <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} />
       )}
       keyExtractor={item => item.id.toString()}
       showsVerticalScrollIndicator={false}
-    />
-
+      />
 
       
-      <TouchableOpacity style={styles.addBtn} onPress={()=>{console.log(programData)}} >
+      <TouchableOpacity style={styles.addBtn} onPress={()=>{
+        console.log(programData);
+        console.log()
+        
+        }} >
         <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
           +
         </Text>
