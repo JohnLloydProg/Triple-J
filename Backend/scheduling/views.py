@@ -13,7 +13,10 @@ class ScheduleView(generics.ListAPIView):
     serializer_class = ScheduleSerializer
     
     def get_queryset(self):
-        return Schedule.objects.filter(**self.kwargs)
+        param = {}
+        for k,v in self.request.query_params.items():
+            param[k] = int(v)
+        return Schedule.objects.filter(**param)
 
 
 class ScheduleCreateView(generics.CreateAPIView):

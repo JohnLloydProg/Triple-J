@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/account/', include('account.urls')),
     path('api/attendance/', include('attendance.urls')),
     path('api/scheduling/', include('scheduling.urls')),
-    path('api-auth/', include('rest_framework.urls'))
+    path('api/dietary/', include('dietary.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]

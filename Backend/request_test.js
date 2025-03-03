@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/account/trainer/its_john", {
+    fetch(baseURL + "api/dietary/meal?height=1.6&weight=40", {
         method : "GET",
         headers : {
             "Content-Type" : "application/json",

@@ -13,6 +13,8 @@ uvicorn = "*"
 django-cors-headers = "*"
 djangorestframework = "*"
 djangorestframework-simplejwt = "*"
+pandas = "*"
+openpyxl = "*"
 
 [dev-packages]
 
