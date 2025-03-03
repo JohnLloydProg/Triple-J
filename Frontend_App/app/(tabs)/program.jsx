@@ -1,115 +1,178 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal} from 'react-native';
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
-import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
+
+import upper from '@/assets/images/Upper-Workout-icon.png';
+import push from '@/assets/images/push.png';
+import pull from '@/assets/images/pull.png';
+import core from '@/assets/images/core.png';
+import lower from '@/assets/images/Treadmill.png';
+
+
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
 import { FlatList } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import jwtDecode from "jwt-decode";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-const DATA = [
-  {
-    id: '1',
-    date: 'Monday',
-    workouts: {
-      type: ['core', 'leg', 'upper'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)'],
-    },
-    img: bicepIcon,
-  },
-  {
-    id: '2',
-    date: 'Tuesday',
-    workouts: {
-      type: ['core', 'leg', 'upper', 'cardio'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)', '10 min'],
-    },
-    img: bicepIcon,
-  },
-  {
-    id: '3',
-    date: 'Wednesday',
-    workouts: {
-      type: ['core', 'leg', 'upper'],
-      description: ['(4 sets, 30 reps)', '(3 sets, 12 reps)', '(2 sets, 30 reps)'],
-    },
-    img: bicepIcon,
-  },
-
-];
+import {refreshAccessToken} from '../../components/refreshToken';
+import { fonts } from '@rneui/base';
 
 
-//function for creating each component of programs and its necessary workouts
-const Item = ({title, workouts, img}) => (
-  <View style={{backgroundColor: '#1E1F26', marginBottom:10,borderRadius: 10, padding:15}}>
+
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const workoutTypes = {
+  'U': upper, //upper body
+  'L': lower, //lower body
+  'C': core,  //core
+  'PS': push,   //push
+  'PL': pull,    //pull
+  'N/A': 'Rest Day'
+};
+
+const daysOfWeekOrder = {
+  Monday: 0,
+  Tuesday: 1,
+  Wednesday: 2,
+  Thursday: 3,
+  Friday: 4,
+  Saturday: 5,
+  Sunday: 6,
+};
+
+//program and workout component for rendering the flatlist that would display the programs and workouts
+const WorkoutItem = ({ title, workouts }) => (
+  <View style={styles.mainProgramsCont}>
     
-    <View style={{borderBottomColor:'white', borderBottomWidth: 1, marginBottom: 10, paddingBottom: 8}}> 
-
-    <Text style={{color:'white', fontFamily: 'KeaniaOne'}}>{title}</Text>
-
+    <View style={styles.programCont}>
+      <Text style={styles.programText}>{title}</Text>
     </View>
 
     <View>
-      {workouts.type.map((type, index) => (
-        <View key={`${title}-${type}-${index}`} style={styles.indivWorkCont}>
-          <Image  source={img} style={{width: 40, height: 40, marginRight:10}} />
-
+      {workouts.length > 0 ? workouts.map((workout, index) => (
+        <View style={styles.indivProgCont} key={`${title}-${index}`}>
+          <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
           <View>
-          <Text style={{color:'white', fontFamily: 'KeaniaOne', marginBottom: 3}}>{type}</Text>
-          <Text style={{color:'white', fontFamily: 'KeaniaOne'}}>{workouts.description[index]}</Text>
-          </View> 
+            <Text style={styles.workoutName}>{workout.name}</Text>
+          </View>
         </View>
-      ))}
+      )) : (
+        <Text style={styles.noWorkout}>No workouts today</Text>
+      )}
     </View>
 
   </View>
 );
+
+
 
 //function for getting the localized variables for the access tokens
 async function getToken(key) {
   return await SecureStore.getItemAsync(key);
 }  
 
+export default function program() {
 
-//function to get the necessary info to display the programs and workouts
+
+const [programData, setProgramData] = useState([]);
+const [modalVisible, setModalVisible] = useState(false);
+const [selectedItem, setSelectedItem] = useState(null);
+
+
+//funnction to handle the modal of selected program
+const handlePress = (item) => {
+  setSelectedItem(item);
+  console.log("Selected item: ", item);
+  setModalVisible(true);
+};
+
+//function to fetch the programs and workouts
 async function testApi() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
 
-  let accessToken = await getToken("accessToken");
-  let refreshToken = await getToken("refreshToken");
-
-  console.log("access: " + accessToken);
-  console.log("refresh: " + refreshToken);
-
-  
-  fetch("https://triple-j.onrender.com/api/gym/program", {
-    method: "GET",
-    headers: {
+    let response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+      method: "GET",
+      headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
     }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
 
-fetch("https://triple-j.onrender.com/api/gym/workout/1", {
-  method: "GET",
-  headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-  }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
+      const data = await response.json();
+      setProgramData(data);
+      console.log(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
 
+//function to add programs
+async function addProgram() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
 
+    let response = await fetch("https://triple-j.onrender.com/api/gym/program/create", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/gym/program/create", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
 }
 
 
-export default function program() {
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -119,7 +182,13 @@ export default function program() {
   useEffect(()=>{
     testApi();
   },[]);
-
+  
+  //sorts the programs from monday-sunday
+  const sortedProgramData = [...programData].sort((a, b) => {
+    const dayA = daysOfWeekOrder[daysOfWeek[a.day]] ?? 0; 
+    const dayB = daysOfWeekOrder[daysOfWeek[b.day]] ?? 0;
+    return dayA - dayB;
+  });
   
   return(
     <View style={styles.container}>
@@ -145,25 +214,71 @@ export default function program() {
         </View>
       </View>
 
-     
+      
       <FlatList
-        data={DATA}
-        renderItem={({item}) => 
-          <Item id={item.id} description={item.description} img={item.img} title={item.date} workouts={item.workouts} />
-      }
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator= {false}
-
+      data={sortedProgramData}
+      renderItem={({ item }) => (
+        <TouchableOpacity onPress={() => handlePress(item)} >
+          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} />
+        </TouchableOpacity>
+      )}
+      keyExtractor={item => item.id.toString()}
+      showsVerticalScrollIndicator={false}
       />
+    
+    <Modal visible={modalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}> 
+            
+           {selectedItem && (
+            <>
+              <View style={styles.modalTitleCont}>
+                <Text style={styles.modalTitle}> {daysOfWeek[selectedItem.day] || "Unknown Day"} </Text>
+              </View>
+
+              <View style={styles.modalTitleCont}>
+                <Text style={styles.modalTitle}> Current Workout/s </Text>
+              </View>
 
 
-      <Link href="/home" asChild>
-            <TouchableOpacity style={styles.addBtn} onPress={()=>{testApi()}} >
-              <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
-                +
-              </Text>
-            </TouchableOpacity>
-      </Link>
+              <View style={styles.modalWorkoutCont}>
+              {selectedItem.workouts.length > 0 ? selectedItem.workouts.map((workout, index) => (
+                <View style={styles.indivWorkoutModalCont} key={`${selectedItem.title}-${index}`}>
+                  <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+                  <View>
+                    <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                  </View>
+                </View>
+              )) : (
+                <View>
+                  <Text style={styles.noWorkoutModal}>No workouts today</Text>
+                </View>
+              )}
+            </View>
+
+
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}> 
+                <Text style={styles.closeBtnText} >Close</Text>
+              </TouchableOpacity>
+            </>
+           )}
+          </View>
+        </View>
+    </Modal>
+
+      
+      <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
+        await addProgram();
+        await testApi();
+        console.log(programData);
+        console.log()
+        
+        }} >
+        <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
+          +
+        </Text>
+      </TouchableOpacity>
+      
 
     </View>
  
@@ -177,6 +292,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryBackground,
     flex: 1,
     padding: 20,
+   },
+   workoutName:{
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    fontSize: 18
+   },
+   noWorkout:{
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    marginTop: 10,
+   },
+   indivProgCont:{
+    flex:1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+   },
+   mainProgramsCont:{
+    backgroundColor: '#1E1F26',
+    padding:20,
+    borderRadius:20,
+    marginBottom: 20,
    },
    progressContainer:{
     flexDirection: 'row',
@@ -192,11 +329,16 @@ const styles = StyleSheet.create({
     maxWidth: 100,
     borderRadius: 20,
    },
-   workoutContainer:{
-    backgroundColor: 'red',
-    flex: 1,
-    borderRadius: 30,
-    padding: 20
+   programCont:{
+    backgroundColor: '#1E1F26',
+    paddingBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: 'white',
+   },
+   programText:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
    }, 
    indivWorkCont:{
     flex: 1,
@@ -221,8 +363,74 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     bottom:10,
     right: 20
+  },
+
+  //modal styles
+  modalContainer:{
+    flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  modalContent: {
+    width: "100%",
+    height: "100%",
+    padding: 20,
+    backgroundColor: colors.primaryBackground,
+    borderRadius: 10,
+    alignItems: 'center'
+  },
+  modalTitle:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+  },
+  modalTitleCont:{
+    backgroundColor: '#1E1F26',
+    padding: 10,
+    borderRadius: 10,
+    width:"90%",
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  closeBtn:{
+    backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+  },
+  closeBtnText:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+  },
+  noWorkoutModal:{
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    marginTop: 10,
+    marginBottom: 10,
+    fontSize: 20,
     
-    
-},
+  },
+  workoutNameModal:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+  },
+  modalWorkoutCont:{
+    backgroundColor: '#1E1F26',
+    height: "auto",
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    width: "90%",
+  },
+  indivWorkoutModalCont:{
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+    borderBottomColor: 'white',
+    borderBottomWidth: 1,
+  }
+
 
 });
