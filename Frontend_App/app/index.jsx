@@ -94,6 +94,7 @@ export default function HomeScreen() {
 
         saveToken("accessToken", accessToken);
         saveToken("refreshToken", refreshToken);
+        saveToken("username", username);
 
         console.log(data)
         router.push('/(tabs)/home');
