@@ -20,8 +20,7 @@ class Program(models.Model):
 
 
 class Workout(models.Model):
-    name = models.CharField(max_length=25)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
     type = models.CharField(max_length=5, choices={
         "L":"Lower",
         "U":"Upper",
@@ -30,4 +29,9 @@ class Workout(models.Model):
         "PL":"Pull"
         }
     )
+
+
+class ProgramWorkout(models.Model):
+    workout = models.ForeignKey(Workout, on_delete=models.CASCADE)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE)
     details = models.JSONField()

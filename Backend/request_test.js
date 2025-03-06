@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/dietary/meal?height=1.6&weight=40", {
+    fetch(baseURL + "api/gym/workout/1", {
         method : "GET",
         headers : {
             "Content-Type" : "application/json",
@@ -35,7 +35,10 @@ fetch(baseURL + "api/account/token", {
         }else {
             return response.blob();
         }
-    }).then((data) => console.log(data)).catch((error) => console.error("Fetch error", error));
+    }).then((data) => {
+        console.log(data);
+        window.open(data['details']['link'])        
+    }).catch((error) => console.error("Fetch error", error));
 }).catch(
     (error) => console.error("Fetch error", error)
 );

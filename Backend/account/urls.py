@@ -13,5 +13,7 @@ urlpatterns = [
     path('token', TokenObtainPairView.as_view(), name='get_token'),
     path('token/refresh', TokenRefreshView.as_view(), name='refresh'),
     path('membership', views.MembershipView.as_view(), name='membership'),
-    path('membership/<int:user>', views.MembershipChangeView.as_view(), name='membership change')
+    path('membership/change/<int:user>', views.MembershipChangeView.as_view(), name='membership change'),
+    path('membership/subscription', views.CheckoutMonthlySubscriptionView.as_view(), name='subscription checkout'),
+    path('membership/successful', views.SuccessfulPaymentView.as_view(), name='successful paymenbt')
 ]
