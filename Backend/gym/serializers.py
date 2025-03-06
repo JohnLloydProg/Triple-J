@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from gym.models import Program, ProgramWorkout
+from gym.models import Program, ProgramWorkout, Workout
 
 
 class ProgramSerializer(serializers.ModelSerializer):
@@ -13,5 +13,10 @@ class ProgramWorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramWorkout
         fields = ['id', 'workout', 'details']
-        extra_kwargs = {'program':{'read_only':True}}
         depth = 1
+
+
+class WorkoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Workout
+        fields = ['id', 'name', 'type']

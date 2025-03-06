@@ -4,11 +4,11 @@ from account.models import Member
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer
+from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer, WorkoutSerializer
 from django.utils.timezone import now
 from django.views import View
 from datetime import date
-from gym.models import Program, ProgramWorkout
+from gym.models import Program, ProgramWorkout, Workout
 import json
 
 # Create your views here.
@@ -107,3 +107,9 @@ class ProgramWorkoutDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return ProgramWorkout.objects.filter(program=self.kwargs['program'])
+
+
+class WorkoutsView(generics.ListAPIView):
+    permission_classes = []
+    serializer_class = WorkoutSerializer
+    queryset = Workout.objects.all()

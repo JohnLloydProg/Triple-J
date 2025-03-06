@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/gym/workout/1", {
+    fetch(baseURL + "api/gym/workouts", {
         method : "GET",
         headers : {
             "Content-Type" : "application/json",
