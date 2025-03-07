@@ -14,10 +14,12 @@ import { router, useRouter } from 'expo-router';
     await SecureStore.deleteItemAsync("accessToken");
     await SecureStore.deleteItemAsync("refreshToken");
     await SecureStore.deleteItemAsync("username");
+    await SecureStore.deleteItemAsync("userId");
 
     console.log(`Item with key  access: '${"accessToken"}' has been deleted.`);
     console.log(`Item with key  refresh: '${"refreshToken"}' has been deleted.`);
     console.log(`Item with key  username: '${"username"}' has been deleted.`);
+    console.log(`Item with key  userID: '${"userID"}' has been deleted.`);
 
     router.push('/');
     
@@ -205,14 +207,17 @@ function calculateExpiry(startDate, membershipType) {
           Membership Payment</Text>
       
     </View>
+    <TouchableOpacity onPress={() => {logoutDetails()}}>
 
-    <View style={styles.logoutCont}>
-      
-        <FontAwesome6 name="right-from-bracket" size={24} color="white" />
-        <Text style={[styles.titleText, {fontSize: 20}]} onPress={() => {logoutDetails()}}>
-          Logout</Text>
-      
-    </View>
+      <View style={styles.logoutCont}>
+        
+          <FontAwesome6 name="right-from-bracket" size={24} color="white" />
+          <Text style={[styles.titleText, {fontSize: 20}]} >
+            Logout</Text>
+        
+      </View>
+
+    </TouchableOpacity>
 
   </View>
 

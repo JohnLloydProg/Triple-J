@@ -61,8 +61,50 @@ export default function HomeScreen() {
 
   function validateInfo() {
 
-    
-
+   //fetches user id
+   async function getMemberInfo() {
+    try {
+      let accessToken = await SecureStore.getItemAsync("accessToken");
+      let refreshToken = await SecureStore.getItemAsync("refreshToken");
+      let username = await SecureStore.getItemAsync("username");
+      
+      console.log("access: " + accessToken);
+      console.log("refresh: " + refreshToken);
+      console.log("username: " + username);
+  
+      let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+  
+      if (response.status === 401) {
+        console.log("Access token expired");
+        accessToken = await refreshAccessToken();
+        console.log("New access token: " + accessToken);
+        if (!accessToken) {
+          throw new Error("Failed to refresh access token");
+        }
+        
+        response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+  
+        const data = await response.json();
+        console.log("user id: " + data.id);
+        saveToken("userId", data.id.toString());
+      } catch (error) {
+        console.error("Error:", error);
+      }
+  
+  }
 
     fetch("https://triple-j.onrender.com/api/account/token", {
       method: "POST",
@@ -85,7 +127,7 @@ export default function HomeScreen() {
       }
       return response.json(); 
     })
-    .then(data => {
+    .then(async (data) => {
 
 
         let accessToken = data.access;
@@ -97,6 +139,7 @@ export default function HomeScreen() {
         saveToken("username", username);
 
         console.log(data)
+        await getMemberInfo();
         router.push('/(tabs)/home');
       
     })
@@ -104,6 +147,9 @@ export default function HomeScreen() {
       console.error("Error:", error);
     });
   }
+
+
+ 
 
   return (
     <View style={styles.container}>

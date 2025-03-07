@@ -20,8 +20,7 @@ import {refreshAccessToken} from '../../components/refreshToken';
 import { fonts } from '@rneui/base';
 
 
-
-
+//constants for processing dates and workout types
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const workoutTypes = {
@@ -76,7 +75,6 @@ async function getToken(key) {
 
 export default function program() {
 
-
 const [programData, setProgramData] = useState([]);
 const [modalVisible, setModalVisible] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null);
@@ -94,11 +92,13 @@ async function testApi() {
   try {
     let accessToken = await SecureStore.getItemAsync("accessToken");
     let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
     
     console.log("access: " + accessToken);
     console.log("refresh: " + refreshToken);
 
-    let response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -114,7 +114,7 @@ async function testApi() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch("https://triple-j.onrender.com/api/gym/program", {
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
