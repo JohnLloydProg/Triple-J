@@ -6,6 +6,9 @@ from datetime import timedelta
 
 # Create your models here.
 
+def userProfilePath(instance, filename):
+    return f'user_{str(instance.user.id)}/{filename}'
+
 
 class ValidationSession(models.Model):
     """
@@ -20,14 +23,6 @@ class ValidationSession(models.Model):
         self.expirationDate = now().date() + timedelta(days=1)
 
 
-class Trainer(User):
-    class Meta:
-        verbose_name = 'Trainer'
-
-    is_trainer = models.BooleanField(default=True)
-    mobileNumber = models.CharField(max_length=15)
-    facebookAccount = models.URLField()
-
 class Member(User):
     """
     Model used for member accounts. Also used for authentication. Inherits from the User class from django.
@@ -35,14 +30,17 @@ class Member(User):
     class Meta:
         verbose_name = 'Member'
 
-    birthDate = models.DateField(null=True)
-    height = models.FloatField(null=True)
-    weight = models.FloatField(null=True)
-    mobileNumber = models.CharField(max_length=15, null=True)
-    address = models.CharField(max_length=200, null=True)
-    gymTrainer = models.ForeignKey(Trainer, null=True, on_delete=models.SET_NULL, blank=True)
+    birthDate = models.DateField(null=True, blank=True)
+    height = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    mobileNumber = models.CharField(max_length=15, null=True, blank=True)
+    address = models.CharField(max_length=200, null=True, blank=True)
+    gymTrainer = models.ForeignKey('self', null=True, on_delete=models.SET_NULL, blank=True)
     membershipType = models.CharField(max_length=15)
     sex = models.CharField(max_length=30, default='NA')
+    is_trainer = models.BooleanField(default=False)
+    facebookAccount = models.URLField(null=True, blank=True)
+    profilePic = models.ImageField(upload_to=userProfilePath, null=True, blank=True)
 
 
 class Membership(models.Model):

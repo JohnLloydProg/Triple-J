@@ -7,6 +7,9 @@ from account.models import Member
 
 # Create your models here.
 
+def timelineRecordPath(instance, filename):
+    return f'user_{str(instance.user.id)}/timeline/{filename}'
+
 
 class Program(models.Model):
     day = models.IntegerField(
@@ -35,3 +38,17 @@ class ProgramWorkout(models.Model):
     workout = models.ForeignKey(Workout, on_delete=models.CASCADE)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     details = models.JSONField()
+
+
+class ProgramWorkoutRecord(models.Model):
+    date = models.DateField(default=now)
+    programWorkout = models.ForeignKey(ProgramWorkout, on_delete=models.CASCADE)
+    details = models.JSONField()
+
+
+class TimelineRecord(models.Model):
+    date = models.DateField(default=now)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    height = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    img = models.ImageField(upload_to=timelineRecordPath, null=True, blank=True)

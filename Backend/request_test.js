@@ -1,4 +1,4 @@
-let baseURL = "https://triple-j.onrender.com/";
+let baseURL = "http://127.0.0.1:8000/";
 
 fetch(baseURL + "api/account/token", {
     method : "POST",
@@ -6,8 +6,8 @@ fetch(baseURL + "api/account/token", {
         "Content-Type" : "application/json"
     },
     body : JSON.stringify({
-        'username':'its_lloyd',
-        'password':'Unida12345'
+        'username':'lloyd_dev',
+        'password':'lloyd12345'
     }),
     credentials: 'same-origin',
 }).then((response) => {
@@ -18,8 +18,8 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/account/membership/subscription", {
-        method : "POST",
+    fetch(baseURL + "api/scheduling/schedules", {
+        method : "GET",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`

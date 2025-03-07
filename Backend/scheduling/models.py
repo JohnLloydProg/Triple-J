@@ -1,11 +1,10 @@
 from django.db import models
-from account.models import Member, Trainer
+from account.models import Member
 
 # Create your models here.
 
 
 class Schedule(models.Model):
-    gymTrainer = models.ForeignKey(Trainer, on_delete=models.CASCADE)
     trainee = models.ForeignKey(Member, on_delete=models.CASCADE)
     day = models.IntegerField(choices={
         0:'Monday', 1:'Tuesday', 2:'Wednesday', 3:'Thursday',

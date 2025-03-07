@@ -6,14 +6,14 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from email.mime.multipart import MIMEMultipart
 from rest_framework import generics
-from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer, TrainerSerializer
+from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from account.permissions import IsTrainer
 from rest_framework.response import Response
 from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
-from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, Trainer, MemberCheckout
+from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
 import requests
 import smtplib
 import ssl
@@ -86,32 +86,6 @@ class EmailValidation(View):
         return JsonResponse({'details':"Email is already registered in the system"}, status=400)
     
 
-class TrainerRegistration(View):
-
-    def get(self, request:HttpRequest):
-        return render(request, 'register.html')
-    
-    def post(self, request:HttpRequest):
-        email = request.POST.get('email')
-        username = request.POST.get('username')
-        firstName = request.POST.get('firstName')
-        lastName = request.POST.get('lastName')
-        mobileNumber = request.POST.get('mobileNumber')
-        facebookAccount = request.POST.get('facebookAccount')
-        password = request.POST.get('password')
-
-        trainer = Trainer(username=username)
-        trainer.email = email
-        trainer.first_name = firstName
-        trainer.last_name = lastName
-        trainer.mobileNumber = mobileNumber
-        trainer.facebookAccount = facebookAccount
-        trainer.set_password(password)
-        trainer.save()
-
-        return HttpResponse("You have created the trainer account")
-
-
 class AccountRegistration(View):
     """
     View that handles the account registration. The get method checks if the validation session is still valid and gives the registration form.
@@ -177,8 +151,8 @@ class MemberView(generics.RetrieveUpdateAPIView):
 
 class TrainerView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = TrainerSerializer
-    queryset = Trainer.objects.all()
+    serializer_class = MemberSerializer
+    queryset = Member.objects.filter(is_trainer=True)
     lookup_field = 'username'
 
 
@@ -187,7 +161,7 @@ class MembersView(generics.ListAPIView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):
-        trainer = Trainer.objects.get(pk=self.request.user)
+        trainer = Member.objects.get(pk=self.request.user)
         return Member.objects.filter(gymTrainer=trainer)
 
 

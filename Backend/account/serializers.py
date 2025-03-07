@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import Member, DailyMembership, MonthlyMembership, Trainer
+from account.models import Member, DailyMembership, MonthlyMembership
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -8,7 +8,8 @@ class MemberSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'first_name', 'last_name', 
             'email', 'password', 'birthDate', 'height', 'weight',
-            'mobileNumber', 'address', 'gymTrainer','membershipType', 'sex'
+            'mobileNumber', 'address', 'gymTrainer','membershipType', 'sex', 
+            'profilePic'
             ]
         extra_kwargs = {'password':{'write_only':True}}
 
@@ -39,12 +40,3 @@ class MonthlyMembershipSerializer(serializers.ModelSerializer):
             'price':{'read_only':True},
             'expirationDate':{'read_only':True}
             }
-
-
-class TrainerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Trainer
-        fields = [
-            'id', 'username', 'first_name', 'last_name', 'email',
-            'mobileNumber', 'facebookAccount'
-        ]
