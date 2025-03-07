@@ -240,7 +240,6 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
                         }
                     ],
                     "payment_method_types": ["qrph", "gcash"],
-                    "success_url": f"http://127.0.0.1:8000/api/account/membership/successful/{str(self.request.user.id)}"
                 } } }
         headers = {
             "accept": "application/json",
