@@ -19,7 +19,7 @@ fetch(baseURL + "api/account/token", {
     console.log(data);
 
     fetch(baseURL + "api/account/membership/subscription", {
-        method : "GET",
+        method : "POST",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`
