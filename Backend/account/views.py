@@ -270,7 +270,7 @@ class SuccessfulPaymentView(generics.GenericAPIView):
     permission_classes = []
 
     def post(self, request, user):
-        print(request.POST)
+        print(request.data)
         member = Member.objects.get(pk=user)
         membership = MonthlyMembership.objects.get(member=member)
         membership.extendExpirationDate()
