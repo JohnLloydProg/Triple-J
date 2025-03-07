@@ -1,9 +1,17 @@
 import requests
-import json
 
+url = "https://api.paymongo.com/v1/webhooks"
 
-data = {'email':'johnlloydunida0@gmail.com', 'password':'Unida12345'}
-r = requests.post('https://triple-j.onrender.com/api/account/authentication', data=data)
-print(r.text)
-r = requests.get(f'https://triple-j.onrender.com/api/attendance/qr-code', cookies=r.cookies)
-print(r.text)
+payload = { "data": { "attributes": {
+            "url": "https://triple-j.onrender.com/api/account/membership/successful/1",
+            "events": ["checkout_session.payment.paid"]
+        } } }
+headers = {
+    "accept": "application/json",
+    "content-type": "application/json",
+    "authorization": "Basic c2tfdGVzdF9pSkE1cmJlMVJ0Q3BjWmN3TWd6aVVkd3c6"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+
+print(response.text)

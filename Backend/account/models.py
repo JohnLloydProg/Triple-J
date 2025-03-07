@@ -78,3 +78,7 @@ class MonthlyMembership(Membership):
     def extendExpirationDate(self):
         self.expirationDate += timedelta(days=30)
 
+
+class MemberCheckout(models.Model):
+    checkoutId = models.CharField(max_length=200)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
-from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, Trainer
+from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, Trainer, MemberCheckout
 import requests
 import smtplib
 import ssl
@@ -221,7 +221,9 @@ class MembershipChangeView(generics.GenericAPIView):
 class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
+        member = Member.objects.get(pk=self.request.user)
+        
         url = "https://api.paymongo.com/v1/checkout_sessions"
 
         payload = { "data": { "attributes": {
@@ -238,7 +240,7 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
                         }
                     ],
                     "payment_method_types": ["qrph", "gcash"],
-                    "success_url": "http://127.0.0.1:8000/api/account/membership/successful"
+                    "success_url": f"http://127.0.0.1:8000/api/account/membership/successful/{str(self.request.user.id)}"
                 } } }
         headers = {
             "accept": "application/json",
@@ -246,12 +248,21 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
             "authorization": "Basic c2tfdGVzdF9pSkE1cmJlMVJ0Q3BjWmN3TWd6aVVkd3c6"
         }
 
-        response = requests.post(url, json=payload, headers=headers).json()
-
-        return JsonResponse({'details':{'link':response.get('data').get('attributes').get('checkout_url')}})
+        response = requests.post(url, json=payload, headers=headers)
+        if (response.ok):
+            data = response.json().get('data')
+            memberCheckout = MemberCheckout(checkoutId=data.get('id'), member=member)
+            memberCheckout.save()
+            return JsonResponse({'details':{'link':data.get('attributes').get('checkout_url')}})
+        return JsonResponse({'details':'paymongo api request failed'})
 
 
 class SuccessfulPaymentView(View):
 
-    def get(self, request:HttpRequest):
-        pass
+    def post(self, request:HttpRequest, user):
+        print(request.POST)
+        member = Member.objects.get(pk=user)
+        membership = MonthlyMembership.objects.get(member=member)
+        membership.extendExpirationDate()
+        membership.save()
+        return HttpResponse("You have successfully paid the membership!")

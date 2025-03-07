@@ -1,4 +1,4 @@
-let baseURL = "http://127.0.0.1:8000/";
+let baseURL = "https://triple-j.onrender.com/";
 
 fetch(baseURL + "api/account/token", {
     method : "POST",
@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/gym/workouts", {
+    fetch(baseURL + "api/account/membership/subscription", {
         method : "GET",
         headers : {
             "Content-Type" : "application/json",
