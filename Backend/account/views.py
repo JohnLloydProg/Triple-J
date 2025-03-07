@@ -266,9 +266,10 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         return JsonResponse({'details':'paymongo api request failed'})
 
 
-class SuccessfulPaymentView(View):
+class SuccessfulPaymentView(generics.GenericAPIView):
+    permission_classes = []
 
-    def post(self, request:HttpRequest, user):
+    def post(self, request, user):
         print(request.POST)
         member = Member.objects.get(pk=user)
         membership = MonthlyMembership.objects.get(member=member)
