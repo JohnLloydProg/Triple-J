@@ -80,5 +80,5 @@ class MonthlyMembership(Membership):
 
 
 class MemberCheckout(models.Model):
-    checkoutId = models.CharField(max_length=200)
+    checkoutId = models.CharField(max_length=200, primary_key=True)
     member = models.ForeignKey(Member, on_delete=models.CASCADE)

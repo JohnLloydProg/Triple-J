@@ -269,10 +269,10 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
 class SuccessfulPaymentView(generics.GenericAPIView):
     permission_classes = []
 
-    def post(self, request, user):
-        print(request.data)
-        member = Member.objects.get(pk=user)
-        membership = MonthlyMembership.objects.get(member=member)
+    def post(self, request):
+        data = request.data.get('data')
+        memberCheckout = MemberCheckout.objects.get(checkoutId=data.get('attributes').get('data').get('id'))
+        membership = MonthlyMembership.objects.get(member=memberCheckout.member)
         membership.extendExpirationDate()
         membership.save()
         return HttpResponse("You have successfully paid the membership!")

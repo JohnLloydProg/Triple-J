@@ -3,7 +3,7 @@ import requests
 url = "https://api.paymongo.com/v1/webhooks"
 
 payload = { "data": { "attributes": {
-            "url": "https://triple-j.onrender.com/api/account/membership/successful/1",
+            "url": "https://triple-j.onrender.com/api/account/membership/successful",
             "events": ["checkout_session.payment.paid"]
         } } }
 headers = {
