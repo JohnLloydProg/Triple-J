@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from rest_framework import generics
 from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer, TrainerSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from account.permissions import IsTrainer
 from rest_framework.response import Response
 from email.mime.text import MIMEText
 from django.views import View
@@ -179,6 +180,15 @@ class TrainerView(generics.RetrieveAPIView):
     serializer_class = TrainerSerializer
     queryset = Trainer.objects.all()
     lookup_field = 'username'
+
+
+class MembersView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTrainer]
+    serializer_class = MemberSerializer
+
+    def get_queryset(self):
+        trainer = Trainer.objects.get(pk=self.request.user)
+        return Member.objects.filter(gymTrainer=trainer)
 
 
 class MembershipView(generics.GenericAPIView):

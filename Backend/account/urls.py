@@ -9,11 +9,12 @@ urlpatterns = [
     path('registration/<str:validationCode>', views.AccountRegistration.as_view(), name='account registration'),
     path('registration-cont/<str:validationCode>', views.AccountRegistrationCont.as_view(), name='account registration cont'),
     path('member/<str:username>', views.MemberView.as_view(), name='member'),
+    path('members', views.MembersView.as_view(), name='members'),
     path('trainer/<str:username>', views.TrainerView.as_view(), name='trainer'),
     path('token', TokenObtainPairView.as_view(), name='get_token'),
     path('token/refresh', TokenRefreshView.as_view(), name='refresh'),
     path('membership', views.MembershipView.as_view(), name='membership'),
     path('membership/change/<int:user>', views.MembershipChangeView.as_view(), name='membership change'),
     path('membership/subscription', views.CheckoutMonthlySubscriptionView.as_view(), name='subscription checkout'),
-    path('membership/successful/<int:user>', views.SuccessfulPaymentView.as_view(), name='successful payment')
+    path('membership/successful/<int:user>', views.SuccessfulPaymentView.as_view(), name='successful payment'),
 ]
