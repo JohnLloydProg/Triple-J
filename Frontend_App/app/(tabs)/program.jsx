@@ -18,10 +18,12 @@ import { useEffect, useState } from 'react';
 
 import {refreshAccessToken} from '../../components/refreshToken';
 import { fonts } from '@rneui/base';
-
+import { Dropdown } from 'react-native-element-dropdown';
+import { Picker } from '@react-native-picker/picker';
 
 //constants for processing dates and workout types
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 
 const workoutTypes = {
   'U': upper, //upper body
@@ -42,30 +44,6 @@ const daysOfWeekOrder = {
   Sunday: 6,
 };
 
-//program and workout component for rendering the flatlist that would display the programs and workouts
-const WorkoutItem = ({ title, workouts }) => (
-  <View style={styles.mainProgramsCont}>
-    
-    <View style={styles.programCont}>
-      <Text style={styles.programText}>{title}</Text>
-    </View>
-
-    <View>
-      {workouts.length > 0 ? workouts.map((workout, index) => (
-        <View style={styles.indivProgCont} key={`${title}-${index}`}>
-          <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
-          <View>
-            <Text style={styles.workoutName}>{workout.name}</Text>
-          </View>
-        </View>
-      )) : (
-        <Text style={styles.noWorkout}>No workouts today</Text>
-      )}
-    </View>
-
-  </View>
-);
-
 
 
 //function for getting the localized variables for the access tokens
@@ -78,6 +56,7 @@ export default function program() {
 const [programData, setProgramData] = useState([]);
 const [modalVisible, setModalVisible] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null);
+const [availableWorkouts, setAvailableWorkouts] = useState([]);
 
 
 //funnction to handle the modal of selected program
@@ -87,7 +66,49 @@ const handlePress = (item) => {
   setModalVisible(true);
 };
 
-//function to fetch the programs and workouts
+//function for fetching available workouts within the app
+async function newTestApi()  {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
+    console.log(userId);
+
+    let response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+      setAvailableWorkouts(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to fetch the programs and associated workouts
 async function testApi() {
   try {
     let accessToken = await SecureStore.getItemAsync("accessToken");
@@ -131,16 +152,18 @@ async function testApi() {
     }
 }
 
-//function to add programs
+//function to add blank programs
 async function addProgram() {
   try {
     let accessToken = await SecureStore.getItemAsync("accessToken");
     let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
     
     console.log("access: " + accessToken);
     console.log("refresh: " + refreshToken);
 
-    let response = await fetch("https://triple-j.onrender.com/api/gym/program/create", {
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -156,7 +179,7 @@ async function addProgram() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch("https://triple-j.onrender.com/api/gym/program/create", {
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -173,6 +196,50 @@ async function addProgram() {
 }
 
 
+//fucntion to delete a program
+async function deleteProgram(programId) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
+    parseInt(programId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+      // const data = await response.json();
+      // console.log(data);
+    } catch (error) {
+      console.error("Error from delete prog:", error);
+    }
+}
+
+
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -181,6 +248,7 @@ async function addProgram() {
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
     testApi();
+    newTestApi();
   },[]);
   
   //sorts the programs from monday-sunday
@@ -189,7 +257,42 @@ async function addProgram() {
     const dayB = daysOfWeekOrder[daysOfWeek[b.day]] ?? 0;
     return dayA - dayB;
   });
+
+
+  //program and workout component for rendering the flatlist that would display the programs and workouts
+const WorkoutItem = ({ title, workouts, programId }) => (
+  <View style={styles.mainProgramsCont}>
+    
+    <View style={styles.programCont}>
+      <Text style={styles.programText}>{title}</Text>
+      <TouchableOpacity style={styles.deleteProg} onPress={ async ()=>{
+        await deleteProgram(programId);
+        await testApi();
+        console.log(programData);
+        console.log()
+        
+        }}>
+        <Text > Delete </Text>
+      </TouchableOpacity>
+    </View>
+
+    <View>
+      {workouts.length > 0 ? workouts.map((workout, index) => (
+        <View style={styles.indivProgCont} key={`${title}-${index}`}>
+          <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+          <View>
+            <Text style={styles.workoutName}>{workout.name}</Text>
+          </View>
+        </View>
+      )) : (
+        <Text style={styles.noWorkout}>No workouts today</Text>
+      )}
+    </View>
+
+  </View>
+);
   
+
   return(
     <View style={styles.container}>
 
@@ -219,7 +322,7 @@ async function addProgram() {
       data={sortedProgramData}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handlePress(item)} >
-          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} />
+          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id}/>
         </TouchableOpacity>
       )}
       keyExtractor={item => item.id.toString()}
@@ -233,7 +336,15 @@ async function addProgram() {
            {selectedItem && (
             <>
               <View style={styles.modalTitleCont}>
-                <Text style={styles.modalTitle}> {daysOfWeek[selectedItem.day] || "Unknown Day"} </Text>
+                {daysOfWeek[selectedItem.day]  ? (
+                  <Text style={styles.modalTitle}>{daysOfWeek[selectedItem.day]}</Text>
+                ) : (
+
+                  <View>
+                    <Text> Placeholder for api for program update</Text>
+                  </View>
+              
+                )}
               </View>
 
               <View style={styles.modalTitleCont}>
@@ -251,7 +362,26 @@ async function addProgram() {
                 </View>
               )) : (
                 <View>
-                  <Text style={styles.noWorkoutModal}>No workouts today</Text>
+                  <Text style={styles.noWorkoutModal}>No workout/s today</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.modalTitleCont}>
+                <Text style={styles.modalTitle}> Available Workout/s </Text>
+            </View>
+
+            <View style={styles.modalWorkoutCont}>
+              {availableWorkouts.length > 0 ? availableWorkouts.map((workout, index) => (
+                <View style={styles.indivWorkoutModalCont} key={`${workout.name}-${index}`}>
+                  <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+                  <View>
+                    <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                  </View>
+                </View>
+              )) : (
+                <View>
+                  <Text style={styles.noWorkoutModal}>No workout/s available</Text>
                 </View>
               )}
             </View>
@@ -259,6 +389,11 @@ async function addProgram() {
 
               <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}> 
                 <Text style={styles.closeBtnText} >Close</Text>
+              </TouchableOpacity>
+
+              
+              <TouchableOpacity style={styles.closeBtn} onPress={() => {newTestApi()}}> 
+                <Text style={styles.closeBtnText} >Test </Text>
               </TouchableOpacity>
             </>
            )}
@@ -334,6 +469,8 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
    },
    programText:{
     fontSize: 20,
@@ -430,7 +567,9 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderBottomColor: 'white',
     borderBottomWidth: 1,
-  }
-
+  },
+  deleteProg:{
+    backgroundColor: 'red'
+  },
 
 });
