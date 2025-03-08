@@ -4,11 +4,11 @@ from account.models import Member
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer, WorkoutSerializer
+from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer, WorkoutSerializer, ProgramWorkoutRecordSerializer, TimelineRecordSerializer
 from django.utils.timezone import now
 from django.views import View
 from datetime import date
-from gym.models import Program, ProgramWorkout, Workout
+from gym.models import Program, ProgramWorkout, Workout, ProgramWorkoutRecord, TimelineRecord
 import json
 
 # Create your views here.
@@ -113,3 +113,42 @@ class WorkoutsView(generics.ListAPIView):
     permission_classes = []
     serializer_class = WorkoutSerializer
     queryset = Workout.objects.all()
+
+
+class ProgramWorkoutRecordsView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, programWorkout):
+        programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+        records = ProgramWorkoutRecord.objects.filter(programWorkout=programWorkout).order_by('-date')
+        return Response(ProgramWorkoutRecordSerializer(records, many=True).data)
+
+    def post(self, request, programWorkout):
+        programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+        records = ProgramWorkoutRecord.objects.filter(programWorkout=programWorkout)
+        if (len(records) == 10):
+            records.first().delete()
+        details = request.data.get('details')
+        if (not details):
+            return JsonResponse({'details':'Does not contain details'}, status=400)
+        record = ProgramWorkoutRecord(programWorkout=programWorkout, details=details)
+        record.save()
+        return JsonResponse({'id':record.pk, 'date':record.date, 'details':record.details})
+
+
+class TimelineRecordsView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        member = Member.objects.get(pk=self.request.user)
+        records = TimelineRecord.objects.filter(member=member).order_by('-date')
+        return Response(TimelineRecordSerializer(records, many=True).data)
+
+    def post(self, request):
+        member = Member.objects.get(pk=self.request.user)
+        if (not request.data):
+            return JsonResponse({'details':'Does not contain information'}, status=400)
+        record = TimelineRecord(**request.data)
+        record.save()
+        return JsonResponse({'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img})
+

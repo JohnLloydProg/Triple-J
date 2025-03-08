@@ -6,6 +6,10 @@ from datetime import timedelta
 from account.models import Member
 
 # Create your models here.
+weekdays = {
+            0 : "Monday", 1:"Tuesday", 2:"Wednesday", 3:"Thursday", 
+            4:"Friday", 5:'Saturday', 6:'Sunday'
+            }
 
 def timelineRecordPath(instance, filename):
     return f'user_{str(instance.user.id)}/timeline/{filename}'
@@ -13,13 +17,13 @@ def timelineRecordPath(instance, filename):
 
 class Program(models.Model):
     day = models.IntegerField(
-        choices={
-            0 : "Monday", 1:"Tuesday", 2:"Wednesday", 3:"Thursday", 
-            4:"Friday", 5:'Saturday', 6:'Sunday'
-            },
+        choices=weekdays,
         null=True
     )
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{weekdays[self.day]} ({str(self.pk)})'
 
 
 class Workout(models.Model):
@@ -32,6 +36,9 @@ class Workout(models.Model):
         "PL":"Pull"
         }
     )
+
+    def __str__(self):
+        return f'{self.name} ({str(self.pk)})'
 
 
 class ProgramWorkout(models.Model):
