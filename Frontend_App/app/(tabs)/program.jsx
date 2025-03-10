@@ -18,8 +18,21 @@ import { useEffect, useState } from 'react';
 
 import {refreshAccessToken} from '../../components/refreshToken';
 import { fonts } from '@rneui/base';
-import { Dropdown } from 'react-native-element-dropdown';
-import { Picker } from '@react-native-picker/picker';
+
+import { SelectList } from 'react-native-dropdown-select-list'
+
+const dataDropdown = [
+  { key: '0', value: 'Monday' },
+  { key: '1', value: 'Tuesday' },
+  { key: '2', value: 'Wednesday' },
+  { key: '3', value: 'Thursday' },
+  { key: '4', value: 'Friday' },
+  { key: '5', value: 'Saturday' },
+  { key: '6', value: 'Sundays' },
+];
+
+
+//dummy data for drop list
 
 //constants for processing dates and workout types
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -52,6 +65,9 @@ async function getToken(key) {
 }  
 
 export default function program() {
+
+//dummy 
+const [selected, setSelected] = useState("");
 
 const [programData, setProgramData] = useState([]);
 const [modalVisible, setModalVisible] = useState(false);
@@ -239,6 +255,54 @@ async function deleteProgram(programId) {
     }
 }
 
+//update program function 
+async function updateProgram(programId,mainDate) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
+    parseInt(programId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        'day':mainDate
+      }),
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          'day':mainDate
+        }),
+      });
+    }
+      // const data = await response.json();
+      // console.log(data);
+    } catch (error) {
+      console.error("Error from delete prog:", error);
+    }
+}
 
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
@@ -296,6 +360,8 @@ const WorkoutItem = ({ title, workouts, programId }) => (
   return(
     <View style={styles.container}>
 
+
+
       <View style={styles.progressContainer}>
         <View style={{marginRight: 15}}>
           <Image source={jordi} style={styles.profileImage} />
@@ -316,6 +382,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
           </Text>
         </View>
       </View>
+      
 
       
       <FlatList
@@ -340,8 +407,30 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                   <Text style={styles.modalTitle}>{daysOfWeek[selectedItem.day]}</Text>
                 ) : (
 
-                  <View>
-                    <Text> Placeholder for api for program update</Text>
+                  <View style={styles.updateDaySelection}>
+                    <SelectList 
+                        setSelected={(val) => setSelected(val)} 
+                        data={dataDropdown} 
+                        save="value"
+                        dropdownTextStyles={{color: 'white'}}
+                    />
+                    <TouchableOpacity onPress={ async ()=>{
+                      console.log(selectedItem.id);
+                      console.log(daysOfWeekOrder[selected]);
+                      await updateProgram(selectedItem.id,daysOfWeekOrder[selected]);
+                      await testApi();
+                      setModalVisible(false);
+                      
+                      
+                      }} style={{backgroundColor: 'white'}}>
+                        
+                      <View> 
+                        <Text style={{color: 'black'}}>
+                          Update 
+                        </Text>
+                      </View>
+
+                    </TouchableOpacity>
                   </View>
               
                 )}
@@ -401,6 +490,8 @@ const WorkoutItem = ({ title, workouts, programId }) => (
         </View>
     </Modal>
 
+    
+
       
       <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
         await addProgram();
@@ -413,6 +504,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
           +
         </Text>
       </TouchableOpacity>
+      
       
 
     </View>
@@ -570,6 +662,12 @@ const styles = StyleSheet.create({
   },
   deleteProg:{
     backgroundColor: 'red'
+  },
+
+
+  updateDaySelection:{
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
 });
