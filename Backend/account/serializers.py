@@ -7,11 +7,10 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = [
             'id', 'username', 'first_name', 'last_name', 
-            'email', 'password', 'birthDate', 'height', 'weight',
+            'email', 'birthDate', 'height', 'weight',
             'mobileNumber', 'address', 'gymTrainer','membershipType', 'sex', 
             'profilePic'
             ]
-        extra_kwargs = {'password':{'write_only':True}}
 
     def create(self, validated_data):
         member = Member(**validated_data)

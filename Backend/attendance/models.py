@@ -36,3 +36,6 @@ class Attendance(models.Model):
 
     def logOut(self):
         self.timeOut = now().time()
+    
+    def __str__(self):
+        return f'{self.member}_{self.date.isoformat()} : {self.timeIn} - {self.timeOut} ({str(self.pk)})'
