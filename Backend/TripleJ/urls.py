@@ -24,5 +24,6 @@ urlpatterns = [
     path('api/attendance/', include('attendance.urls')),
     path('api/scheduling/', include('scheduling.urls')),
     path('api/dietary/', include('dietary.urls')),
+    path('api/analytics/', include('analytics.urls')),
     path('api-auth/', include('rest_framework.urls')),
 ]

@@ -36,6 +36,11 @@ class Workout(models.Model):
         "PL":"Pull"
         }
     )
+    time = models.BooleanField()
+    sets = models.BooleanField()
+    reps = models.BooleanField()
+    weight = models.BooleanField()
+    distance = models.BooleanField()
 
     def __str__(self):
         return f'{self.name} ({str(self.pk)})'
