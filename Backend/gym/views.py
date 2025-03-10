@@ -152,3 +152,12 @@ class TimelineRecordsView(generics.GenericAPIView):
         record.save()
         return JsonResponse({'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img})
 
+
+class CurrentTimelineRecordView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        member = Member.objects.get(pk=self.request.user)
+        records = TimelineRecord.objects.filter(member=member).order_by('-date')
+        return Response(TimelineRecordSerializer(records.first()).data)
+
