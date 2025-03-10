@@ -314,6 +314,18 @@ async function updateProgram(programId,mainDate) {
     testApi();
     newTestApi();
   },[]);
+
+//refreshed modal after calling the updateProgram function
+  useEffect(() => {
+    if (selectedItem) {
+      const updatedItem = programData.find(item => item.id === selectedItem.id);
+      if (updatedItem) {
+        setSelectedItem(updatedItem);
+      }
+    }
+  }, [programData]);
+  
+  
   
   //sorts the programs from monday-sunday
   const sortedProgramData = [...programData].sort((a, b) => {
@@ -355,6 +367,12 @@ const WorkoutItem = ({ title, workouts, programId }) => (
 
   </View>
 );
+
+
+const refreshModalData = async () => {
+  await testApi();
+  setSelectedItem(prev => ({ ...prev })); // Force re-render
+};
   
 
   return(
@@ -419,7 +437,11 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                       console.log(daysOfWeekOrder[selected]);
                       await updateProgram(selectedItem.id,daysOfWeekOrder[selected]);
                       await testApi();
-                      setModalVisible(false);
+                      const updatedItem = programData.find(item => item.id === selectedItem.id);
+                      setSelectedItem(updatedItem);
+                      refreshModalData();
+                      //setModalVisible(false);
+                      
                       
                       
                       }} style={{backgroundColor: 'white'}}>
