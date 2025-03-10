@@ -151,6 +151,7 @@ async function setMemberHW(newHeight,newWeight) {
       console.log(data);
       await SecureStore.setItemAsync("weight",data.weight.toString());
       await SecureStore.setItemAsync("height",data.height.toString());
+      getMemberInfo();
     } catch (error) {
       console.error("Error:", error);
     }
