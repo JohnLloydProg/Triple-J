@@ -71,6 +71,10 @@ export default function HomeScreen() {
       console.log("access: " + accessToken);
       console.log("refresh: " + refreshToken);
       console.log("username: " + username);
+      console.log("password: " + password);
+
+
+      
   
       let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
         method: "GET",
@@ -100,6 +104,15 @@ export default function HomeScreen() {
         const data = await response.json();
         console.log("user id: " + data.id);
         saveToken("userId", data.id.toString());
+
+        
+
+        await saveToken("height", data.height.toString());
+        await saveToken("weight", data.weight.toString());
+        
+
+
+
       } catch (error) {
         console.error("Error:", error);
       }
@@ -132,11 +145,15 @@ export default function HomeScreen() {
 
         let accessToken = data.access;
         let refreshToken = data.refresh;
+        
 
 
-        saveToken("accessToken", accessToken);
-        saveToken("refreshToken", refreshToken);
-        saveToken("username", username);
+        await saveToken("accessToken", accessToken);
+        await saveToken("refreshToken", refreshToken);
+        await saveToken("username", username);
+        await saveToken("password",password);
+        
+        
 
         console.log(data)
         await getMemberInfo();
@@ -286,4 +303,5 @@ const styles = StyleSheet.create({
     fontFamily: 'KeaniaOne',
     fontWeight: 'normal'
   },
+  
 });

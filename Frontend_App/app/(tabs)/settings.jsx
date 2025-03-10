@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, View, Text, Linking, TouchableOpacity} from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, Linking, TouchableOpacity,TextInput} from 'react-native';
 import { useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -6,6 +6,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import { router, useRouter } from 'expo-router';
+import { ScrollView } from 'react-native';
 
 
 //deletes the tokens for authentication and redirects to login page
@@ -15,11 +16,19 @@ import { router, useRouter } from 'expo-router';
     await SecureStore.deleteItemAsync("refreshToken");
     await SecureStore.deleteItemAsync("username");
     await SecureStore.deleteItemAsync("userId");
+    await SecureStore.deleteItemAsync("weight");
+    await SecureStore.deleteItemAsync("height");
+    await SecureStore.deleteItemAsync("password");
+    await SecureStore.deleteItemAsync("membershipType");
 
     console.log(`Item with key  access: '${"accessToken"}' has been deleted.`);
     console.log(`Item with key  refresh: '${"refreshToken"}' has been deleted.`);
     console.log(`Item with key  username: '${"username"}' has been deleted.`);
     console.log(`Item with key  userID: '${"userID"}' has been deleted.`);
+    console.log(`Item with key  weight: '${"weight"}' has been deleted.`);
+    console.log(`Item with key  height: '${"height"}' has been deleted.`);
+    console.log(`Item with key  password: '${"password"}' has been deleted.`);
+    console.log(`Item with key  membershipType: '${"membershipType"}' has been deleted.`);
 
     router.push('/');
     
@@ -34,11 +43,16 @@ export default function Settings() {
 
   const [memberInfo, setMemberInfo] = useState([]);
   const [membershipInfo, setMembershipInfo] = useState([]);
+  const [memberHeight, setMemberHeight] = useState('');
+  const [memberWeight, setMemberWeight] = useState('');
 
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
+  
+
+  
   //function to retrieve member information such as name, membership type, and expiry of membership
 async function getMemberInfo() {
   try {
@@ -78,6 +92,65 @@ async function getMemberInfo() {
       const data = await response.json();
       setMemberInfo(data);
       console.log(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+}
+
+//function to update height and weight of member
+async function setMemberHW(newHeight,newWeight) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let username = await SecureStore.getItemAsync("username");
+    let membershipType = memberInfo.membershipType;
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+    console.log("username: " + username);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        'height':newHeight,
+        'weight':newWeight,
+        'username': username,
+        'membershipType':membershipType,
+      }),
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          'height':newHeight,
+          'weight':newWeight,
+          'username': username,
+          'membershipType':membershipType,
+        }),
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+      await SecureStore.setItemAsync("weight",data.weight.toString());
+      await SecureStore.setItemAsync("height",data.height.toString());
     } catch (error) {
       console.error("Error:", error);
     }
@@ -136,7 +209,7 @@ function calculateExpiry(startDate, membershipType) {
   const start = new Date(startDate);
   const end = new Date(start);
 
-  if (membershipType === "monthly") {
+  if (membershipType === "Monthly") {
     end.setDate(start.getDate() + 30);
   }
 
@@ -145,81 +218,120 @@ function calculateExpiry(startDate, membershipType) {
 
  return(
 
-  
+  <ScrollView>
 
-  <View style={styles.container}>
-    <TouchableOpacity onPress={() => {getMembershipInfo()}}>
+    <View style={styles.container}>
+      
+
+        <View style={styles.accountCont}>
+          
+          <View style={styles.headerCont}>
+            <FontAwesome6 name="user" size={24} color="white" />
+            <Text style={styles.titleText}>Account Info</Text>
+          </View>
+
+
+          <View>
+            <Text style={styles.subText}>
+            Account Holder: {memberInfo.first_name} 
+            </Text>
+            <Text style={styles.subText}>
+            Membership Type: {memberInfo.membershipType}
+            </Text>
+            <Text style={styles.subText}>
+            Height: {memberInfo.height} cm
+            </Text>
+            <Text style={styles.subText}>
+            Weight: {memberInfo.weight} kg
+            </Text>
+            <Text  style={styles.subText}>
+            Membership Expiry: {calculateExpiry(membershipInfo.startDate, memberInfo.membershipType)}
+            </Text>
+            
+          </View>
+
+        </View>
 
       <View style={styles.accountCont}>
+
+          <View style={styles.headerCont}>
+            <FontAwesome6 name="user" size={24} color="white" />
+            <Text style={styles.titleText}>Update Biometrics</Text>
+          </View>
+
+          <View  style={{marginBottom: 20}}>
+                  <Text style={styles.inputFieldText}>
+                    Height (cm)
+                  </Text>
+                  <TextInput  onChangeText={newText => {setMemberHeight(newText)}} cursorColor={colors.redAccent} style={styles.inputField} />
+          </View>
+          <View  style={{marginBottom: 20}}>
+                  <Text style={styles.inputFieldText}>
+                    Weight (kg)
+                  </Text>
+                  <TextInput  onChangeText={newText => setMemberWeight(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
+          </View>
+
+          <TouchableOpacity onPress={async ()=>{
+            await setMemberHW(memberHeight,memberWeight);
+          }}  style={styles.loginBtn}>
+                  <Text style={styles.loginBtnTxt}>
+                    Update
+                  </Text>
+          </TouchableOpacity>
+
+      </View>
+      
+
+      <View style={styles.contactCont}>
         
         <View style={styles.headerCont}>
-          <FontAwesome6 name="user" size={24} color="white" />
-          <Text style={styles.titleText}>Account Info</Text>
+          <FontAwesome6 name="envelope" size={24} color="white" />
+          <Text style={styles.titleText}>Contact & Business Info</Text>
         </View>
 
 
         <View>
           <Text style={styles.subText}>
-          Account Holder: {memberInfo.first_name} 
+          Contact no. 0917 622 9969 
           </Text>
+
           <Text style={styles.subText}>
-          Membership Type: {memberInfo.membershipType}
+          Facebook: <Text onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')} > facebook.com/triplejfitnesscenter </Text>
           </Text>
+
           <Text  style={styles.subText}>
-          Membership Expiry: {calculateExpiry(membershipInfo.startDate, memberInfo.membershipType)}
+          Address: 34 Lj Building unit 5 4th floor illenado compound maysan road malina, Valenzuela, Philippines
           </Text>
+
         </View>
 
-      </View>
-    </TouchableOpacity>
 
-    <View style={styles.contactCont}>
-      
-      <View style={styles.headerCont}>
-        <FontAwesome6 name="envelope" size={24} color="white" />
-        <Text style={styles.titleText}>Contact & Business Info</Text>
-      </View>
-
-
-      <View>
-        <Text style={styles.subText}>
-        Contact no. 0917 622 9969 
-        </Text>
-
-        <Text style={styles.subText}>
-        Facebook: <Text onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')} > facebook.com/triplejfitnesscenter </Text>
-        </Text>
-
-        <Text  style={styles.subText}>
-        Address: 34 Lj Building unit 5 4th floor illenado compound maysan road malina, Valenzuela, Philippines
-        </Text>
 
       </View>
 
-
-
-    </View>
-
-    <View style={styles.membershipCont}>
-      
-        <FontAwesome6 name="credit-card" size={24} color="white" />
-        <Text  onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}style={[styles.titleText, {fontSize: 20}]} >
-          Membership Payment</Text>
-      
-    </View>
-    <TouchableOpacity onPress={() => {logoutDetails()}}>
-
-      <View style={styles.logoutCont}>
+      <View style={styles.membershipCont}>
         
-          <FontAwesome6 name="right-from-bracket" size={24} color="white" />
-          <Text style={[styles.titleText, {fontSize: 20}]} >
-            Logout</Text>
+          <FontAwesome6 name="credit-card" size={24} color="white" />
+          <Text  onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}style={[styles.titleText, {fontSize: 20}]} >
+            Membership Payment</Text>
         
       </View>
+      <TouchableOpacity onPress={() => {logoutDetails()}}>
 
-    </TouchableOpacity>
+        <View style={styles.logoutCont}>
+          
+            <FontAwesome6 name="right-from-bracket" size={24} color="white" />
+            <Text style={[styles.titleText, {fontSize: 20}]} >
+              Logout</Text>
+          
+        </View>
 
-  </View>
+      </TouchableOpacity>
+
+    </View>
+  </ScrollView>
+
 
 
 
@@ -278,4 +390,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  inputFieldText:{
+      color: colors.redAccent,
+      left: 20,
+      fontFamily: 'KeaniaOne',
+      marginBottom: 8,
+   },
+   inputField:{
+    backgroundColor: '#5E5C5C',
+    borderRadius: 22,
+    height: 50,
+    color: 'white',
+    paddingLeft: 20,
+    paddingRight: 20,
+   },
+   loginBtn:{
+    backgroundColor: '#4259CA',
+    padding: 15,
+    borderRadius: 22,
+    alignItems: 'center',
+    marginBottom: 15,
+},
+ loginBtnTxt:{
+    fontFamily: 'KeaniaOne',
+    color: 'white',
+    fontSize: 14,
+},
 });
