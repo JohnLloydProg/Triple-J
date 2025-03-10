@@ -369,10 +369,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
 );
 
 
-const refreshModalData = async () => {
-  await testApi();
-  setSelectedItem(prev => ({ ...prev })); // Force re-render
-};
+
   
 
   return(
@@ -439,7 +436,6 @@ const refreshModalData = async () => {
                       await testApi();
                       const updatedItem = programData.find(item => item.id === selectedItem.id);
                       setSelectedItem(updatedItem);
-                      refreshModalData();
                       //setModalVisible(false);
                       
                       
