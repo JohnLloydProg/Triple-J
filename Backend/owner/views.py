@@ -7,7 +7,11 @@ from django.views import View
 # Create your views here.
 
 
+class AnalyticsView(View):
+    def get(self, request:HttpRequest):
+        return render(request, 'analytics.html')
+
+
 class LoginView(View):
     def get(self, request:HttpRequest):
-        print(render_to_string('login.html'))
         return render(request, 'login.html')

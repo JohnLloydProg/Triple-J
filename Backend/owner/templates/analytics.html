@@ -1,0 +1,65 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'analytics.css' %}">
+    <title>Triple J</title>
+</head>
+<body>
+    <div class="wrapper">
+        <h1>Analytics Page</h1>
+        <select name="months" id="months" onchange="selectMonth()">
+        </select>
+        <h4>User Report</h4>
+        <div class="live-report widget">
+            <h3 id="numberOfMembers">Number of Members: </h3>
+            <div class="flex">
+                <div class="demographics">
+                    <h4>Demographics</h4>
+                    <canvas id="demographics" style="max-width: 500px;"></canvas>
+                </div>
+                <div class="memberships">
+                    <h4>Memberships</h4>
+                    <canvas id="memberships" style="max-width: 500px;"></canvas>
+                </div>
+                
+                <div class="workouts">
+                    <h4>Workouts</h4>
+                    <canvas id="workouts" style="max-width: 500px;"></canvas>
+                </div>
+            </div>
+            
+        </div>
+        <h4>Activity Report</h4>
+        <div class="activity widget flex">
+            <div class="hours">
+                <h3>Peak Hours</h3>
+                <canvas id="peakHours" style="max-width: 500px;"></canvas>
+            </div>
+            <div class="days">
+                <h3>Peak Days</h3>
+                <canvas id="peakDays" style="max-width: 500px;"></canvas>
+            </div>
+        </div>        
+        <h4>Sales Report</h4>
+        <div class="sales widget flex">
+            <div class="table">
+                <h5>Daily</h5>
+                <table id="daily" style="width: 100%;">
+                </table>
+            </div>
+            <div class="table">
+                <h5>Monthly</h5>
+                <table id="monthly" style="width: 100%;">
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="{% static 'analytics.js' %}"></script>
+</body>
+</html>

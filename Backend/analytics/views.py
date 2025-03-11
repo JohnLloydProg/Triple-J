@@ -26,7 +26,7 @@ class PeakHoursView(generics.GenericAPIView):
         for inOut in hours:
             for inHour in range(inOut[0], inOut[1]+1):
                 hourRecords[inHour] += 1
-        return JsonResponse(hourRecords)
+        return JsonResponse({'x':list(hourRecords.keys()), 'y':list(hourRecords.values())})
 
 
 class PeakDaysView(generics.GenericAPIView):
@@ -37,7 +37,7 @@ class PeakDaysView(generics.GenericAPIView):
         days = [attendance.date.weekday() for attendance in objectsThisMonth(Attendance, month)]
         for day in days:
             dayRecords[day] += 1
-        return JsonResponse(dayRecords)
+        return JsonResponse({'x':list(dayRecords.keys()), 'y':list(dayRecords.values())})
 
 
 class MembersReportView(generics.GenericAPIView):
@@ -49,9 +49,9 @@ class MembersReportView(generics.GenericAPIView):
         response['demographics'] = {}
         response['demographics']['M'] = len(Member.objects.filter(sex='M'))
         response['demographics']['F'] = len(Member.objects.filter(sex='F'))
-        response['membership'] = {}
-        response['membership']['Monthly'] = len(MonthlyMembership.objects.all())
-        response['membership']['Daily'] = len(DailyMembership.objects.all())
+        response['memberships'] = {}
+        response['memberships']['Monthly'] = len(MonthlyMembership.objects.all())
+        response['memberships']['Daily'] = len(DailyMembership.objects.all())
         return JsonResponse(response)
 
 
@@ -59,12 +59,12 @@ class SalesReportView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, month):
-        response = {'daily':0, 'monthly':0}
+        response = {'daily':{}, 'monthly':{}}
         for attendance in objectsThisMonth(Attendance, month):
             if (attendance.member.membershipType == 'Daily'):
-                response['daily'] += 100
+                response['daily'][attendance.date.isoformat()] = 100
         for memberCheckout in objectsThisMonth(MemberCheckout, month, type='membership'):
-            response['monthly'] += memberCheckout.price
+            response['monthly'][memberCheckout.date.isoformat()] = memberCheckout.price
         return JsonResponse(response)
 
 
@@ -75,5 +75,5 @@ class WorkoutReportView(generics.GenericAPIView):
         programTypes = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
         for programWorkout in ProgramWorkout.objects.all():
             programTypes[programWorkout.workout.type] += 1
-        return JsonResponse(programTypes)
+        return JsonResponse({'x':list(programTypes.keys()), 'y':list(programTypes.values())})
 
