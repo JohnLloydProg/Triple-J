@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal} from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal, ScrollView} from 'react-native';
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
 
@@ -17,7 +17,8 @@ import jwtDecode from "jwt-decode";
 import { useEffect, useState } from 'react';
 
 import {refreshAccessToken} from '../../components/refreshToken';
-import { fonts } from '@rneui/base';
+import { color, fonts } from '@rneui/base';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 import { SelectList } from 'react-native-dropdown-select-list'
 
@@ -348,7 +349,9 @@ const WorkoutItem = ({ title, workouts, programId }) => (
         console.log()
         
         }}>
-        <Text > Delete </Text>
+        <View>
+        <FontAwesome6 name="trash" size={20} color="red" />
+        </View>
       </TouchableOpacity>
     </View>
 
@@ -398,7 +401,6 @@ const WorkoutItem = ({ title, workouts, programId }) => (
         </View>
       </View>
       
-
       
       <FlatList
       data={sortedProgramData}
@@ -412,7 +414,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
       />
     
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
+        <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
           <View style={styles.modalContent}> 
             
            {selectedItem && (
@@ -427,7 +429,14 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                         setSelected={(val) => setSelected(val)} 
                         data={dataDropdown} 
                         save="value"
-                        dropdownTextStyles={{color: 'white'}}
+                        dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
+                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
+                        dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
+                        boxStyles={[{ width: 300 },{borderWidth:0}]}
+                        placeholder='Select Program Day'
+                        search={false}
+                        
+                       
                     />
                     <TouchableOpacity onPress={ async ()=>{
                       console.log(selectedItem.id);
@@ -437,16 +446,12 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                       const updatedItem = programData.find(item => item.id === selectedItem.id);
                       setSelectedItem(updatedItem);
                       //setModalVisible(false);
-                      
-                      
-                      
-                      }} style={{backgroundColor: 'white'}}>
+
+                      }} style={styles.updateButton}>
                         
-                      <View> 
-                        <Text style={{color: 'black'}}>
-                          Update 
-                        </Text>
-                      </View>
+                        <View style={[{alignItems: 'center'}]}>
+                        <FontAwesome6 name="check" size={20} color="green" />
+                        </View>
 
                     </TouchableOpacity>
                   </View>
@@ -498,14 +503,10 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                 <Text style={styles.closeBtnText} >Close</Text>
               </TouchableOpacity>
 
-              
-              <TouchableOpacity style={styles.closeBtn} onPress={() => {newTestApi()}}> 
-                <Text style={styles.closeBtnText} >Test </Text>
-              </TouchableOpacity>
             </>
            )}
           </View>
-        </View>
+        </ScrollView>
     </Modal>
 
     
@@ -615,8 +616,6 @@ const styles = StyleSheet.create({
   //modal styles
   modalContainer:{
     flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
       backgroundColor: 'rgba(0,0,0,0.5)'
   },
   modalContent: {
@@ -664,28 +663,34 @@ const styles = StyleSheet.create({
     fontFamily: 'KeaniaOne',
   },
   modalWorkoutCont:{
-    backgroundColor: '#1E1F26',
     height: "auto",
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
-    width: "90%",
+    width: "100%",
   },
   indivWorkoutModalCont:{
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
-    borderBottomColor: 'white',
-    borderBottomWidth: 1,
+    marginBottom: 10,
+    backgroundColor: '#1E1F26',
+    padding: 15,
+    borderRadius: 20,
   },
   deleteProg:{
-    backgroundColor: 'red'
+    
   },
-
-
   updateDaySelection:{
     flexDirection: 'row',
     alignItems: 'center',
+    
   },
+  updateButton:{
+    marginLeft: 20,
+    width: "10%",
+    height: 45,
+    justifyContent: 'center',
+   
+  }
 
 });
