@@ -1,0 +1,65 @@
+body {
+    margin: 0;
+}
+
+.wrapper {
+    margin: 10px 10%;
+}
+
+.widget {
+    padding: 20px;
+    border-radius: 20px;
+    background-color: #222222;
+    color: #FFFFFF;
+}
+
+.flex {
+    display: flex;
+}
+
+.live-report h3 {
+    margin: auto;
+    width: fit-content;
+    padding: 5px;
+}
+
+.live-report .flex {
+    width: fit-content;
+    margin: auto;
+}
+
+.live-report canvas {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+}
+
+.live-report .flex div {
+    text-align: center;
+    color: red;
+    width: fit-content;
+    margin: 0 5px;
+}
+
+.activity {
+}
+
+.activity div {
+    width: 50%;
+}
+
+.activity canvas {
+    background-color: #FFFFFF;
+    border-radius: 20px;
+    padding: 5px;
+    margin: 0 auto;
+}
+
+.sales {
+}
+
+.table {
+    width: 50%;
+}
+.table td, tr {
+    border: 2px, solid, #FFFFFF;
+}
