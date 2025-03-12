@@ -1,4 +1,4 @@
-baseURL = "http://127.0.0.1:8000/"
+baseURL = "https://triple-j.onrender.com/"
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const numberOfMembers = document.getElementById('numberOfMembers')
 const salesDaily = document.getElementById('daily')
