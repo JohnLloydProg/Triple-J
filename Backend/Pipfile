@@ -27,6 +27,7 @@ tzdata = "==2025.1"
 urllib3 = "==2.3.0"
 uvicorn = "==0.34.0"
 django-cors-headers = "*"
+whitenoise = {extras = ["brotli"], version = "*"}
 
 [dev-packages]
 
