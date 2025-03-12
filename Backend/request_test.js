@@ -6,8 +6,8 @@ fetch(baseURL + "api/account/token", {
         "Content-Type" : "application/json"
     },
     body : JSON.stringify({
-        'username':'admin',
-        'password':'admin12345'
+        'username':'its_lloyd',
+        'password':'Unida12345'
     }),
     credentials: 'same-origin',
 }).then((response) => {
@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/analytics/sales/3", {
+    fetch(baseURL + "api/gym/program/current", {
         method : "GET",
         headers : {
             "Content-Type" : "application/json",

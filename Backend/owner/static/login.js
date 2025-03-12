@@ -1,4 +1,4 @@
-baseURL = "https://triple-j.onrender.com/"
+baseURL = "http://127.0.0.1:8000/"
 
 async function request(url, _method, _body=null, _headers={"Content-Type" : "application/json"}) {
     let responseData = null;
