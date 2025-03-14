@@ -78,19 +78,22 @@ class ProgramDeleteView(generics.DestroyAPIView):
         return Program.objects.filter(member=member)
 
 
-class ProgramWorkoutCreateView(generics.ListCreateAPIView):
+class ProgramWorkoutCreateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProgramWorkoutSerializer
+    
+    def get(self, request, program):
+        programWorkouts = ProgramWorkoutSerializer(ProgramWorkout.objects.filter(program=program), many=True).data
+        for programWorkout in programWorkouts:
+            programWorkout['workout'] = WorkoutSerializer(Workout.objects.get(pk=programWorkout['workout'])).data
+        return Response(programWorkouts)
 
-    def get_queryset(self):
-        return ProgramWorkout.objects.filter(program=self.kwargs['program'])
-
-    def perform_create(self, serializer):
-        program = Program.objects.get(pk=self.kwargs['program'])
-        if serializer.is_valid():
-            serializer.save(program=program)
-        else:
-            print(serializer.errors)
+    def post(self, request, program):
+        program = Program.objects.get(pk=program)
+        workout = Workout.objects.get(pk=request.data.get('workout'))
+        programWorkout = ProgramWorkout(workout=workout, program=program, details=request.data.get('details'))
+        programWorkout.save()
+        return Response(ProgramWorkoutSerializer(programWorkout).data)
 
 
 class ProgramWorkoutUpdateView(generics.UpdateAPIView):
@@ -110,12 +113,6 @@ class ProgramWorkoutDeleteView(generics.DestroyAPIView):
 
 
 class WorkoutsView(generics.ListAPIView):
-    permission_classes = []
-    serializer_class = WorkoutSerializer
-    queryset = Workout.objects.all()
-
-
-class WorkoutsRetrieveView(generics.RetrieveAPIView):
     permission_classes = []
     serializer_class = WorkoutSerializer
     queryset = Workout.objects.all()
