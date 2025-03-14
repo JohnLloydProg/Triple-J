@@ -235,6 +235,8 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         if (response.ok):
             data = response.json().get('data')
             memberCheckout = MemberCheckout(checkoutId=data.get('id'), member=member)
+            memberCheckout.type = 'membership'
+            memberCheckout.price = 1000
             memberCheckout.save()
             return JsonResponse({'details':{'link':data.get('attributes').get('checkout_url')}})
         return JsonResponse({'details':'paymongo api request failed'})
