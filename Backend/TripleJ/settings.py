@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-_ltan28p7(*t91xsuym!nqb8lt8vqwa@qm*tlp(0&8qv8zx0v6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['triple-j.onrender.com', '127.0.0.1']
+ALLOWED_HOSTS = ['triple-j.onrender.com', '127.0.0.1', '*']
 
 
 # Application definition
@@ -84,6 +84,7 @@ CORS_ALLOW_HEADERS = (
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWS_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = ['*']
 
 
 ROOT_URLCONF = 'TripleJ.urls'
