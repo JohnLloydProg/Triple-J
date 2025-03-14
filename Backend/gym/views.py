@@ -115,6 +115,12 @@ class WorkoutsView(generics.ListAPIView):
     queryset = Workout.objects.all()
 
 
+class WorkoutsRetrieveView(generics.RetrieveAPIView):
+    permission_classes = []
+    serializer_class = WorkoutSerializer
+    queryset = Workout.objects.all()
+
+
 class ProgramWorkoutRecordsView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 

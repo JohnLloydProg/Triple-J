@@ -6,33 +6,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'analytics.css' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Keania+One&family=Poppins&display=swap" rel="stylesheet">
     <title>Triple J</title>
 </head>
 <body>
+    <header>
+        Triple J Analytics
+    </header>
     <div class="wrapper">
-        <h1>Analytics Page</h1>
-        <select name="months" id="months" onchange="selectMonth()">
-        </select>
         <h4>User Report</h4>
         <div class="live-report widget">
             <h3 id="numberOfMembers">Number of Members: </h3>
             <div class="flex">
                 <div class="demographics">
                     <h4>Demographics</h4>
-                    <canvas id="demographics" style="max-width: 500px;"></canvas>
+                    <canvas id="demographics"></canvas>
                 </div>
                 <div class="memberships">
                     <h4>Memberships</h4>
-                    <canvas id="memberships" style="max-width: 500px;"></canvas>
+                    <canvas id="memberships"></canvas>
                 </div>
                 
                 <div class="workouts">
                     <h4>Workouts</h4>
-                    <canvas id="workouts" style="max-width: 500px;"></canvas>
+                    <canvas id="workouts"></canvas>
                 </div>
             </div>
             
         </div>
+        <select name="months" id="months" onchange="selectMonth()">
+        </select>
         <h4>Activity Report</h4>
         <div class="activity widget flex">
             <div class="hours">

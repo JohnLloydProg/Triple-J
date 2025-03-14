@@ -18,12 +18,16 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/gym/program/current", {
-        method : "GET",
+    fetch(baseURL + "api/gym/workout/1", {
+        method : "POST",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`
         },
+        body: JSON.stringify({
+            'workout': 1,
+            'details': {'reps':15, 'sets':3},
+        }),
         credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {

@@ -25,7 +25,13 @@ async function initGraph(month) {
                 data:peakHoursData['y']
             }]
         },
-        options: {}
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            }
+          },
+        }
       });
 
       peakDaysData = await myRequest.get(`api/analytics/peak/${month}/days`)
@@ -42,7 +48,13 @@ async function initGraph(month) {
                   data:peakDaysData['y']
               }]
           },
-          options: {}
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              }
+            },
+          }
         });
 
         membersData = await myRequest.get('api/analytics/members/report')
@@ -57,7 +69,17 @@ async function initGraph(month) {
                 data: [membersData['demographics']['M'], membersData['demographics']['F']]
               }]
             },
-            options: {}
+            options: {
+              legend: {
+                position: 'left',
+                align: 'start', 
+              },
+              elements: {
+                arc: {
+                  borderColor: '#EA4444'
+                }
+              }
+            }
           });
         new Chart("memberships", {
             type: "pie",
@@ -68,7 +90,12 @@ async function initGraph(month) {
                 data: [membersData['memberships']['Monthly'], membersData['memberships']['Daily']]
               }]
             },
-            options: {}
+            options: {
+              legend: {
+                position: 'left',
+                align: 'start', 
+              }
+            }
           });
         
         workoutsData = await myRequest.get('api/analytics/program/types')
@@ -82,7 +109,12 @@ async function initGraph(month) {
                 data: workoutsData['y']
               }]
             },
-            options: {}
+            options: {
+              legend: {
+                position: 'left',
+                align: 'start', 
+              }
+            }
           });
         
         salesReport = await myRequest.get(`api/analytics/sales/${month}`)

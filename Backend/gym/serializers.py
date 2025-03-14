@@ -13,7 +13,6 @@ class ProgramWorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramWorkout
         fields = ['id', 'workout', 'details']
-        depth = 1
 
 
 class WorkoutSerializer(serializers.ModelSerializer):
