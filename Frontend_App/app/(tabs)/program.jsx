@@ -357,12 +357,13 @@ async function viewWorkout(programId) {
 }
 
 //function to add a workout
-async function addWorkout(programId) {
+async function addWorkout(programId, workoutType) {
   try {
     let accessToken = await SecureStore.getItemAsync("accessToken");
     let refreshToken = await SecureStore.getItemAsync("refreshToken");
     let userId = await SecureStore.getItemAsync("userId");
     parseInt(programId);
+    parseInt(workoutType);
     console.log(programId);
     
     console.log("access: " + accessToken);
@@ -374,7 +375,7 @@ async function addWorkout(programId) {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json"
       },body: JSON.stringify({
-        'workout': 1,
+        'workout': workoutType,
         'details': { "reps": 15, "sets": 3 }
       
       })
@@ -394,7 +395,7 @@ async function addWorkout(programId) {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json"
         },body: JSON.stringify({
-          'workout': 1,
+          'workout': workoutType,
           'details': { "reps": 15, "sets": 3 }
         })
       });
@@ -630,7 +631,27 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                 <View style={styles.indivWorkoutModalCont} key={`${workout.workout.title}-${index}`}>
                   <Image source={workoutTypes[workout.workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
                   <View>
+                    <View>
                     <Text style={styles.workoutNameModal}>{workout.workout.name}</Text>
+                    </View>
+                    <View style={{flexDirection: "row"}}>
+                    {workout.details.reps && (
+                      <Text style={styles.workoutdetailsModal}>Reps: {workout.details.reps} </Text>
+                    )}
+                    {workout.details.sets && (
+                      <Text style={styles.workoutdetailsModal}>Sets: {workout.details.sets} </Text>
+                    )}
+                    {workout.details.time && (
+                      <Text style={styles.workoutdetailsModal}>Time: {workout.details.time} </Text>
+                    )}
+                    {workout.details.weight && (
+                      <Text style={styles.workoutdetailsModal}>Weight: {workout.details.weight} </Text>
+                    )}
+                    {workout.details.distance && (
+                      <Text style={styles.workoutdetailsModal}>Distance: {workout.details.distance} </Text>
+                    )}
+                    </View>
+                    
                   </View>
                   <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
                     console.log("selected workout for deletion:" +workout.workout.name + "id: " + workout.id);
@@ -660,7 +681,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                     <Text style={styles.workoutNameModal}>{workout.name}</Text>
                   </View>
 
-                  <TouchableOpacity style={styles.addProgramBtn} onPress={()=>{addWorkout(selectedProgram.id)}}>
+                  <TouchableOpacity style={styles.addProgramBtn} onPress={()=>{addWorkout(selectedProgram.id,workout.id)}}>
                     <FontAwesome6 name="plus" size={20} color="black" />
                   </TouchableOpacity>
 
@@ -836,6 +857,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'KeaniaOne',
   },
+  workoutdetailsModal:{
+    fontSize: 15,
+    color: 'gray',
+    fontFamily: 'KeaniaOne',
+  },
+
   modalWorkoutCont:{
     height: "auto",
     padding: 20,
