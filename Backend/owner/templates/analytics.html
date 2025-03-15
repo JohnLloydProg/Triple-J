@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'analytics.css' %}">
+    <link rel="stylesheet" href="{% static 'analytics.css'%}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,56 +17,75 @@
         Triple J Analytics
     </header>
     <div class="wrapper">
-        <h4>User Report</h4>
+        <div class="number flex">
+            <h1 id="numberOfMembers"></h1>
+            <h1>Active Members</h1>
+        </div>
         <div class="live-report widget">
-            <h3 id="numberOfMembers">Number of Members: </h3>
             <div class="flex">
-                <div class="demographics">
-                    <h4>Demographics</h4>
-                    <canvas id="demographics"></canvas>
+                <div class="col">
+                    <h3>Demographics</h3>
+                    <div class="chartBox">
+                        <canvas id="demographics"></canvas>
+                    </div>
                 </div>
-                <div class="memberships">
-                    <h4>Memberships</h4>
-                    <canvas id="memberships"></canvas>
+                <div class="col">
+                    <h3>Memberships</h3>
+                    <div class="chartBox">
+                        <canvas id="memberships"></canvas>
+                    </div>
                 </div>
                 
-                <div class="workouts">
-                    <h4>Workouts</h4>
-                    <canvas id="workouts"></canvas>
+                <div class="col">
+                    <h3>Workouts</h3>
+                    <div class="chartBox">
+                        <canvas id="workouts"></canvas>
+                    </div>
                 </div>
             </div>
             
         </div>
-        <select name="months" id="months" onchange="selectMonth()">
-        </select>
-        <h4>Activity Report</h4>
+        <div class="months widget">
+            <div class="flex" id="month-btns"></div>
+        </div>
+        <h1>Activity Report</h1>
         <div class="activity widget flex">
             <div class="hours">
                 <h3>Peak Hours</h3>
-                <canvas id="peakHours" style="max-width: 500px;"></canvas>
+                <div class="chartBox">
+                    <canvas id="peakHours" style="max-width: 500px;"></canvas>
+                </div>
             </div>
             <div class="days">
                 <h3>Peak Days</h3>
-                <canvas id="peakDays" style="max-width: 500px;"></canvas>
+                <div class="chartBox">
+                    <canvas id="peakDays" style="max-width: 500px;"></canvas>
+                </div>
             </div>
         </div>        
-        <h4>Sales Report</h4>
-        <div class="sales widget flex">
+        <h1>Sales Report</h1>
+        <div class="sales widget">
             <div class="table">
-                <h5>Daily</h5>
+                <h3>Daily</h3>
+                <h3>Monthly</h3>
                 <table id="daily" style="width: 100%;">
                 </table>
-            </div>
-            <div class="table">
-                <h5>Monthly</h5>
                 <table id="monthly" style="width: 100%;">
                 </table>
+                <div class="summation">
+                    <hr>
+                    <p id="dailySales"></p>
+                </div>
+                <div class="summation">
+                    <hr>
+                    <p id="monthlySales"></p>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <script src="{% static 'request.js' %}"></script>
-    <script src="{% static 'analytics.js' %}"></script>
+    <script src="{% static 'analytics.js'%}"></script>
 </body>
 </html>
