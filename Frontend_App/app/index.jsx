@@ -231,14 +231,7 @@ export default function HomeScreen() {
     </View>
 
 
-    <Link href="/home" asChild>
-      <TouchableOpacity style={styles.loginBtn}>
-        <Text style={styles.loginBtnTxt}>
-          Temporary: go to home page
-        </Text>
-      </TouchableOpacity>
-    
-    </Link>
+  
 
     </View>
   );

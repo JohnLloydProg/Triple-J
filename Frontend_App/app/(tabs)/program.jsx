@@ -58,6 +58,14 @@ const daysOfWeekOrder = {
   Sunday: 6,
 };
 
+const workoutConvert = {
+  "Bench Press": 1,
+  "Push Up": 2,
+  "Squats": 3,
+  "Plank": 4,
+  "Sit Ups": 5
+};
+
 
 
 //function for getting the localized variables for the access tokens
@@ -305,6 +313,108 @@ async function updateProgram(programId,mainDate) {
     }
 }
 
+
+//function to add a workout
+async function addWorkout(programId) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(programId);
+    console.log(programId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },body: JSON.stringify({
+        'workout': 1,
+        'details': { "reps": 15, "sets": 3 }
+      
+      })
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },body: JSON.stringify({
+          'workout': 1,
+          'details': { "reps": 15, "sets": 3 }
+        })
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+      console.log(JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to delete a workout
+async function deleteWorkout(programId, workoutId) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(programId);
+    parseInt(workoutId);
+    console.log("progID: " + programId);
+    console.log("workoutID: " + workoutId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+        
+      });
+    }
+
+      const data = await response.json();
+      console.log("yeess" + JSON.stringify(data));
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+
+
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -441,7 +551,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                     <TouchableOpacity onPress={ async ()=>{
                       console.log(selectedItem.id);
                       console.log(daysOfWeekOrder[selected]);
-                      await updateProgram(selectedItem.id,daysOfWeekOrder[selected]);
+                      await updateProgram(selectedItem.id,workout.id);
                       await testApi();
                       const updatedItem = programData.find(item => item.id === selectedItem.id);
                       setSelectedItem(updatedItem);
@@ -471,6 +581,11 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                   <View>
                     <Text style={styles.workoutNameModal}>{workout.name}</Text>
                   </View>
+                  <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
+                    console.log("selected workout for deletion:" +workout.name);
+                    await deleteWorkout(selectedItem.id,workoutConvert[workout.name]);}}>
+                    <FontAwesome6 name="minus" size={20} color="black" />
+                  </TouchableOpacity>
                 </View>
               )) : (
                 <View>
@@ -487,9 +602,15 @@ const WorkoutItem = ({ title, workouts, programId }) => (
               {availableWorkouts.length > 0 ? availableWorkouts.map((workout, index) => (
                 <View style={styles.indivWorkoutModalCont} key={`${workout.name}-${index}`}>
                   <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+
                   <View>
                     <Text style={styles.workoutNameModal}>{workout.name}</Text>
                   </View>
+
+                  <TouchableOpacity style={styles.addProgramBtn} onPress={()=>{addWorkout(selectedItem.id)}}>
+                    <FontAwesome6 name="plus" size={20} color="black" />
+                  </TouchableOpacity>
+
                 </View>
               )) : (
                 <View>
@@ -691,6 +812,20 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
    
-  }
+  },
+  addProgramBtn:{
+    backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+    position: 'absolute',
+    right: 15
+  },
+  deleteProgramBtn:{
+    backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+    position: 'absolute',
+    right: 15
+  },
 
 });
