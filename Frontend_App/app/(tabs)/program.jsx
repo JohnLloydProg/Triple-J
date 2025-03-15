@@ -80,12 +80,27 @@ const [selected, setSelected] = useState("");
 
 const [programData, setProgramData] = useState([]);
 const [modalVisible, setModalVisible] = useState(false);
+const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null);
 const [availableWorkouts, setAvailableWorkouts] = useState([]);
 const [selectedProgram, setSelectedProgram] = useState([]);
 const [selectedWorkout, setSelectedWorkout] = useState([]);
+const [selectedWorkoutItem, setselectedWorkoutItem] = useState([]);
 
 
+const [reps,setReps] = useState("");
+const [sets,setSets] = useState("");
+const [time,setTime] = useState("");
+const [weight,setWeight] = useState("");
+const [distance,setDistance] = useState("");
+
+const resetChoiceValues = () => {
+  setReps("");
+  setSets("");
+  setTime("");
+  setWeight("");
+  setDistance("");
+};
 
 //function for fetching available workouts within the app
 async function newTestApi()  {
@@ -357,7 +372,7 @@ async function viewWorkout(programId) {
 }
 
 //function to add a workout
-async function addWorkout(programId, workoutType) {
+async function addWorkout(programId, workoutType, mainDetails) {
   try {
     let accessToken = await SecureStore.getItemAsync("accessToken");
     let refreshToken = await SecureStore.getItemAsync("refreshToken");
@@ -376,7 +391,7 @@ async function addWorkout(programId, workoutType) {
         "Content-Type": "application/json"
       },body: JSON.stringify({
         'workout': workoutType,
-        'details': { "reps": 15, "sets": 3 }
+        'details': mainDetails
       
       })
     });
@@ -396,7 +411,7 @@ async function addWorkout(programId, workoutType) {
           "Content-Type": "application/json"
         },body: JSON.stringify({
           'workout': workoutType,
-          'details': { "reps": 15, "sets": 3 }
+          'details': mainDetails
         })
       });
     }
@@ -461,6 +476,12 @@ const handlePress =  async (item) => {
   setSelectedItem(await viewWorkout(item.id));
   console.log("Selected item: ", item.id);
   setModalVisible(true);
+};
+
+const handlePressChoice =  async (item) => {
+  resetChoiceValues();
+  setselectedWorkoutItem(item);
+  setmodalChoiceVisible(true);
 };
 
 useEffect(() => {
@@ -687,10 +708,11 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                   </View>
 
                   <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
-                    addWorkout(selectedProgram.id,workout.id);
-                    const updatedItem = await viewWorkout(selectedProgram.id);
-                    setSelectedItem(updatedItem);
-                    testApi();
+                    handlePressChoice(workout);
+                    // addWorkout(selectedProgram.id,workout.id);
+                    // const updatedItem = await viewWorkout(selectedProgram.id);
+                    // setSelectedItem(updatedItem);
+                    // testApi();
                     }}>
                     <FontAwesome6 name="plus" size={20} color="black" />
                   </TouchableOpacity>
@@ -712,6 +734,76 @@ const WorkoutItem = ({ title, workouts, programId }) => (
            )}
           </View>
         </ScrollView>
+    </Modal>
+
+    {/* renders the modal for adjusting details of workouts */}
+
+    <Modal visible={modalChoiceVisible} animationType="slide" transparent={true}>
+      <View style={styles.modalChoiceCont}>
+
+          <View style={styles.mainInputCont}>
+            {selectedWorkoutItem.reps && (
+              <View style={styles.workoutChoiceCont}>
+                <Text style={styles.workoutdetailsModal}>Reps:  </Text>
+                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
+              </View>
+              
+            )}
+            {selectedWorkoutItem.sets && (
+              <View style={styles.workoutChoiceCont}>
+                <Text style={styles.workoutdetailsModal}>Sets:  </Text>
+                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
+              </View>
+            )}
+            {selectedWorkoutItem.time && (
+               <View style={styles.workoutChoiceCont}>
+                <Text style={styles.workoutdetailsModal}>Time:  </Text>
+                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
+               </View>
+            )}
+            {selectedWorkoutItem.weight && (
+                <View style={styles.workoutChoiceCont}>
+                  <Text style={styles.workoutdetailsModal}>Weight:  </Text>
+                  <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
+                </View>
+
+            )}
+            {selectedWorkoutItem.distance && (
+              <View style={styles.workoutChoiceCont}>
+                <Text style={styles.workoutdetailsModal}>Distance: </Text>
+                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
+              </View>
+              
+            )}
+          </View>
+          <View style={styles.mainButtonCont}>
+
+            <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
+              const choiceData = {
+                ...(reps && { reps }),
+                ...(sets && { sets }),
+                ...(time && { time }),
+                ...(weight && { weight }),
+                ...(distance && { distance })
+              };
+              console.log(choiceData);
+              addWorkout(selectedProgram.id,selectedWorkoutItem.id, choiceData);
+              const updatedItem = await viewWorkout(selectedProgram.id);
+              setSelectedItem(updatedItem);
+              testApi();
+              setmodalChoiceVisible(false);
+
+            }}>
+              <Text style={styles.closeBtnText}>Create Workout</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalChoiceVisible(false)}> 
+              <Text style={styles.closeBtnText} >Cancel </Text>
+            </TouchableOpacity>
+
+          </View>
+
+      </View>
     </Modal>
 
     
@@ -916,6 +1008,48 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     position: 'absolute',
     right: 15
+  },
+
+
+  modalChoiceCont:{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: "100%",
+    height: "100%",
+    padding: 20,
+    backgroundColor: colors.primaryBackground,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainInputCont:{
+    width:'100%',
+    flexDirection: 'row',
+    justifyContent: 'center'
+  },
+  choiceInputCont:{
+    backgroundColor: '#5E5C5C',
+    borderRadius: 22,
+    height: 50,
+    width: 100,
+    color: 'white',
+    paddingLeft: 20,
+    paddingRight: 20,
+  },
+  workoutChoiceCont:{
+    marginRight: 5,
+    marginLeft: 5,
+    alignItems: 'center',
+  },
+  mainButtonCont:{
+    flexDirection: 'row',
+    marginTop:20,
+  },
+  createWorkoutBtn:{
+    backgroundColor: colors.greenAccent,
+    padding: 10,
+    borderRadius: 10,
+    marginRight: 15,
   },
 
 });
