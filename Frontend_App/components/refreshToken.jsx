@@ -27,6 +27,11 @@ export async function refreshAccessToken() {
     return updatedAccessToken;
   } catch (error) {
     console.error('Error refreshing token:', error);
+
+    if (error instanceof ReferenceError && error.message.includes("refreshAccessToken")) {
+      router.push('/');
+    }
+    
     return null;
   }
 }
