@@ -50,7 +50,49 @@ export default function Settings() {
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
+  async function startPayment() {
+    try {
+      let accessToken = await SecureStore.getItemAsync("accessToken");
+      let refreshToken = await SecureStore.getItemAsync("refreshToken");
+      let username = await SecureStore.getItemAsync("username");
+      
+      console.log("access: " + accessToken);
+      console.log("refresh: " + refreshToken);
+      console.log("username: " + username);
   
+      let response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+  
+      if (response.status === 401) {
+        console.log("Access token expired");
+        accessToken = await refreshAccessToken();
+        console.log("New access token: " + accessToken);
+        if (!accessToken) {
+          throw new Error("Failed to refresh access token");
+        }
+        
+        response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+  
+        const data = await response.json();
+        console.log(data.details.link);
+        Linking.openURL(data.details.link).catch(err => console.error('An error occurred', err));
+      } catch (error) {
+        console.error("Error:", error);
+      }
+  
+  }
 
   
   //function to retrieve member information such as name, membership type, and expiry of membership
@@ -311,13 +353,21 @@ function calculateExpiry(startDate, membershipType) {
 
       </View>
 
-      <View style={styles.membershipCont}>
-        
-          <FontAwesome6 name="credit-card" size={24} color="white" />
-          <Text  onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}style={[styles.titleText, {fontSize: 20}]} >
-            Membership Payment</Text>
-        
-      </View>
+      <TouchableOpacity onPress={async ()=>{
+        await startPayment();
+        console.log("redirected to payment channel");
+      }}>
+
+        <View style={styles.membershipCont}>
+          
+            <FontAwesome6 name="credit-card" size={24} color="white" />
+            <Text style={[styles.titleText, {fontSize: 20}]} >
+              Membership Payment</Text>
+          
+        </View>
+
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={() => {logoutDetails()}}>
 
         <View style={styles.logoutCont}>
