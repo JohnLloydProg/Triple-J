@@ -58,6 +58,14 @@ const daysOfWeekOrder = {
   Sunday: 6,
 };
 
+const workoutConvert = {
+  "Bench Press": 1,
+  "Push Up": 2,
+  "Squats": 3,
+  "Plank": 4,
+  "Sit Ups": 5
+};
+
 
 
 //function for getting the localized variables for the access tokens
@@ -74,14 +82,10 @@ const [programData, setProgramData] = useState([]);
 const [modalVisible, setModalVisible] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null);
 const [availableWorkouts, setAvailableWorkouts] = useState([]);
+const [selectedProgram, setSelectedProgram] = useState([]);
+const [selectedWorkout, setSelectedWorkout] = useState([]);
 
 
-//funnction to handle the modal of selected program
-const handlePress = (item) => {
-  setSelectedItem(item);
-  console.log("Selected item: ", item);
-  setModalVisible(true);
-};
 
 //function for fetching available workouts within the app
 async function newTestApi()  {
@@ -305,6 +309,164 @@ async function updateProgram(programId,mainDate) {
     }
 }
 
+//function to get all workouts associated with a program
+async function viewWorkout(programId) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(programId);
+    console.log(programId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      // console.log(data);
+      // console.log(JSON.stringify(data, null, 2));
+
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to add a workout
+async function addWorkout(programId, workoutType) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(programId);
+    parseInt(workoutType);
+    console.log(programId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },body: JSON.stringify({
+        'workout': workoutType,
+        'details': { "reps": 15, "sets": 3 }
+      
+      })
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },body: JSON.stringify({
+          'workout': workoutType,
+          'details': { "reps": 15, "sets": 3 }
+        })
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+      console.log(JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to delete a workout
+async function deleteWorkout(programId, workoutId) {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(programId);
+    parseInt(workoutId);
+    console.log("progID: " + programId);
+    console.log("workoutID: " + workoutId);
+    
+    console.log("access: " + accessToken);
+    console.log("refresh: " + refreshToken);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+        
+      });
+    }
+
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//funnction to handle the modal of selected program
+const handlePress =  async (item) => {
+  setSelectedProgram(item);
+  setSelectedItem(await viewWorkout(item.id));
+  console.log("Selected item: ", item.id);
+  setModalVisible(true);
+};
+
+useEffect(() => {
+  console.log("Updated Selected Program: ", selectedProgram);
+}, [selectedProgram]);
+
   //loads the needed custom font styles
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -316,12 +478,12 @@ async function updateProgram(programId,mainDate) {
     newTestApi();
   },[]);
 
-//refreshed modal after calling the updateProgram function
+// refreshed modal after calling the updateProgram function
   useEffect(() => {
-    if (selectedItem) {
-      const updatedItem = programData.find(item => item.id === selectedItem.id);
+    if (selectedProgram) {
+      const updatedItem = programData.find(item => item.id === selectedProgram.id);
       if (updatedItem) {
-        setSelectedItem(updatedItem);
+        setSelectedProgram(updatedItem);
       }
     }
   }, [programData]);
@@ -420,8 +582,8 @@ const WorkoutItem = ({ title, workouts, programId }) => (
            {selectedItem && (
             <>
               <View style={styles.modalTitleCont}>
-                {daysOfWeek[selectedItem.day]  ? (
-                  <Text style={styles.modalTitle}>{daysOfWeek[selectedItem.day]}</Text>
+                {daysOfWeek[selectedProgram.day]  ? (
+                  <Text style={styles.modalTitle}>{daysOfWeek[selectedProgram.day]}</Text>
                 ) : (
 
                   <View style={styles.updateDaySelection}>
@@ -439,13 +601,13 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                        
                     />
                     <TouchableOpacity onPress={ async ()=>{
-                      console.log(selectedItem.id);
-                      console.log(daysOfWeekOrder[selected]);
-                      await updateProgram(selectedItem.id,daysOfWeekOrder[selected]);
+                      console.log("IDDDDDDDDDD" + selectedProgram.id + " DAYYYYY: " +selectedProgram.day);
+                      console.log(daysOfWeekOrder[selectedProgram.day]);
+                      await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await testApi();
-                      const updatedItem = programData.find(item => item.id === selectedItem.id);
+                      const updatedItem = programData.find(item => item.id === selectedProgram.id);
                       setSelectedItem(updatedItem);
-                      //setModalVisible(false);
+                      // setModalVisible(false);
 
                       }} style={styles.updateButton}>
                         
@@ -465,12 +627,37 @@ const WorkoutItem = ({ title, workouts, programId }) => (
 
 
               <View style={styles.modalWorkoutCont}>
-              {selectedItem.workouts.length > 0 ? selectedItem.workouts.map((workout, index) => (
-                <View style={styles.indivWorkoutModalCont} key={`${selectedItem.title}-${index}`}>
-                  <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+              {selectedItem.length > 0 ? selectedItem.map((workout, index) => (
+                <View style={styles.indivWorkoutModalCont} key={`${workout.workout.title}-${index}`}>
+                  <Image source={workoutTypes[workout.workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
                   <View>
-                    <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                    <View>
+                    <Text style={styles.workoutNameModal}>{workout.workout.name}</Text>
+                    </View>
+                    <View style={{flexDirection: "row"}}>
+                    {workout.details.reps && (
+                      <Text style={styles.workoutdetailsModal}>Reps: {workout.details.reps} </Text>
+                    )}
+                    {workout.details.sets && (
+                      <Text style={styles.workoutdetailsModal}>Sets: {workout.details.sets} </Text>
+                    )}
+                    {workout.details.time && (
+                      <Text style={styles.workoutdetailsModal}>Time: {workout.details.time} </Text>
+                    )}
+                    {workout.details.weight && (
+                      <Text style={styles.workoutdetailsModal}>Weight: {workout.details.weight} </Text>
+                    )}
+                    {workout.details.distance && (
+                      <Text style={styles.workoutdetailsModal}>Distance: {workout.details.distance} </Text>
+                    )}
+                    </View>
+                    
                   </View>
+                  <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
+                    console.log("selected workout for deletion:" +workout.workout.name + "id: " + workout.id);
+                    await deleteWorkout(selectedProgram.id,workout.id);}}>
+                    <FontAwesome6 name="minus" size={20} color="black" />
+                  </TouchableOpacity>
                 </View>
               )) : (
                 <View>
@@ -478,6 +665,8 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                 </View>
               )}
             </View>
+
+              {/* renders the available workouts */}
 
             <View style={styles.modalTitleCont}>
                 <Text style={styles.modalTitle}> Available Workout/s </Text>
@@ -487,9 +676,15 @@ const WorkoutItem = ({ title, workouts, programId }) => (
               {availableWorkouts.length > 0 ? availableWorkouts.map((workout, index) => (
                 <View style={styles.indivWorkoutModalCont} key={`${workout.name}-${index}`}>
                   <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+
                   <View>
                     <Text style={styles.workoutNameModal}>{workout.name}</Text>
                   </View>
+
+                  <TouchableOpacity style={styles.addProgramBtn} onPress={()=>{addWorkout(selectedProgram.id,workout.id)}}>
+                    <FontAwesome6 name="plus" size={20} color="black" />
+                  </TouchableOpacity>
+
                 </View>
               )) : (
                 <View>
@@ -662,6 +857,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'KeaniaOne',
   },
+  workoutdetailsModal:{
+    fontSize: 15,
+    color: 'gray',
+    fontFamily: 'KeaniaOne',
+  },
+
   modalWorkoutCont:{
     height: "auto",
     padding: 20,
@@ -691,6 +892,20 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
    
-  }
+  },
+  addProgramBtn:{
+    backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+    position: 'absolute',
+    right: 15
+  },
+  deleteProgramBtn:{
+    backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+    position: 'absolute',
+    right: 15
+  },
 
 });
