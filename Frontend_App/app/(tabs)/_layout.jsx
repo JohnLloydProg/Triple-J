@@ -64,12 +64,22 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="timeline"
+        options={{
+          title: 'Timeline',
+          tabBarIcon: ({ color }) => <FontAwesome6 name="timeline" size={24} color="white" />,
+        }}
+      />  
+
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <Fontisto name="player-settings" size={24} color="white" />,
         }}
       />
+
+      
       
 
     </Tabs>
