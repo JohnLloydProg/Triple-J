@@ -655,7 +655,12 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                   </View>
                   <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
                     console.log("selected workout for deletion:" +workout.workout.name + "id: " + workout.id);
-                    await deleteWorkout(selectedProgram.id,workout.id);}}>
+                    await deleteWorkout(selectedProgram.id,workout.id);
+                    const updatedItem = await viewWorkout(selectedProgram.id);
+                    setSelectedItem(updatedItem);
+                    testApi();
+                    }}>
+                      
                     <FontAwesome6 name="minus" size={20} color="black" />
                   </TouchableOpacity>
                 </View>
@@ -681,7 +686,12 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                     <Text style={styles.workoutNameModal}>{workout.name}</Text>
                   </View>
 
-                  <TouchableOpacity style={styles.addProgramBtn} onPress={()=>{addWorkout(selectedProgram.id,workout.id)}}>
+                  <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
+                    addWorkout(selectedProgram.id,workout.id);
+                    const updatedItem = await viewWorkout(selectedProgram.id);
+                    setSelectedItem(updatedItem);
+                    testApi();
+                    }}>
                     <FontAwesome6 name="plus" size={20} color="black" />
                   </TouchableOpacity>
 
