@@ -675,7 +675,6 @@ const getWorkoutDetails = (workoutName) => {
 const WorkoutModalItem = ({workout}) => {
 
   const [recordData, setRecordData] = useState(null);
-  const [currentRecordData, setcurrentRecordData ] = useState([]);
 
   useEffect(() => {
     const fetchRecord = async () => {
@@ -685,8 +684,6 @@ const WorkoutModalItem = ({workout}) => {
     };
 
     fetchRecord(); 
-    setcurrentRecordData(getWorkoutDetails(workout.workout.name));
-
   }, []);
 
   return (
@@ -728,102 +725,103 @@ const WorkoutModalItem = ({workout}) => {
         <FontAwesome6 name="minus" size={20} color="black" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={[{backgroundColor: 'blue'}, {position:'absolute'},{right: 80}]} onPress={async ()=>{
+      {/* <TouchableOpacity style={[{backgroundColor: 'blue'}, {position:'absolute'},{right: 80}]} onPress={async ()=>{
           console.log("workout id: " + workout.id);
           setTimeout(async () => {
             await getRecord(workout.id);
           }, 0);
         }}>
         <FontAwesome6 name="chart-simple" size={20} color="black" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
     </View>
 
     <View style={styles.workoutAnalyticsCont}>
-      <View>
-         
-          <View style={styles.modalChoiceAnalyticsCont}>
-
-            <View style={styles.mainRecordContainer}>
-              {currentRecordData.reps && (
-                <View style={styles.recordChoiceBtnCont}>
-                  <TouchableOpacity>
-                    <Text style={styles.setAnalyticsBtn}>Reps</Text>
-                  </TouchableOpacity>
-                </View>
-                
-              )}
-              {currentRecordData.sets && (
-                <View style={styles.recordChoiceBtnCont}>
-                  <TouchableOpacity>
-                    <Text style={styles.setAnalyticsBtn}>Sets</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {currentRecordData.time && (
-                <View style={styles.recordChoiceBtnCont}>
-                  <TouchableOpacity>
-                    <Text style={styles.setAnalyticsBtn}>Time</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {currentRecordData.weight && (
-                  <View style={styles.recordChoiceBtnCont}>
-                    <TouchableOpacity>
-                    <Text style={styles.setAnalyticsBtn}>Weight</Text>
-                  </TouchableOpacity>
-                  </View>
-
-              )}
-              {currentRecordData.distance && (
-                <View style={styles.recordChoiceBtnCont}>
-                  <TouchableOpacity>
-                    <Text style={styles.setAnalyticsBtn}>Distance</Text>
-                  </TouchableOpacity>
-                </View>
-                
-              )}
-            </View>
-          </View>
-          
-
-      </View>
-          {/* <View>
+      
+          <View>
             
           {recordData && recordData.map((record, index) => (
-          <View key={record.id || index}>
-            <Text style={{ color: 'white' }}>
-              Date: {record.date}
-            </Text>
-            {record.details.sets && (
-              <Text style={{ color: 'white' }}>
-                Sets: {record.details.sets}
+          <View style={styles.analyticsInfoCont} key={record.id || index}>
+            <View style={styles.indivAnalyticsCont}> 
+              <Text style={styles.analyticText}>
+                 {record.date}
               </Text>
-            )}
-            {record.details.reps && (
-              <Text style={{ color: 'white' }}>
-                Reps: {record.details.reps}
+              <Text style={styles.analyticSubText}>
+              Date
               </Text>
-            )}
-            {record.details.weight && (
-              <Text style={{ color: 'white' }}>
-                Weight: {record.details.weight}
-              </Text>
-            )}
-            {record.details.distance && (
-              <Text style={{ color: 'white' }}>
-                Distance: {record.details.distance}
-              </Text>
-            )}
-            {record.details.time && (
-              <Text style={{ color: 'white' }}>
-                Time: {record.details.time}
-              </Text>
-            )}
+            </View>
+            
+            
+              {record.details.sets && (
+                <View style={styles.indivAnalyticsCont}>
+                  <Text style={styles.analyticText}>
+                    {record.details.sets}
+                  </Text>
+                  <Text style={styles.analyticSubText}>
+                    Sets
+                  </Text>
+                </View>
+              )}
+            
+            
+            
+              {record.details.reps && (
+                <View style={styles.indivAnalyticsCont}>
+                  <Text style={styles.analyticText}>
+                     {record.details.reps}
+                  </Text>
+                  <Text style={styles.analyticSubText}>
+                    Reps
+                  </Text>
+                </View>
+              )}
+           
+
+              
+                {record.details.weight && (
+                  <View style={styles.indivAnalyticsCont}>
+                    <Text style={styles.analyticText}>
+                       {record.details.weight}
+                    </Text>
+                    <Text style={styles.analyticSubText}>
+                     Weight
+                    </Text>
+                    </View>
+                )}
+              
+
+              
+                {record.details.distance && (
+                  <View style={styles.indivAnalyticsCont}>
+                    <Text style={styles.analyticText}>
+                       {record.details.distance}
+                    </Text>
+                    <Text style={styles.analyticSubText}>
+                      Distance
+                    </Text>
+                    </View>
+                )}
+              
+
+              
+                {record.details.time && (
+                  <View style={styles.indivAnalyticsCont}>
+                    <Text style={styles.analyticText}>
+                      {record.details.time}
+                    </Text>
+                    <Text style={styles.analyticSubText}>
+                      Time
+                    </Text>
+                  </View>
+                )}
+              
+
           </View>
         ))}
             
-          </View> */}
+          </View>
+
+      
       
       <TouchableOpacity style={styles.addRecordBtn} onPress={() => {
         // console.log(availableWorkouts);
@@ -1412,7 +1410,7 @@ const styles = StyleSheet.create({
 
   mainRecordContainer:{
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
     width: '100%'
     
   },
@@ -1420,6 +1418,30 @@ const styles = StyleSheet.create({
   setAnalyticsBtn:{
     fontFamily: 'KeaniaOne',
     color: 'white',
-  }
+  },
+
+  analyticsInfoCont:{
+    flexDirection: 'row',
+    marginTop: 20,
+    backgroundColor: colors.primaryBackground,
+    borderRadius: 10,
+    padding: 10,
+  },
+  analyticText:{
+    fontFamily: 'KeaniaOne',
+    color: 'white',
+    fontSize: 20,
+  },
+  indivAnalyticsCont:{
+    marginLeft: 10,
+    marginRight:10,
+    alignItems: 'center',
+  },
+  analyticSubText:{
+    fontFamily: 'KeaniaOne',
+    fontSize: 16,
+    color: 'gray',
+  },
+
 
 });
