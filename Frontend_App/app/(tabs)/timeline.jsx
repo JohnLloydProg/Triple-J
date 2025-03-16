@@ -101,8 +101,16 @@ const TimelineScreen = () => {
     console.log('pressed');
     const response = await timelineSaveRequest(height, weight);
     if (response.ok){
-      console.log("Added the timeline");
+      setModalVisible(false);
     }
+  }
+
+  const add = () => {
+    let height = SecureStore.getItem('height');
+    let weight = SecureStore.getItem('weight');
+    setHeight(height);
+    setWeight(weight);
+    setModalVisible(true);
   }
 
   return (
@@ -138,11 +146,11 @@ const TimelineScreen = () => {
             <Image source={require('@/assets/images/sample-full-body.jpg')} style={modalStyles.image} onPress/>
             <View style={modalStyles.flex}>
                 <Text style={modalStyles.textInputLabel}>Height (M): </Text>
-                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setHeight(newText)}></TextInput>
+                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setHeight(newText)} value={height}></TextInput>
             </View>
             <View style={modalStyles.flex}>
                 <Text style={modalStyles.textInputLabel}>Weight (Kg): </Text>
-                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setWeight(newText)}></TextInput>
+                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setWeight(newText)} value={weight}></TextInput>
             </View>
           </View>
           <View style={modalStyles.footer}>
@@ -155,7 +163,7 @@ const TimelineScreen = () => {
           </View>
         </View>
       </Modal>
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={styles.addButton} onPress={() => add()}>
           <AntDesign name="plus" size={24} color="white" />
         </TouchableOpacity>
     </SafeAreaView>
