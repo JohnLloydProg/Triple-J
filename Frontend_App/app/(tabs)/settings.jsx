@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Platform, View, Text, Linking, TouchableOpacity,TextInput} from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, Linking, TouchableOpacity,TextInput, RefreshControl} from 'react-native';
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -7,6 +8,7 @@ import colors from '../../constants/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import { router, useRouter } from 'expo-router';
 import { ScrollView } from 'react-native';
+import {refreshAccessToken} from '../../components/refreshToken';
 
 
 //deletes the tokens for authentication and redirects to login page
@@ -40,6 +42,16 @@ import { ScrollView } from 'react-native';
 
 
 export default function Settings() {
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+    getMemberInfo();
+    getMembershipInfo();
+  }, []);
 
   const [memberInfo, setMemberInfo] = useState([]);
   const [membershipInfo, setMembershipInfo] = useState([]);
@@ -93,7 +105,7 @@ export default function Settings() {
       }
   
   }
-
+  
   
   //function to retrieve member information such as name, membership type, and expiry of membership
 async function getMemberInfo() {
@@ -246,25 +258,15 @@ useEffect(() => {
 }, []);
 
 
-function calculateExpiry(startDate, membershipType) {
-  if (!startDate) return "Unknown"; 
 
-  const start = new Date(startDate);
-  const end = new Date(start);
-
-  if (membershipType === "Monthly") {
-    end.setDate(start.getDate() + 30);
-  }
-
-  return end.toISOString().split("T")[0];
-}
 
  return(
 
-  <ScrollView>
+  <ScrollView refreshControl={
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  }>
 
     <View style={styles.container}>
-      
 
         <View style={styles.accountCont}>
           
@@ -288,7 +290,10 @@ function calculateExpiry(startDate, membershipType) {
             Weight: {memberInfo.weight} kg
             </Text>
             <Text  style={styles.subText}>
-            Membership Expiry: {calculateExpiry(membershipInfo.startDate, memberInfo.membershipType)}
+            Membership Start: {membershipInfo.startDate}
+            </Text>
+            <Text  style={styles.subText}>
+            Membership Expiry: {membershipInfo.expirationDate}
             </Text>
             
           </View>
