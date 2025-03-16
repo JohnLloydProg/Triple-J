@@ -154,7 +154,10 @@ class TimelineRecordsView(generics.GenericAPIView):
             return JsonResponse({'details':'Does not contain information'}, status=400)
         record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'), img=request.data.get('img'))
         record.save()
-        return JsonResponse({'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img})
+        response = {'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight}
+        if (record.img):
+            response['img'] = record.img
+        return Response(response)
 
 
 class CurrentTimelineRecordView(generics.GenericAPIView):

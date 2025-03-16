@@ -18,12 +18,16 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/account/membership/subscription", {
+    fetch(baseURL + "api/gym/progress", {
         method : "POST",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`
         },
+        body : JSON.stringify({
+            'height': 1.6,
+            'weight': 80
+        }),
         credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {
