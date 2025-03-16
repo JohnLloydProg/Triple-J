@@ -618,8 +618,8 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                         boxStyles={[{ width: 300 },{borderWidth:0}]}
                         placeholder='Select Program Day'
                         search={false}
+
                         
-                       
                     />
                     <TouchableOpacity onPress={ async ()=>{
                       console.log("IDDDDDDDDDD" + selectedProgram.id + " DAYYYYY: " +selectedProgram.day);
