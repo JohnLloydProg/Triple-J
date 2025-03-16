@@ -150,6 +150,7 @@ class TimelineRecordsView(generics.GenericAPIView):
     def post(self, request):
         member = Member.objects.get(pk=self.request.user)
         if (not request.data):
+            print(request.data)
             return JsonResponse({'details':'Does not contain information'}, status=400)
         record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'), img=request.data.get('img'))
         record.save()

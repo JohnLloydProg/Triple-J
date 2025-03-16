@@ -42,9 +42,8 @@ async function timelineSaveRequest(height, weight) {
       "Authorization": `Bearer ${accessToken}`
     },
     body : JSON.stringify({
-      'height' : height,
-      'weight' : weight,
-      'img': null
+      'height' : parseFloat(height),
+      'weight' : parseFloat(weight),
     }),
     credentials : "same-origin"
   })
@@ -54,7 +53,6 @@ async function timelineSaveRequest(height, weight) {
     }catch (err) {
       return "";
     }
-    return timelineRequest()
   }
   return response;
 }
