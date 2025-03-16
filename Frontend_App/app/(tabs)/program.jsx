@@ -470,6 +470,46 @@ async function deleteWorkout(programId, workoutId) {
     }
 }
 
+async function getRecord(programWorkout)  {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
+    console.log(userId);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
 //funnction to handle the modal of selected program
 const handlePress =  async (item) => {
   setSelectedProgram(item);
@@ -684,6 +724,13 @@ const WorkoutItem = ({ title, workouts, programId }) => (
                       
                     <FontAwesome6 name="minus" size={20} color="black" />
                   </TouchableOpacity>
+
+                  <TouchableOpacity style={[{backgroundColor: 'blue'}, {position:'absolute'},{right: 80}]} onPress={async ()=>{
+                      console.log(workout.id);
+                      await getRecord(workout.id);
+                    }}>
+                    <FontAwesome6 name="chart-simple" size={20} color="black" />
+                  </TouchableOpacity>
                 </View>
               )) : (
                 <View>
@@ -709,13 +756,11 @@ const WorkoutItem = ({ title, workouts, programId }) => (
 
                   <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
                     handlePressChoice(workout);
-                    // addWorkout(selectedProgram.id,workout.id);
-                    // const updatedItem = await viewWorkout(selectedProgram.id);
-                    // setSelectedItem(updatedItem);
-                    // testApi();
                     }}>
                     <FontAwesome6 name="plus" size={20} color="black" />
                   </TouchableOpacity>
+
+                  
 
                 </View>
               )) : (
