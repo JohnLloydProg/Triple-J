@@ -88,6 +88,7 @@ const TimelineScreen = () => {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -103,7 +104,7 @@ const TimelineScreen = () => {
 
   const save = async () => {
     console.log('pressed');
-    const response = await timelineSaveRequest(height, weight, image);
+    const response = await timelineSaveRequest(height, weight, imageFile);
     if (response.ok){
       setModalVisible(false);
     }
@@ -123,12 +124,16 @@ const TimelineScreen = () => {
     if (status !== "granted") {
       alert("Permission denied")
     }else {
-      const result = await ImagePicker.launchImageLibraryAsync();
+      const result = await ImagePicker.launchImageLibraryAsync({
+        base64 : true
+      });
       if (!result.canceled) {
         console.log(result.assets[0]);
-        const uri = result.assets.pop().uri;
+        const asset = result.assets.pop()
+        const uri = asset.uri;
 
         setImage(uri);
+        setImageFile(asset.base64);
       }
     }
     
