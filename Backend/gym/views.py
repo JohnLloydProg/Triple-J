@@ -6,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer, WorkoutSerializer, ProgramWorkoutRecordSerializer, TimelineRecordSerializer
 from django.utils.timezone import now
-from django.core.files import File
 from django.views import View
 from datetime import date
 from gym.models import Program, ProgramWorkout, Workout, ProgramWorkoutRecord, TimelineRecord
@@ -153,8 +152,7 @@ class TimelineRecordsView(generics.GenericAPIView):
         if (not request.data):
             print(request.data)
             return JsonResponse({'details':'Does not contain information'}, status=400)
-        record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'))
-        record.img.save(f'{record.date.isoformat()}-image.jpg', File(open(request.data.get('img'),'r')))
+        record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'), img=request.data.get('img'))
         record.save()
         response = {'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight}
         if (record.img):
