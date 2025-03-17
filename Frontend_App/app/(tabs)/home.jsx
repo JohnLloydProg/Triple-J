@@ -312,7 +312,7 @@ const HomeScreen = () => {
         <View style={styles.profileContainer}>
           <Image source={kotsIcon} style={styles.profileImage} />
           <View style={styles.profileTextContainer}>
-            <Text style={styles.text}>{'Loading...'}</Text>
+            <Text style={styles.text}>Louis Gascon</Text>
             <Text style={styles.schedule}>12/24/2025 - 00:04:20</Text>
             <TouchableOpacity style={styles.button} onPress={() => {Linking.openURL("https://web.facebook.com/louisanton.gascon").catch(err => console.error('An error occurred', err));}}>
               <Text style={styles.buttonText}>Contact Me</Text>
