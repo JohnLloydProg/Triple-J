@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import bodyIcon from '@/assets/images/sample-full-body.jpg';
 import { RefreshControl } from 'react-native';
-import { router, useRouter } from 'expo-router';
 import {refreshAccessToken} from '../../components/refreshToken';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -37,10 +36,6 @@ async function timelineRequest() {
 
 async function timelineSaveRequest(height, weight, image=null) {
   let accessToken = await SecureStore.getItemAsync("accessToken");
-  if (image !== null) {
-    const image_response = await fetch(image);
-    image = await image_response.blob()
-  }
   console.log(image)
   const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
     method : "POST",
@@ -130,8 +125,9 @@ const TimelineScreen = () => {
     }else {
       const result = await ImagePicker.launchImageLibraryAsync();
       if (!result.canceled) {
-        console.log(result.assets);
+        console.log(result.assets[0]);
         const uri = result.assets.pop().uri;
+
         setImage(uri);
       }
     }
