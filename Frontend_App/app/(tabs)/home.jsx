@@ -1,12 +1,13 @@
-import { Image, StyleSheet, View, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
+import { Image, StyleSheet, View, Text, TouchableOpacity, Alert, RefreshControl, Modal } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useFonts } from 'expo-font';
 import { CheckBox } from '@rneui/themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
-// Import simple QR code library - uses less dependencies
+// Import simple QR code library
 import QRCode from 'react-native-qrcode-svg';
 
 import heartIcon from '@/assets/images/Cardio-Workout-icon.png';
@@ -15,18 +16,107 @@ import situpIcon from '@/assets/images/Core-Workout-icon.png';
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
 import kotsIcon from '@/assets/images/Coach-icon.png';
 
+import {refreshAccessToken} from '../../components/refreshToken';
+
+
+async function getCurrentProgram() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let response = await fetch("https://triple-j.onrender.com/api/gym/program/current", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    });
+
+    if (response.status === 401) {
+      accessToken = await refreshAccessToken();
+      response = await fetch("https://triple-j.onrender.com/api/member/program/current", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      });
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching current program:", error);
+    return null;
+  }
+}
+
+async function getGymPopulation() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    const response = await fetch("https://triple-j.onrender.com/api/attendance/logging", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    });
+    if (response.status === 401) {
+      accessToken = await refreshAccessToken();
+      response = await fetch("https://triple-j.onrender.com/api/attendance/logging", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      });
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching gym population:", error);
+  }
+}
+
+async function getQrCode() {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let response = await fetch("https://triple-j.onrender.com/api/attendance/qr-code", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    });
+    if (response.status === 401) {
+      accessToken = await refreshAccessToken();
+      response = await fetch("https://triple-j.onrender.com/api/attendance/qr-code", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      });
+    }
+    const data = await response.blob();
+    return data;
+  } catch (error) {
+    console.error("Error fetching QR Code:", error);
+    return null;
+  }
+}
+
+async function postQrCode() {
+  let accessToken = await SecureStore.getItemAsync("accessToken");
+    const response = await fetch("https://triple-j.onrender.com/api/attendance/qr-code", {
+      method : "POST",
+      headers : {
+        "Content-Type" : "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      },
+      credentials : "same-origin"
+    })
+    if (!response.ok) {
+      try {
+        refreshAccessToken();
+      }catch (err) {
+        return "";
+      }
+    }
+    const data = await response.json();
+    return data;
+}
+
+
+
+
 // API configuration
 const API_CONFIG = {
-  BASE_URL: 'https://your-api-endpoint.com',
+  BASE_URL: 'https://triple-j.onrender.com/api',
   ENDPOINTS: {
-    USER_DATA: '/user-data',
-    MEMBER_COUNT: '/active-members',
-    USER_PROGRAM: '/user-program',
-  },
-  HEADERS: {
-    'Content-Type': 'application/json',
-    // Add authorization headers if needed
-    // 'Authorization': 'Bearer YOUR_TOKEN'
+    USER_PROFILE: '/user/profile',
+    MEMBER_COUNT: '/gym/active-members',
+    USER_PROGRAM: '/user/workout-program',
+    GENERATE_QR: '/user/generate-qr',
   }
 };
 
@@ -46,57 +136,15 @@ const mockProgram = [
   { icon: situpIcon, type: 'core', name: 'Russian Twists', details: '3 sets   15 reps each side', completed: false },
 ];
 
-// Reusable fetch function with error handling and caching
-const fetchWithCache = async (endpoint, options = {}) => {
-  const cacheKey = `cache_${endpoint}`;
-  const cacheDuration = 5 * 60 * 1000; // 5 minutes cache
-  
-  try {
-    // Check if we have cached data
-    const cachedData = await AsyncStorage.getItem(cacheKey);
-    if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      const isExpired = Date.now() - timestamp > cacheDuration;
-      
-      if (!isExpired) {
-        console.log(`Using cached data for ${endpoint}`);
-        return data;
-      }
-    }
-    
-    // Fetch fresh data
-    const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
-      headers: API_CONFIG.HEADERS,
-      ...options,
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Cache the data
-    await AsyncStorage.setItem(
-      cacheKey,
-      JSON.stringify({
-        data,
-        timestamp: Date.now(),
-      })
-    );
-    
-    return data;
-  } catch (error) {
-    console.error(`Error fetching ${endpoint}:`, error);
-    throw error;
-  }
-};
+
 
 const HomeScreen = () => {
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [qrCode, setqrCode] = useState([]);
+  const [gymPopCount, setgymPopCount] = useState([]);
   const [exercises, setExercises] = useState(mockProgram);
   const [programLoading, setProgramLoading] = useState(false);
   const [programError, setProgramError] = useState(false);
@@ -107,147 +155,40 @@ const HomeScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [userData, setUserData] = useState({
-    name: '',
-    id: '',
-  });
+  const [qr, setQr] = useState('');
+ 
 
-  // Function to fetch user data
-  const fetchUserData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.USER_DATA);
-      setUserData({
-        name: data.name || 'Guest User',
-        id: data.id || 'Unknown',
-      });
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      Alert.alert('Error', 'Failed to fetch user data. Using cached data if available.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to fetch active members count
-  const fetchMemberCount = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.MEMBER_COUNT);
-      setMemberCount(data.activeMembers || 0);
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error fetching member count:', error);
-      // Fallback to mock data if API fails
-      const mockCount = Math.floor(Math.random() * 31) + 20;
-      setMemberCount(mockCount);
-      setLastUpdated(new Date());
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to fetch user program
-  const fetchUserProgram = async () => {
-    try {
-      setProgramLoading(true);
-      setProgramError(false);
-      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.USER_PROGRAM);
-      
-      if (data && data.exercises && data.exercises.length > 0) {
-        // Map API data to our exercise format
-        const formattedExercises = data.exercises.map(exercise => {
-          return {
-            icon: exerciseIconMap[exercise.type] || situpIcon, // Default to situp icon if type not found
-            type: exercise.type || 'unknown',
-            name: exercise.name,
-            details: exercise.details,
-            completed: exercise.completed || false
-          };
-        });
-        setExercises(formattedExercises);
-      } else {
-        // If no exercises in response, use empty array to show rest day message
-        setExercises([]);
-      }
-    } catch (error) {
-      console.error('Error fetching program:', error);
-      setProgramError(true);
-      setErrorMessage('Could not load your exercise program. Please try again later.');
-      // Fallback to mock data
-      setExercises(mockProgram);
-    } finally {
-      setProgramLoading(false);
-    }
-  };
-
-  // Combined refresh function for pull-to-refresh
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        fetchUserData(),
-        fetchMemberCount(),
-        fetchUserProgram()
-      ]);
-    } catch (error) {
-      console.error('Error during refresh:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
-
-  // Initial data loading
   useEffect(() => {
-    const loadInitialData = async () => {
+    const fetchUserData = async () => {
       try {
-        await Promise.all([
-          fetchUserData(),
-          fetchMemberCount(),
-          fetchUserProgram()
-        ]);
+        let userId = await SecureStore.getItemAsync("userId");
+        let userName = await SecureStore.getItemAsync("userName");
+        setUserData({ name: userName || "Guest User", id: userId || "" });
+        
       } catch (error) {
-        console.error('Error loading initial data:', error);
+        console.error("Error fetching user data:", error);
       }
     };
+    fetchUserData();
+    postQrCode().then(data => console.log(data));
     
-    loadInitialData();
-    
-    // Set up periodic refresh for member count only
-    const intervalId = setInterval(fetchMemberCount, 60000);
-    return () => clearInterval(intervalId);
   }, []);
 
-  if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
-  }
 
-  const toggleExercise = (index) => {
-    const updatedExercises = exercises.map((exercise, i) =>
-      i === index ? { ...exercise, completed: !exercise.completed } : exercise
-    );
-    setExercises(updatedExercises);
-  };
+ 
+  // Combined refresh function for pull-to-refresh
+  const onRefresh = useCallback(() => {
+    console.log("refreshing")
+    setRefreshing(true);
+    getQrCode().then(data => console.log(data));
+    setTimeout(() => { 
+      setRefreshing(false);
+    }, 2000);
+  }, []);
 
-  // Generate QR code
-  const generateQR = () => {
-    if (!userData.name || !userData.id) {
-      Alert.alert('Error', 'User data is not available. Please try again later.');
-      return;
-    }
+  
 
-    setQrVisible(true);
-    setDaysRemaining(5);
-    Alert.alert('Success', 'QR code generated successfully!');
-  };
 
-  // QR code value
-  const qrValue = JSON.stringify({
-    name: userData.name,
-    membershipId: userData.id,
-    timestamp: new Date().toISOString(),
-    expires: new Date(Date.now() + daysRemaining * 86400000).toISOString(),
-  });
 
   // Format the last updated time
   const formatLastUpdated = () => {
@@ -317,45 +258,134 @@ const HomeScreen = () => {
         </View>
 
         {/* Gym Members Count */}
-        <View style={styles.membersCard}>
-          <Text style={styles.bigText}>{isLoading ? '...' : memberCount}</Text>
-          <Text style={styles.details}>Gym members currently making gains</Text>
-          {lastUpdated && (
-            <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
-          )}
-          <Text style={styles.pullToRefreshHint}>Pull down to refresh</Text>
-        </View>
+          <View style={styles.membersCard}>
+            <Text style={styles.bigText}>{gymPopCount.Number}</Text>
+            <Text style={styles.details}>Gym members currently making gains</Text>
+            {lastUpdated && (
+              <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
+            )}
+            <Text style={styles.pullToRefreshHint}>Pull down to refresh</Text>
+          </View>
+
+
+
 
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
           {qrVisible && (
-            <View style={styles.qrBox}>
-              <QRCode
-                value={qrValue}
-                size={150}
-                backgroundColor="white"
-                color="black"
-              />
-            </View>
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <View style={styles.qrBox}>
+                
+              </View>
+            </TouchableOpacity>
           )}
+
           <View style={styles.qrDetails}>
             <Text style={styles.text}>Days until your QR code expires:</Text>
             <Text style={styles.expiry}>{daysRemaining}</Text>
-            <TouchableOpacity style={styles.button} onPress={generateQR}>
-              <Text style={styles.buttonText}>Generate QR</Text>
+            
+            <TouchableOpacity style={styles.button} onPress={async () => {
+              if (daysRemaining <= 0) {
+                console.log("QR code expired. Generating a new one...");
+                
+                if (qrCodeValue) {
+                  setQrVisible(true);
+                  setQrCode(qrCodeValue);
+                }
+              } else {
+                console.log("QR code is still valid.");
+                setQrVisible(true);
+              }
+            }}>
+              <Text style={styles.buttonText}>
+                {daysRemaining <= 0 ? "Generate New QR" : "Show QR code"}
+              </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Modal for Enlarged QR Code */}
+          <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                  <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
+
+          <View style={styles.qrDetails}>
+            <Text style={styles.text}>Days until your QR code expires:</Text>
+            <Text style={styles.expiry}>{daysRemaining}</Text>
+            
+            <TouchableOpacity style={styles.button} onPress={async()=>{
+
+              if (daysRemaining <= 0) {
+                console.log("QR code expired. Generating a new one...");
+                const qrCodeValue = await getQrCode();
+                if (qrCodeValue){
+                  setQrVisible(true);
+                  setQrCode(qrCodeValue);
+                }
+              } else {
+                console.log("QR code is still valid.");
+                setQrVisible(true);
+              }
+            }}
+            >
+
+              <Text style={styles.buttonText}>
+                {daysRemaining <= 0 ? "Generate New QR" : "Show QR code"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        
+
+
+
 
         {/* Profile Section */}
         <View style={styles.profileContainer}>
           <Image source={kotsIcon} style={styles.profileImage} />
           <View style={styles.profileTextContainer}>
-            <Text style={styles.text}>{userData.name || 'Loading...'}</Text>
+            <Text style={styles.text}>{'Loading...'}</Text>
             <Text style={styles.schedule}>12/24/2025 - 00:04:20</Text>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => Alert.alert('Contact', 'Your coach has been notified!')}>
               <Text style={styles.buttonText}>Contact Me</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Additional feature: Workout Summary */}
+        <View style={[styles.card, {marginTop: 15}]}>
+          <Text style={styles.heading}>Workout Summary</Text>
+          <View style={styles.summaryContainer}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>
+                {exercises.filter(ex => ex.completed).length}
+              </Text>
+              <Text style={styles.summaryLabel}>Completed</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>
+                {exercises.length}
+              </Text>
+              <Text style={styles.summaryLabel}>Total</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>
+                {exercises.length > 0 ? 
+                  Math.round((exercises.filter(ex => ex.completed).length / exercises.length) * 100) + '%' : 
+                  '0%'}
+              </Text>
+              <Text style={styles.summaryLabel}>Progress</Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -538,14 +568,47 @@ const styles = StyleSheet.create({
     fontFamily: 'KeaniaOne',
     marginTop: 10,
   },
-  programNote: {
-    color: '#AAAAAA',
-    fontSize: 12,
-    fontFamily: 'KeaniaOne',
-    textAlign: 'center',
+  summaryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 15,
-    fontStyle: 'italic',
+    marginBottom: 5,
   },
+  summaryItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  summaryValue: {
+    color: '#4CAF50',
+    fontSize: 24,
+    fontFamily: 'KeaniaOne',
+  },
+  summaryLabel: {
+    color: 'white',
+    fontSize: 14,
+    fontFamily: 'KeaniaOne',
+    marginTop: 5,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  closeButton: {
+    marginTop: 15,
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+  },
+  
 });
 
 export default HomeScreen;
