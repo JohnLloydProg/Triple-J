@@ -158,10 +158,7 @@ class TimelineRecordsView(generics.GenericAPIView):
         record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'))
         record.img.save('image.jpg', ContentFile(base64.b64decode(request.data.get('img'))))
         record.save()
-        response = {'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight}
-        if (record.img):
-            response['img'] = record.img
-        return Response(response)
+        return Response({'details': 'successfully uploaded'})
 
 
 class CurrentTimelineRecordView(generics.GenericAPIView):
