@@ -36,7 +36,6 @@ async function timelineRequest() {
 
 async function timelineSaveRequest(height, weight, image=null) {
   let accessToken = await SecureStore.getItemAsync("accessToken");
-  console.log(image)
   const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
     method : "POST",
     headers : {
@@ -128,7 +127,6 @@ const TimelineScreen = () => {
         base64 : true
       });
       if (!result.canceled) {
-        console.log(result.assets[0]);
         const asset = result.assets.pop()
         const uri = asset.uri;
 
