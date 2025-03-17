@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { CheckBox } from '@rneui/themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 // Import simple QR code library
 import QRCode from 'react-native-qrcode-svg';
@@ -75,7 +76,8 @@ async function getQrCode() {
         headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
       });
     }
-    const data = await response.blob();
+    const data = await response.json();
+    console.log(data.image);
     return data;
   } catch (error) {
     console.error("Error fetching QR Code:", error);
@@ -101,6 +103,7 @@ async function postQrCode() {
       }
     }
     const data = await response.json();
+    console.log(data.image);
     return data;
 }
 
@@ -168,7 +171,7 @@ const HomeScreen = () => {
       }
     };
     fetchUserData();
-    postQrCode().then(data => console.log(data));
+    getQrCode().then(data => setQr(data));
     
   }, []);
 
@@ -178,7 +181,7 @@ const HomeScreen = () => {
   const onRefresh = useCallback(() => {
     console.log("refreshing")
     setRefreshing(true);
-    getQrCode().then(data => console.log(data));
+    getQrCode().then(data => setQr(data));
     setTimeout(() => { 
       setRefreshing(false);
     }, 2000);
@@ -270,30 +273,18 @@ const HomeScreen = () => {
 
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
-          {qrVisible && (
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <View style={styles.qrBox}>
-                
-              </View>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <View style={styles.qrBox}>
+              <Image source={{uri: `data:image/jpeg;base64,${qr.image}`}} style={{width:100, height:100}}/>
+            </View>
+          </TouchableOpacity>
 
           <View style={styles.qrDetails}>
             <Text style={styles.text}>Days until your QR code expires:</Text>
             <Text style={styles.expiry}>{daysRemaining}</Text>
             
             <TouchableOpacity style={styles.button} onPress={async () => {
-              if (daysRemaining <= 0) {
-                console.log("QR code expired. Generating a new one...");
-                
-                if (qrCodeValue) {
-                  setQrVisible(true);
-                  setQrCode(qrCodeValue);
-                }
-              } else {
-                console.log("QR code is still valid.");
-                setQrVisible(true);
-              }
+              postQrCode().then(data => setQr(data));
             }}>
               <Text style={styles.buttonText}>
                 {daysRemaining <= 0 ? "Generate New QR" : "Show QR code"}
@@ -317,36 +308,6 @@ const HomeScreen = () => {
             </View>
           </Modal>
         </View>
-
-          <View style={styles.qrDetails}>
-            <Text style={styles.text}>Days until your QR code expires:</Text>
-            <Text style={styles.expiry}>{daysRemaining}</Text>
-            
-            <TouchableOpacity style={styles.button} onPress={async()=>{
-
-              if (daysRemaining <= 0) {
-                console.log("QR code expired. Generating a new one...");
-                const qrCodeValue = await getQrCode();
-                if (qrCodeValue){
-                  setQrVisible(true);
-                  setQrCode(qrCodeValue);
-                }
-              } else {
-                console.log("QR code is still valid.");
-                setQrVisible(true);
-              }
-            }}
-            >
-
-              <Text style={styles.buttonText}>
-                {daysRemaining <= 0 ? "Generate New QR" : "Show QR code"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        
-
-
-
 
         {/* Profile Section */}
         <View style={styles.profileContainer}>

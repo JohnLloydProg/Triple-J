@@ -28,7 +28,7 @@ class QRCodeView(generics.GenericAPIView):
             
             
             qrImage = qrcode.make(qrObject.content)
-            data = {'image' : str(base64.b64encode(qrImage.get_image().tobytes()))}
+            data = {'image' : str(base64.b64encode(qrImage.get_image()))}
             return JsonResponse(data)
         except QRCode.DoesNotExist:
             return JsonResponse({'details':'Account does not have any QR code'})
@@ -44,7 +44,7 @@ class QRCodeView(generics.GenericAPIView):
             qrObject.save()
 
             qrImage = qrcode.make(qrObject.content)
-            data = {'image' : str(base64.b64encode(qrImage.get_image().tobytes()))}
+            data = {'image' : str(base64.b64encode(qrImage.get_image()))}
             return JsonResponse(data)
 
 
