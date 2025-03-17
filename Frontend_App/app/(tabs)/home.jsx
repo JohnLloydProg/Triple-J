@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View, Text, TouchableOpacity, Alert, RefreshControl, Modal } from 'react-native';
+import { Image, StyleSheet, View, Text, TouchableOpacity, Alert, RefreshControl, Modal, Linking } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFonts } from 'expo-font';
 import { CheckBox } from '@rneui/themed';
@@ -77,7 +77,7 @@ async function getQrCode() {
       });
     }
     const data = await response.json();
-    console.log(data.image);
+    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching QR Code:", error);
@@ -103,7 +103,7 @@ async function postQrCode() {
       }
     }
     const data = await response.json();
-    console.log(data.image);
+    console.log(data);
     return data;
 }
 
@@ -164,13 +164,13 @@ const HomeScreen = () => {
       try {
         let userId = await SecureStore.getItemAsync("userId");
         let userName = await SecureStore.getItemAsync("userName");
-        setUserData({ name: userName || "Guest User", id: userId || "" });
         
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
     fetchUserData();
+    getGymPopulation().then(data => setgymPopCount(data));
     getQrCode().then(data => setQr(data));
     
   }, []);
@@ -182,6 +182,7 @@ const HomeScreen = () => {
     console.log("refreshing")
     setRefreshing(true);
     getQrCode().then(data => setQr(data));
+    getGymPopulation().then(data => setgymPopCount(data));
     setTimeout(() => { 
       setRefreshing(false);
     }, 2000);
@@ -274,17 +275,15 @@ const HomeScreen = () => {
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
           <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <View style={styles.qrBox}>
-              <Image source={{uri: `data:image/jpeg;base64,${qr.image}`}} style={{width:100, height:100}}/>
-            </View>
+            <Image source={{uri: `https://triple-j.onrender.com${qr.image}`}} style={styles.qrBox}/>
           </TouchableOpacity>
 
           <View style={styles.qrDetails}>
             <Text style={styles.text}>Days until your QR code expires:</Text>
             <Text style={styles.expiry}>{daysRemaining}</Text>
             
-            <TouchableOpacity style={styles.button} onPress={async () => {
-              postQrCode().then(data => setQr(data));
+            <TouchableOpacity style={styles.button} onPress={() => {
+              postQrCode().then(data => alert(data.details));
             }}>
               <Text style={styles.buttonText}>
                 {daysRemaining <= 0 ? "Generate New QR" : "Show QR code"}
@@ -315,36 +314,9 @@ const HomeScreen = () => {
           <View style={styles.profileTextContainer}>
             <Text style={styles.text}>{'Loading...'}</Text>
             <Text style={styles.schedule}>12/24/2025 - 00:04:20</Text>
-            <TouchableOpacity style={styles.button} onPress={() => Alert.alert('Contact', 'Your coach has been notified!')}>
+            <TouchableOpacity style={styles.button} onPress={() => {Linking.openURL("https://web.facebook.com/louisanton.gascon").catch(err => console.error('An error occurred', err));}}>
               <Text style={styles.buttonText}>Contact Me</Text>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Additional feature: Workout Summary */}
-        <View style={[styles.card, {marginTop: 15}]}>
-          <Text style={styles.heading}>Workout Summary</Text>
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {exercises.filter(ex => ex.completed).length}
-              </Text>
-              <Text style={styles.summaryLabel}>Completed</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {exercises.length}
-              </Text>
-              <Text style={styles.summaryLabel}>Total</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {exercises.length > 0 ? 
-                  Math.round((exercises.filter(ex => ex.completed).length / exercises.length) * 100) + '%' : 
-                  '0%'}
-              </Text>
-              <Text style={styles.summaryLabel}>Progress</Text>
-            </View>
           </View>
         </View>
       </ScrollView>
