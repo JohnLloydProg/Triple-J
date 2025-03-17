@@ -5,7 +5,7 @@ from attendance.models import Attendance, QRCode
 class QRCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = QRCode
-        fields = ['content', 'member', 'expirationDate']
+        fields = ['content', 'member', 'expirationDate', 'image']
         extra_kwargs = {
             'content':{'read_only':True},
             'member':{'read_only':True},

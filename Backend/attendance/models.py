@@ -4,9 +4,13 @@ import uuid
 from django.utils.timezone import now
 from datetime import timedelta
 from account.models import Member
+from django.core.files.base import ContentFile
+from django.core.files import File
+import qrcode
 
 # Create your models here.
-
+def timelineRecordPath(instance, filename):
+    return f'user_{str(instance.member.pk)}/qr-code/{filename}'
 
 class QRCode(models.Model):
     """
@@ -14,8 +18,14 @@ class QRCode(models.Model):
     """
 
     content = models.UUIDField(primary_key=True, default=uuid.uuid1, editable=False)
+    image = models.ImageField(upload_to=timelineRecordPath, null=True, blank=True)
     member = models.OneToOneField(Member, on_delete=models.CASCADE)
     expirationDate = models.DateField(null=True)
+
+    def generate(self):
+        qrImage = qrcode.make(self.content)
+        qrImage.save('temp-qr.png')
+        self.image.save('code.png', File(open('temp-qr.png', 'rb')))
 
     def setExpirationDate(self):
         self.expirationDate = now().date() + timedelta(days=7)

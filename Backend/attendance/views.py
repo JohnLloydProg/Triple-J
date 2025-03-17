@@ -8,10 +8,13 @@ from attendance.models import Attendance
 from django.utils.timezone import now
 from attendance.models import QRCode
 from rest_framework import generics
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from attendance.serializers import QRCodeSerializer
 from django.views import View
-import qrcode
-import base64
+from django.conf import settings
+import json
+import os
 
 # Create your views here.
 
@@ -25,11 +28,8 @@ class QRCodeView(generics.GenericAPIView):
             if (qrObject.isExpired()):
                 qrObject.delete()
                 return JsonResponse({'details' : 'QR code is expired'})
+            return Response(QRCodeSerializer(qrObject).data)
             
-            
-            qrImage = qrcode.make(qrObject.content)
-            data = {'image' : str(base64.b64encode(qrImage.get_image()))}
-            return JsonResponse(data)
         except QRCode.DoesNotExist:
             return JsonResponse({'details':'Account does not have any QR code'})
     
@@ -40,12 +40,10 @@ class QRCodeView(generics.GenericAPIView):
             return JsonResponse({'details' : 'The account already has a QR Code'})
         except:
             qrObject = QRCode(member=Member.objects.get(pk=member))
+            qrObject.generate()
             qrObject.setExpirationDate()
             qrObject.save()
-
-            qrImage = qrcode.make(qrObject.content)
-            data = {'image' : str(base64.b64encode(qrImage.get_image()))}
-            return JsonResponse(data)
+            return JsonResponse({'details':'success'})
 
 
 class LoggingView(generics.GenericAPIView):
