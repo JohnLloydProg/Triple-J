@@ -6,10 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import bodyIcon from '@/assets/images/sample-full-body.jpg';
 import { RefreshControl } from 'react-native';
-import { router, useRouter } from 'expo-router';
 import {refreshAccessToken} from '../../components/refreshToken';
+import * as ImagePicker from 'expo-image-picker';
 
 //{'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img}
+// might need to add dependencies for the image picker library
 
 async function timelineRequest() {
   let accessToken = await SecureStore.getItemAsync("accessToken");
@@ -33,7 +34,7 @@ async function timelineRequest() {
   return body;
 }
 
-async function timelineSaveRequest(height, weight) {
+async function timelineSaveRequest(height, weight, image=null) {
   let accessToken = await SecureStore.getItemAsync("accessToken");
   const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
     method : "POST",
@@ -44,6 +45,7 @@ async function timelineSaveRequest(height, weight) {
     body : JSON.stringify({
       'height' : parseFloat(height),
       'weight' : parseFloat(weight),
+      'img' : image
     }),
     credentials : "same-origin"
   })
@@ -84,6 +86,8 @@ const TimelineScreen = () => {
   const [modalVisble, setModalVisible] = useState(false);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
+  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -99,7 +103,7 @@ const TimelineScreen = () => {
 
   const save = async () => {
     console.log('pressed');
-    const response = await timelineSaveRequest(height, weight);
+    const response = await timelineSaveRequest(height, weight, imageFile);
     if (response.ok){
       setModalVisible(false);
     }
@@ -111,6 +115,26 @@ const TimelineScreen = () => {
     setHeight(height);
     setWeight(weight);
     setModalVisible(true);
+  }
+
+  const selectImage = async () => {
+    console.log("image pressed")
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission denied")
+    }else {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        base64 : true
+      });
+      if (!result.canceled) {
+        const asset = result.assets.pop()
+        const uri = asset.uri;
+
+        setImage(uri);
+        setImageFile(asset.base64);
+      }
+    }
+    
   }
 
   return (
@@ -126,7 +150,7 @@ const TimelineScreen = () => {
             <View key={index} style={styles.itemContainer}>
               <Text style={styles.dateText}>{timeline.date}</Text>
               <View style={styles.card}>
-                <Image source={require('@/assets/images/sample-full-body.jpg')} style={styles.image} />
+                <Image source={{uri: image}} style={styles.image}/>
                 <View style={styles.details}>
                   <Text style={styles.status}>{BMICategory(timeline.height, timeline.weight)}</Text>
                   <Text style={styles.info}>BMI: {calculateBMI(timeline.height, timeline.weight)}</Text>
@@ -143,7 +167,9 @@ const TimelineScreen = () => {
       }}>
         <View style={modalStyles.background}>
           <View style={modalStyles.textView}>
-            <Image source={require('@/assets/images/sample-full-body.jpg')} style={modalStyles.image} onPress/>
+            <TouchableOpacity onPress={() => {selectImage()}}>
+              <Image source={{uri : image}} style={modalStyles.image}/>
+            </TouchableOpacity>
             <View style={modalStyles.flex}>
                 <Text style={modalStyles.textInputLabel}>Height (M): </Text>
                 <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setHeight(newText)} value={height}></TextInput>
@@ -260,7 +286,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: 8,
     height: '100%',
-    backgroundColor: 'red',
+    backgroundColor: colors.redAccent,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -322,7 +348,7 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: '#76D09C',
     padding: 15,
-    borderRadius: 50,
+    borderRadius: 20,
   },
   timeline: {
     paddingLeft: 40,

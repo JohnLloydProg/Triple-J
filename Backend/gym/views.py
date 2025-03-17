@@ -9,7 +9,10 @@ from django.utils.timezone import now
 from django.views import View
 from datetime import date
 from gym.models import Program, ProgramWorkout, Workout, ProgramWorkoutRecord, TimelineRecord
+from django.core.files.base import ContentFile
+from django.core.files import File
 import json
+import base64
 
 # Create your views here.
 
@@ -152,12 +155,10 @@ class TimelineRecordsView(generics.GenericAPIView):
         if (not request.data):
             print(request.data)
             return JsonResponse({'details':'Does not contain information'}, status=400)
-        record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'), img=request.data.get('img'))
+        record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'))
+        record.img.save('image.jpg', ContentFile(base64.b64decode(request.data.get('img'))))
         record.save()
-        response = {'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight}
-        if (record.img):
-            response['img'] = record.img
-        return Response(response)
+        return Response({'details': 'successfully uploaded'})
 
 
 class CurrentTimelineRecordView(generics.GenericAPIView):
