@@ -1,7 +1,7 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal, ScrollView} from 'react-native';
+import {RefreshControl, Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal, ScrollView} from 'react-native';
 import colors from '../../constants/globalStyles';
 import jordi from '@/assets/images/jordi.png';
-
+import React from 'react';
 import upper from '@/assets/images/Upper-Workout-icon.png';
 import push from '@/assets/images/push.png';
 import pull from '@/assets/images/pull.png';
@@ -100,7 +100,7 @@ const [selectedProgram, setSelectedProgram] = useState([]);
 const [selectedWorkoutItem, setselectedWorkoutItem] = useState([]);
 const [selectedWorkoutRecord, setselectedWorkoutRecord] = useState([]);
 
-const [currentTimeLineInfo, setcurrentTimeLineInfo] = useState([]);
+const [currentTimeLineInfo, setcurrentTimeLineInfo] = useState({});
 
 const [reps,setReps] = useState("");
 const [sets,setSets] = useState("");
@@ -124,7 +124,7 @@ async function getCurrentTimeline()  {
     let userId = await SecureStore.getItemAsync("userId");
     parseInt(userId);
 
-    let response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
+    const response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -150,8 +150,8 @@ async function getCurrentTimeline()  {
     }
 
       const data = await response.json();
-      console.log(data);
-      setcurrentTimeLineInfo(data);
+    
+      return data;
     } catch (error) {
       console.error("Error:", error);
     }
@@ -192,7 +192,6 @@ async function newTestApi()  {
     }
 
       const data = await response.json();
-      console.log(data);
       setAvailableWorkouts(data);
     } catch (error) {
       console.error("Error:", error);
@@ -647,7 +646,10 @@ useEffect(() => {
   useEffect(()=>{
     testApi();
     newTestApi();
-    getCurrentTimeline();
+    getCurrentTimeline().then(data => {
+      console.log(data);
+      setcurrentTimeLineInfo(data);
+    });
   },[]);
 
 // refreshed modal after calling the updateProgram function
@@ -1035,10 +1037,29 @@ const WorkoutModalItem = ({workout}) => {
     </View>
   )
 };
+
+const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+
+    testApi();
+    newTestApi();
+    getCurrentTimeline().then(data => {
+      console.log(data);
+      setcurrentTimeLineInfo(data);
+    });
+  }, []);
   
 
   return(
-    <View style={styles.container}>
+    <View style={{flex: 1}}>
+    <ScrollView  refreshControl={
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    } style={styles.container}>
 
 
 
@@ -1046,7 +1067,7 @@ const WorkoutModalItem = ({workout}) => {
 
         <View style={styles.progressContainer}>
           <View style={{marginRight: 15}}>
-            <Image source={jordi} style={styles.profileImage} />
+            <Image source={{uri : `https://triple-j.onrender.com${currentTimeLineInfo.img}`}} style={styles.profileImage} />
           </View>
 
           <View>
@@ -1054,10 +1075,10 @@ const WorkoutModalItem = ({workout}) => {
               Date: {currentTimeLineInfo.date}
             </Text>
             <Text style={styles.progressText}>
-            BMI: {Math.round(currentTimeLineInfo.weight / (currentTimeLineInfo.height ** 2))} 
+            BMI: {Math.round(currentTimeLineInfo.weight / ((currentTimeLineInfo.height) ** 2))} 
                 {" "}
                 ({(() => {
-                  const bmi = Math.round(currentTimeLineInfo.weight / (currentTimeLineInfo.height ** 2));
+                  const bmi = Math.round(currentTimeLineInfo.weight / ((currentTimeLineInfo.height) ** 2));
                   
                   if (bmi < 18.5) {
                     return "Underweight";
@@ -1083,6 +1104,7 @@ const WorkoutModalItem = ({workout}) => {
       
       
       <FlatList
+      style={{marginBottom:25}}
       data={sortedProgramData}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handlePress(item)} >
@@ -1334,26 +1356,23 @@ const WorkoutModalItem = ({workout}) => {
       </View>
     </Modal>
 
-    
-
-      
-      <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
-        await addProgram();
-        await testApi();
-        console.log(programData);
-        console.log()
-        
-        }} >
-        <Text style={{fontSize: 40, position: 'relative', bottom: 3}}>
-          +
-        </Text>
-      </TouchableOpacity>
       
       
-
-    </View>
+      
+    </ScrollView>
  
-
+    <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
+      await addProgram();
+      await testApi();
+      console.log(programData);
+      console.log()
+      
+      }} >
+      <Text style={{fontSize: 40}}>
+        +
+      </Text>
+    </TouchableOpacity>
+    </View>
   )
   
 }
@@ -1396,8 +1415,8 @@ const styles = StyleSheet.create({
     
    },
    profileImage:{
-    maxHeight: 100,
-    maxWidth: 100,
+    width: 100,
+    height: 100,
     borderRadius: 20,
    },
    programCont:{

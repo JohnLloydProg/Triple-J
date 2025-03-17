@@ -4,7 +4,6 @@ import { useFonts } from 'expo-font';
 import { CheckBox } from '@rneui/themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import simple QR code library - uses less dependencies
 import QRCode from 'react-native-qrcode-svg';
