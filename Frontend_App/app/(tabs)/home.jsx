@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { CheckBox } from '@rneui/themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import simple QR code library - uses less dependencies
 import QRCode from 'react-native-qrcode-svg';
@@ -15,9 +15,20 @@ import situpIcon from '@/assets/images/Core-Workout-icon.png';
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
 import kotsIcon from '@/assets/images/Coach-icon.png';
 
-// API URLs for the gym member count and user's program
-const MEMBERS_API_URL = 'https://your-api-endpoint.com/active-members';
-const PROGRAM_API_URL = 'https://your-api-endpoint.com/user-program';
+// API configuration
+const API_CONFIG = {
+  BASE_URL: 'https://your-api-endpoint.com',
+  ENDPOINTS: {
+    USER_DATA: '/user-data',
+    MEMBER_COUNT: '/active-members',
+    USER_PROGRAM: '/user-program',
+  },
+  HEADERS: {
+    'Content-Type': 'application/json',
+    // Add authorization headers if needed
+    // 'Authorization': 'Bearer YOUR_TOKEN'
+  }
+};
 
 // Map exercise types to their corresponding icons
 const exerciseIconMap = {
@@ -35,76 +46,150 @@ const mockProgram = [
   { icon: situpIcon, type: 'core', name: 'Russian Twists', details: '3 sets   15 reps each side', completed: false },
 ];
 
+// Reusable fetch function with error handling and caching
+const fetchWithCache = async (endpoint, options = {}) => {
+  const cacheKey = `cache_${endpoint}`;
+  const cacheDuration = 5 * 60 * 1000; // 5 minutes cache
+  
+  try {
+    // Check if we have cached data
+    const cachedData = await AsyncStorage.getItem(cacheKey);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      const isExpired = Date.now() - timestamp > cacheDuration;
+      
+      if (!isExpired) {
+        console.log(`Using cached data for ${endpoint}`);
+        return data;
+      }
+    }
+    
+    // Fetch fresh data
+    const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+      headers: API_CONFIG.HEADERS,
+      ...options,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Cache the data
+    await AsyncStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      })
+    );
+    
+    return data;
+  } catch (error) {
+    console.error(`Error fetching ${endpoint}:`, error);
+    throw error;
+  }
+};
+
 const HomeScreen = () => {
   const [fontsLoaded] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
-  const [exercises, setExercises] = useState(mockProgram); // Use mock data directly
-  const [programLoading, setProgramLoading] = useState(false); // No loading state needed for mock data
+  const [exercises, setExercises] = useState(mockProgram);
+  const [programLoading, setProgramLoading] = useState(false);
   const [programError, setProgramError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
-  // QR code states
   const [qrVisible, setQrVisible] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(5);
-  
-  // Gym member count state
   const [memberCount, setMemberCount] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  
-  // Pull-to-refresh state
   const [refreshing, setRefreshing] = useState(false);
+  const [userData, setUserData] = useState({
+    name: '',
+    id: '',
+  });
 
-  // Safe JSON parse function with error handling (kept for future use)
-  const safeJsonParse = async (response) => {
+  // Function to fetch user data
+  const fetchUserData = async () => {
     try {
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
-      } else {
-        const text = await response.text();
-        console.error('Non-JSON response received:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
-        throw new Error('API returned non-JSON response');
-      }
+      setIsLoading(true);
+      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.USER_DATA);
+      setUserData({
+        name: data.name || 'Guest User',
+        id: data.id || 'Unknown',
+      });
     } catch (error) {
-      console.error('Response parse error:', error.message);
-      throw new Error(`Parse error: ${error.message}`);
-    }
-  };
-
-  // Fetch user's program from API (disabled for now)
-  const fetchUserProgram = async () => {
-    // Disabled for now, only mock data is used
-    console.log('Fetch functionality is disabled. Using mock data.');
-  };
-
-  // Fetch member count from API (disabled for now)
-  const fetchMemberCount = async () => {
-    setIsLoading(true);
-    try {
-      // Demo data, simulate API response with random count between 20-50
-      const mockResponse = {
-        activeMembers: Math.floor(Math.random() * 31) + 20,
-        timestamp: new Date().toISOString()
-      };
-      
-      setMemberCount(mockResponse.activeMembers);
-      setLastUpdated(new Date());
-      
-    } catch (error) {
-      console.error('Error fetching member count:', error);
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data. Using cached data if available.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Pull-to-refresh handler
+  // Function to fetch active members count
+  const fetchMemberCount = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.MEMBER_COUNT);
+      setMemberCount(data.activeMembers || 0);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching member count:', error);
+      // Fallback to mock data if API fails
+      const mockCount = Math.floor(Math.random() * 31) + 20;
+      setMemberCount(mockCount);
+      setLastUpdated(new Date());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to fetch user program
+  const fetchUserProgram = async () => {
+    try {
+      setProgramLoading(true);
+      setProgramError(false);
+      const data = await fetchWithCache(API_CONFIG.ENDPOINTS.USER_PROGRAM);
+      
+      if (data && data.exercises && data.exercises.length > 0) {
+        // Map API data to our exercise format
+        const formattedExercises = data.exercises.map(exercise => {
+          return {
+            icon: exerciseIconMap[exercise.type] || situpIcon, // Default to situp icon if type not found
+            type: exercise.type || 'unknown',
+            name: exercise.name,
+            details: exercise.details,
+            completed: exercise.completed || false
+          };
+        });
+        setExercises(formattedExercises);
+      } else {
+        // If no exercises in response, use empty array to show rest day message
+        setExercises([]);
+      }
+    } catch (error) {
+      console.error('Error fetching program:', error);
+      setProgramError(true);
+      setErrorMessage('Could not load your exercise program. Please try again later.');
+      // Fallback to mock data
+      setExercises(mockProgram);
+    } finally {
+      setProgramLoading(false);
+    }
+  };
+
+  // Combined refresh function for pull-to-refresh
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchMemberCount();
+      await Promise.all([
+        fetchUserData(),
+        fetchMemberCount(),
+        fetchUserProgram()
+      ]);
     } catch (error) {
       console.error('Error during refresh:', error);
     } finally {
@@ -112,9 +197,23 @@ const HomeScreen = () => {
     }
   }, []);
 
-  // Initial fetch and periodic updates
+  // Initial data loading
   useEffect(() => {
-    fetchMemberCount();
+    const loadInitialData = async () => {
+      try {
+        await Promise.all([
+          fetchUserData(),
+          fetchMemberCount(),
+          fetchUserProgram()
+        ]);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+    
+    loadInitialData();
+    
+    // Set up periodic refresh for member count only
     const intervalId = setInterval(fetchMemberCount, 60000);
     return () => clearInterval(intervalId);
   }, []);
@@ -129,29 +228,32 @@ const HomeScreen = () => {
     );
     setExercises(updatedExercises);
   };
-  
-  // Simple function to generate QR code
+
+  // Generate QR code
   const generateQR = () => {
+    if (!userData.name || !userData.id) {
+      Alert.alert('Error', 'User data is not available. Please try again later.');
+      return;
+    }
+
     setQrVisible(true);
     setDaysRemaining(5);
-    Alert.alert("Success", "QR code generated successfully!");
+    Alert.alert('Success', 'QR code generated successfully!');
   };
 
-  // Create QR code value with user information
+  // QR code value
   const qrValue = JSON.stringify({
-    name: "Louis Anton L. Gascon",
-    membershipId: "GYM-12345",
+    name: userData.name,
+    membershipId: userData.id,
     timestamp: new Date().toISOString(),
-    expires: new Date(Date.now() + daysRemaining * 86400000).toISOString()
+    expires: new Date(Date.now() + daysRemaining * 86400000).toISOString(),
   });
 
   // Format the last updated time
   const formatLastUpdated = () => {
     if (!lastUpdated) return '';
-    
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastUpdated) / 60000);
-    
     if (diffInMinutes < 1) return 'Updated just now';
     if (diffInMinutes === 1) return 'Updated 1 minute ago';
     return `Updated ${diffInMinutes} minutes ago`;
@@ -159,9 +261,9 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={{ paddingBottom: 30 }} 
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 30 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
@@ -177,7 +279,15 @@ const HomeScreen = () => {
         {/* Program for Today */}
         <View style={styles.card}>
           <Text style={styles.heading}>Your program for today</Text>
-          {exercises.length === 0 ? (
+          {programLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading your workout...</Text>
+            </View>
+          ) : programError ? (
+            <View style={styles.noExercisesContainer}>
+              <Text style={styles.noExercisesText}>{errorMessage}</Text>
+            </View>
+          ) : exercises.length === 0 ? (
             <View style={styles.noExercisesContainer}>
               <Text style={styles.noExercisesText}>No exercises scheduled for today</Text>
               <Text style={styles.restDayText}>Enjoy your rest day!</Text>
@@ -189,12 +299,10 @@ const HomeScreen = () => {
                   {exercise.icon && (
                     <Image source={exercise.icon} style={styles.exerciseIcon} resizeMode="contain" />
                   )}
-
                   <View style={styles.exerciseTextContainer}>
                     <Text style={styles.text}>{exercise.name}</Text>
                     <Text style={styles.details}>{exercise.details}</Text>
                   </View>
-
                   <CheckBox
                     checked={exercise.completed}
                     onPress={() => toggleExercise(index)}
@@ -206,12 +314,9 @@ const HomeScreen = () => {
               ))}
             </>
           )}
-          <Text style={styles.programNote}>
-            Program optimized for current gym occupancy: {memberCount} members
-          </Text>
         </View>
 
-        {/* Gym Members Count - Now with pull-to-refresh functionality */}
+        {/* Gym Members Count */}
         <View style={styles.membersCard}>
           <Text style={styles.bigText}>{isLoading ? '...' : memberCount}</Text>
           <Text style={styles.details}>Gym members currently making gains</Text>
@@ -220,22 +325,19 @@ const HomeScreen = () => {
           )}
           <Text style={styles.pullToRefreshHint}>Pull down to refresh</Text>
         </View>
-        
+
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
-          <View style={styles.qrBox}>
-            {qrVisible ? (
+          {qrVisible && (
+            <View style={styles.qrBox}>
               <QRCode
                 value={qrValue}
                 size={150}
                 backgroundColor="white"
                 color="black"
               />
-            ) : (
-              <AntDesign name="qrcode" size={150} color="black" />
-            )}
-          </View>
-
+            </View>
+          )}
           <View style={styles.qrDetails}>
             <Text style={styles.text}>Days until your QR code expires:</Text>
             <Text style={styles.expiry}>{daysRemaining}</Text>
@@ -249,7 +351,7 @@ const HomeScreen = () => {
         <View style={styles.profileContainer}>
           <Image source={kotsIcon} style={styles.profileImage} />
           <View style={styles.profileTextContainer}>
-            <Text style={styles.text}>Louis Anton L. Gascon</Text>
+            <Text style={styles.text}>{userData.name || 'Loading...'}</Text>
             <Text style={styles.schedule}>12/24/2025 - 00:04:20</Text>
             <TouchableOpacity style={styles.button}>
               <Text style={styles.buttonText}>Contact Me</Text>
