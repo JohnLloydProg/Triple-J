@@ -41,7 +41,7 @@ class Attendance(models.Model):
 
     date = models.DateField(default=now)
     timeIn = models.TimeField(default=now)
-    timeOut = models.TimeField(null=True)
+    timeOut = models.TimeField(null=True, blank=True)
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
 
     def logOut(self):
