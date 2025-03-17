@@ -672,19 +672,231 @@ const getWorkoutDetails = (workoutName) => {
 };
 
 
+const processData = (data) => {
+  // Ensure data is an array and not null/undefined
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    // Return empty data structure if no valid data
+    return {
+      labels: [],
+      datasets: [],
+    };
+  }
+
+  // Safely extract data with proper type checking
+  const labels = data.map((item) => item.date || '');
+  
+  // Create datasets for all possible metrics
+  const datasets = [];
+  
+  // Check if any workout has sets data
+  const hasSetsData = data.some(item => 
+    item.details?.sets !== undefined && 
+    item.details?.sets !== null && 
+    !isNaN(parseInt(item.details.sets, 10))
+  );
+  
+  if (hasSetsData) {
+    const setsData = data.map((item) => {
+      const sets = item.details?.sets;
+      return sets && !isNaN(parseInt(sets, 10)) ? parseInt(sets, 10) : null;
+    });
+    
+    // Only add dataset if we have actual values (not all null)
+    if (setsData.some(value => value !== null)) {
+      datasets.push({
+        data: setsData.map(value => value === null ? 0 : value),
+        color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`, // Red for sets
+        strokeWidth: 2,
+        legendLabel: 'Sets'
+      });
+    }
+  }
+  
+  // Check if any workout has reps data
+  const hasRepsData = data.some(item => 
+    item.details?.reps !== undefined && 
+    item.details?.reps !== null && 
+    !isNaN(parseInt(item.details.reps, 10))
+  );
+  
+  if (hasRepsData) {
+    const repsData = data.map((item) => {
+      const reps = item.details?.reps;
+      return reps && !isNaN(parseInt(reps, 10)) ? parseInt(reps, 10) : null;
+    });
+    
+    // Only add dataset if we have actual values (not all null)
+    if (repsData.some(value => value !== null)) {
+      datasets.push({
+        data: repsData.map(value => value === null ? 0 : value),
+        color: (opacity = 1) => `rgba(0, 255, 0, ${opacity})`, // Green for reps
+        strokeWidth: 2,
+        legendLabel: 'Reps'
+      });
+    }
+  }
+  
+  // Check if any workout has time data
+  const hasTimeData = data.some(item => 
+    item.details?.time !== undefined && 
+    item.details?.time !== null && 
+    !isNaN(parseInt(item.details.time, 10))
+  );
+  
+  if (hasTimeData) {
+    const timeData = data.map((item) => {
+      const time = item.details?.time;
+      return time && !isNaN(parseInt(time, 10)) ? parseInt(time, 10) : null;
+    });
+    
+    // Only add dataset if we have actual values (not all null)
+    if (timeData.some(value => value !== null)) {
+      datasets.push({
+        data: timeData.map(value => value === null ? 0 : value),
+        color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`, // Blue for time
+        strokeWidth: 2,
+        legendLabel: 'Time'
+      });
+    }
+  }
+  
+  // Check if any workout has weight data
+  const hasWeightData = data.some(item => 
+    item.details?.weight !== undefined && 
+    item.details?.weight !== null && 
+    !isNaN(parseFloat(item.details.weight))
+  );
+  
+  if (hasWeightData) {
+    const weightData = data.map((item) => {
+      const weight = item.details?.weight;
+      return weight && !isNaN(parseFloat(weight)) ? parseFloat(weight) : null;
+    });
+    
+    // Only add dataset if we have actual values (not all null)
+    if (weightData.some(value => value !== null)) {
+      datasets.push({
+        data: weightData.map(value => value === null ? 0 : value),
+        color: (opacity = 1) => `rgba(128, 0, 128, ${opacity})`, // Purple for weight
+        strokeWidth: 2,
+        legendLabel: 'Weight'
+      });
+    }
+  }
+  
+  // Check if any workout has distance data
+  const hasDistanceData = data.some(item => 
+    item.details?.distance !== undefined && 
+    item.details?.distance !== null && 
+    !isNaN(parseFloat(item.details.distance))
+  );
+  
+  if (hasDistanceData) {
+    const distanceData = data.map((item) => {
+      const distance = item.details?.distance;
+      return distance && !isNaN(parseFloat(distance)) ? parseFloat(distance) : null;
+    });
+    
+    // Only add dataset if we have actual values (not all null)
+    if (distanceData.some(value => value !== null)) {
+      datasets.push({
+        data: distanceData.map(value => value === null ? 0 : value),
+        color: (opacity = 1) => `rgba(255, 165, 0, ${opacity})`, // Orange for distance
+        strokeWidth: 2,
+        legendLabel: 'Distance'
+      });
+    }
+  }
+
+  return {
+    labels,
+    datasets,
+    legend: datasets.map(dataset => dataset.legendLabel)
+  };
+};
+
+
 const WorkoutModalItem = ({workout}) => {
 
   const [recordData, setRecordData] = useState(null);
+  // Start with all metrics enabled, but they'll only show if data exists
+  const [selectedMetrics, setSelectedMetrics] = useState(['sets', 'reps', 'time', 'weight', 'distance']);
+
+  const chartConfig = {
+    backgroundGradientFrom: "#1E2923",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#08130D",
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: true, // Use dataset colors
+    decimalPlaces: 1, // Allow one decimal place for weight/distance
+    formatYLabel: (value) => value.toString(),
+    formatXLabel: (value) => value.toString(),
+    propsForDots: {
+      r: "5", // Dot radius
+    }, 
+    propsForLabels: {
+      xLabelsOffset: 15, 
+      fontSize: 10,
+    },
+  };
 
   useEffect(() => {
     const fetchRecord = async () => {
-      console.log("Fetching record for workout:", workout.id);
-      const data = await getRecord(workout.id);
-      setRecordData(data);
+      try {
+        console.log("Fetching record for workout:", workout.id);
+        const data = await getRecord(workout.id);
+        // Ensure data is valid before setting state
+        if (data && Array.isArray(data)) {
+          setRecordData(data);
+        } else {
+          console.error("Invalid record data received:", data);
+          setRecordData([]);
+        }
+      } catch (error) {
+        console.error("Error fetching workout record:", error);
+        setRecordData([]);
+      }
     };
 
     fetchRecord(); 
   }, []);
+
+  // Process data safely
+  const chartData = processData(recordData);
+  
+  // Toggle specific metrics on/off
+  const toggleMetric = (metric) => {
+    if (selectedMetrics.includes(metric)) {
+      setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
+    } else {
+      setSelectedMetrics([...selectedMetrics, metric]);
+    }
+  };
+  
+  // Filter datasets based on selected metrics
+  const filterDatasets = (data) => {
+    if (!data || !data.datasets) return { labels: [], datasets: [] };
+    
+    const metricToLabelMap = {
+      'sets': 'Sets',
+      'reps': 'Reps',
+      'time': 'Time',
+      'weight': 'Weight',
+      'distance': 'Distance'
+    };
+    
+    const filteredDatasets = data.datasets.filter(dataset => 
+      selectedMetrics.some(metric => dataset.legendLabel === metricToLabelMap[metric])
+    );
+    
+    return {
+      ...data,
+      datasets: filteredDatasets
+    };
+  };
 
   return (
     <View style={styles.mainModalCont}>
@@ -737,87 +949,25 @@ const WorkoutModalItem = ({workout}) => {
     </View>
 
     <View style={styles.workoutAnalyticsCont}>
-      
-          <View>
-            
-          {recordData && recordData.map((record, index) => (
-          <View style={styles.analyticsInfoCont} key={record.id || index}>
-            <View style={styles.indivAnalyticsCont}> 
-              <Text style={styles.analyticText}>
-                 {record.date}
-              </Text>
-              <Text style={styles.analyticSubText}>
-              Date
-              </Text>
-            </View>
-            
-            
-              {record.details.sets && (
-                <View style={styles.indivAnalyticsCont}>
-                  <Text style={styles.analyticText}>
-                    {record.details.sets}
-                  </Text>
-                  <Text style={styles.analyticSubText}>
-                    Sets
-                  </Text>
-                </View>
-              )}
-            
-            
-            
-              {record.details.reps && (
-                <View style={styles.indivAnalyticsCont}>
-                  <Text style={styles.analyticText}>
-                     {record.details.reps}
-                  </Text>
-                  <Text style={styles.analyticSubText}>
-                    Reps
-                  </Text>
-                </View>
-              )}
-           
-
-              
-                {record.details.weight && (
-                  <View style={styles.indivAnalyticsCont}>
-                    <Text style={styles.analyticText}>
-                       {record.details.weight}
-                    </Text>
-                    <Text style={styles.analyticSubText}>
-                     Weight
-                    </Text>
-                    </View>
-                )}
-              
-
-              
-                {record.details.distance && (
-                  <View style={styles.indivAnalyticsCont}>
-                    <Text style={styles.analyticText}>
-                       {record.details.distance}
-                    </Text>
-                    <Text style={styles.analyticSubText}>
-                      Distance
-                    </Text>
-                    </View>
-                )}
-              
-
-              
-                {record.details.time && (
-                  <View style={styles.indivAnalyticsCont}>
-                    <Text style={styles.analyticText}>
-                      {record.details.time}
-                    </Text>
-                    <Text style={styles.analyticSubText}>
-                      Time
-                    </Text>
-                  </View>
-                )}
-              
-
-          </View>
-        ))}
+        <View style={[{flex: 1}, {alignItems:'center'}, {position:'relative'}, {left:-13}]}>
+          {recordData && recordData.length > 0 && chartData.datasets && chartData.datasets.length > 0 ? (
+            <LineChart
+              data={filterDatasets(chartData)}
+              width={380}
+              height={310}
+              verticalLabelRotation={45}
+              chartConfig={chartConfig}
+              withDots={true}
+              withInnerLines={true}
+              withOuterLines={true}
+              withShadow={false}
+              fromZero={true}
+              legend={chartData.legend}
+            />
+          ) : (
+            <Text style={{textAlign: 'center', marginTop: 100}}>No workout data available</Text>
+          )}
+                    
             
           </View>
 
@@ -1107,7 +1257,7 @@ const WorkoutModalItem = ({workout}) => {
               setmodalRecordVisible(false);
 
             }}>
-              <Text style={styles.closeBtnText}>Create Workout</Text>
+              <Text style={styles.closeBtnText}>Add Record</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalRecordVisible(false)}> 
