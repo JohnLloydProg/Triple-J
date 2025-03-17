@@ -965,7 +965,9 @@ const WorkoutModalItem = ({workout}) => {
               legend={chartData.legend}
             />
           ) : (
-            <Text style={{textAlign: 'center', marginTop: 100}}>No workout data available</Text>
+            <View style={{justifyContent:'center'}}>
+              <Text style={{ marginTop: 20, color: 'white',fontFamily: 'KeaniaOne'}}>No workout data available</Text>
+            </View>
           )}
                     
             
@@ -1187,6 +1189,7 @@ const WorkoutModalItem = ({workout}) => {
               const updatedItem = await viewWorkout(selectedProgram.id);
               setSelectedItem(updatedItem);
               await testApi();
+              await newTestApi();
               setmodalChoiceVisible(false);
 
             }}>
