@@ -274,7 +274,7 @@ const HomeScreen = () => {
 
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <TouchableOpacity>
             <Image source={{uri: `https://triple-j.onrender.com${qr.image}`}} style={styles.qrBox}/>
           </TouchableOpacity>
 
