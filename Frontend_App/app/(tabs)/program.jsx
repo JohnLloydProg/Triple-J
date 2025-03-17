@@ -862,6 +862,7 @@ const processData = (data) => {
 };
 
 
+
 const WorkoutModalItem = ({workout}) => {
 
   const [recordData, setRecordData] = useState(null);
@@ -999,7 +1000,7 @@ const WorkoutModalItem = ({workout}) => {
           {recordData && recordData.length > 0 && chartData.datasets && chartData.datasets.length > 0 ? (
             <LineChart
               data={filterDatasets(chartData)}
-              width={380}
+              width={360}
               height={310}
               verticalLabelRotation={45}
               chartConfig={chartConfig}

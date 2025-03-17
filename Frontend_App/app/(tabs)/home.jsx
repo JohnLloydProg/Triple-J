@@ -130,12 +130,14 @@ const exerciseIconMap = {
 };
 
 // Mock program data for fallback
-const mockProgram = [
+let mockProgram = [
   { icon: heartIcon, type: 'cardio', name: 'Treadmill Run', details: '20 minutes, moderate pace', completed: false },
   { icon: treadmillIcon, type: 'lower', name: 'Squats', details: '4 sets   12 reps', completed: false },
   { icon: bicepIcon, type: 'upper', name: 'Dumbbell Curls', details: '3 sets   10 reps', completed: false },
   { icon: situpIcon, type: 'core', name: 'Russian Twists', details: '3 sets   15 reps each side', completed: false },
 ];
+
+
 
 
 
@@ -175,7 +177,12 @@ const HomeScreen = () => {
     
   }, []);
 
-
+  const toggleExercise = (index) => {
+    const updatedExercises = exercises.map((exercise, i) =>
+      i === index ? { ...exercise, completed: !exercise.completed } : exercise
+    );
+    setExercises(updatedExercises);
+  }
  
   // Combined refresh function for pull-to-refresh
   const onRefresh = useCallback(() => {
@@ -261,7 +268,7 @@ const HomeScreen = () => {
 
         {/* Gym Members Count */}
           <View style={styles.membersCard}>
-            <Text style={styles.bigText}>{gymPopCount.Number}</Text>
+          <Text style={styles.bigText}>{gymPopCount?.Number ?? 0}</Text>
             <Text style={styles.details}>Gym members currently making gains</Text>
             {lastUpdated && (
               <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
