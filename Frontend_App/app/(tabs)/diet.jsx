@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   ScrollView,
-  Image,
+  TouchableOpacity,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useFocusEffect } from "expo-router";
@@ -17,12 +17,12 @@ export default function Diet() {
   const [bmi, setBMI] = useState(null);
   const [bmiCategory, setBmiCategory] = useState("");
   const [recommendedMeals, setRecommendedMeals] = useState([]);
+  const [expanded, setExpanded] = useState(null);
 
   const [fontsLoaded] = useFonts({
     KeaniaOne: require("@/assets/fonts/KeaniaOne-Regular.ttf"),
   });
 
-  // Fetch weight & height from SecureStore and then get recommended meals from the server
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
@@ -30,35 +30,24 @@ export default function Diet() {
           const storedWeight = await SecureStore.getItemAsync("weight");
           const storedHeight = await SecureStore.getItemAsync("height");
 
-          const parsedWeight = parseFloat(storedWeight);
-          const parsedHeight = parseFloat(storedHeight);
+          if (storedWeight && storedHeight) {
+            const parsedWeight = parseFloat(storedWeight);
+            const parsedHeight = parseFloat(storedHeight);
 
-          setWeight(parsedWeight);
-          setHeight(parsedHeight);
+            setWeight(parsedWeight);
+            setHeight(parsedHeight);
 
-          if (parsedWeight && parsedHeight) {
-            // 1) Calculate BMI and classification
-            const heightInMeters = parsedHeight / 100;
-            const calculatedBMI =
-              parsedWeight / (heightInMeters * heightInMeters);
-            setBMI(calculatedBMI);
-            setBmiCategory(getBmiClassification(calculatedBMI));
-
-            // 2) Fetch recommended meals from your server
-            // Adjust the base URL as needed
-            const response = await fetch(
-              `https://triple-j.onrender.com/api/dietary/meal?height=${parsedHeight}&weight=${parsedWeight}`
-            );
-            if (!response.ok) {
-              throw new Error("Failed to fetch recommended meals");
+            // Calculate BMI
+            if (parsedWeight > 0 && parsedHeight > 0) {
+              const heightInMeters = parsedHeight / 100;
+              const calculatedBMI =
+                parsedWeight / (heightInMeters * heightInMeters);
+              setBMI(calculatedBMI);
+              setBmiCategory(getBmiClassification(calculatedBMI));
             }
-
-            const data = await response.json();
-            console.log(data);
-            setRecommendedMeals(data);
           }
         } catch (error) {
-          console.error("Error fetching data or recommended meals:", error);
+          console.error("Error fetching weight/height:", error);
         }
       };
 
@@ -66,7 +55,37 @@ export default function Diet() {
     }, [])
   );
 
-  // Local BMI classification
+  // Fetch meals whenever BMI category changes
+  useEffect(() => {
+    const fetchRecommendedMeals = async () => {
+      if (!bmi || !bmiCategory) return; // Ensure BMI and category are calculated first
+
+      try {
+        // Convert height from cm to meters for the API
+        const heightInMeters = height / 100;
+
+        const response = await fetch(
+          `https://triple-j.onrender.com/api/dietary/meal?height=${heightInMeters.toFixed(
+            2
+          )}&weight=${weight}&bmi=${bmi.toFixed(
+            2
+          )}&category=${encodeURIComponent(bmiCategory)}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch recommended meals");
+        }
+
+        const data = await response.json();
+        setRecommendedMeals(data);
+      } catch (error) {
+        console.error("Error fetching recommended meals:", error);
+      }
+    };
+
+    fetchRecommendedMeals();
+  }, [bmi, bmiCategory, height, weight]);
+
+  // Local BMI classification function
   const getBmiClassification = (bmiValue) => {
     if (bmiValue < 18.5) return "Underweight";
     else if (bmiValue < 25) return "Normal";
@@ -74,76 +93,128 @@ export default function Diet() {
     else return "Obese";
   };
 
+  // Get color based on BMI category
+  const getBmiColor = (category) => {
+    switch (category) {
+      case "Underweight":
+        return "#FF9800";
+      case "Normal":
+        return "#4CAF50";
+      case "Overweight":
+        return "#FF5722";
+      case "Obese":
+        return "#F44336";
+      default:
+        return COLORS.accent;
+    }
+  };
+
+  // Toggle expanded state for meal cards
+  const toggleExpand = (index) => {
+    setExpanded(expanded === index ? null : index);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Top Box: Height/Weight and BMI Result */}
-      <View style={styles.topBox}>
-        {/* Left side: Height & Weight (read-only) */}
-        <View style={styles.inputBox}>
-          <Text style={styles.label}>Height (cm)</Text>
-          <TextInput
-            style={styles.textInput}
-            editable={false}
-            value={height ? height.toString() : ""}
-            placeholder="0"
-            placeholderTextColor="#888"
-          />
-          <Text style={styles.label}>Weight (kg)</Text>
-          <TextInput
-            style={styles.textInput}
-            editable={false}
-            value={weight ? weight.toString() : ""}
-            placeholder="0"
-            placeholderTextColor="#888"
-          />
+      {/* BMI Status Card */}
+      <View style={styles.bmiCard}>
+        <View style={styles.bmiHeaderRow}>
+          <Text style={styles.bmiHeaderText}>Health Status</Text>
+          <View
+            style={[
+              styles.bmiCategoryBadge,
+              { backgroundColor: getBmiColor(bmiCategory) },
+            ]}
+          >
+            <Text style={styles.bmiCategoryText}>{bmiCategory || "—"}</Text>
+          </View>
         </View>
 
-        {/* Right side: BMI classification */}
-        <View style={styles.bmiBox}>
-          <Text style={styles.bmiCategory}>
-            {bmiCategory ? bmiCategory : "—"}
-          </Text>
-          <Text style={styles.bmiValue}>
-            {bmi ? `BMI: ${bmi.toFixed(2)}` : "No BMI yet"}
-          </Text>
-        </View>
-      </View>
-
-      {/* Recommended Meals */}
-      <Text style={styles.mealSectionTitle}>Recommended Meals</Text>
-      {recommendedMeals.map((meal, index) => (
-        <View key={index} style={styles.mealCard}>
-          <Image source={{ uri: meal.image }} style={styles.mealImage} />
-          <View style={styles.mealInfo}>
-            <Text style={styles.mealName}>{meal.name}</Text>
-
-            <Text style={styles.mealDetailLine}>
-              <Text style={styles.label}>BodyGoal:</Text>
-              <Text style={styles.value}> {meal.bodyGoal}</Text>
+        <View style={styles.bmiInfoRow}>
+          <View style={styles.bmiInfoColumn}>
+            <Text style={styles.bmiInfoLabel}>Height</Text>
+            <Text style={styles.bmiInfoValue}>
+              {height ? `${height} cm` : "—"}
             </Text>
-
-            <Text style={styles.mealDetailLine}>
-              <Text style={styles.label}>Calories:</Text>
-              <Text style={styles.value}> {meal.calorie}</Text>
+          </View>
+          <View style={styles.bmiInfoColumn}>
+            <Text style={styles.bmiInfoLabel}>Weight</Text>
+            <Text style={styles.bmiInfoValue}>
+              {weight ? `${weight} kg` : "—"}
             </Text>
-
-            <Text style={styles.mealDetailLine}>
-              <Text style={styles.label}>Protein:</Text>
-              <Text style={styles.value}> {meal.protein}g</Text>
-            </Text>
-
-            <Text style={styles.mealDetailLine}>
-              <Text style={styles.label}>Carbs:</Text>
-              <Text style={styles.value}> {meal.carb}g</Text>
-            </Text>
-
-            <Text style={styles.mealDetailLine}>
-              <Text style={styles.label}>Fat:</Text>
-              <Text style={styles.value}> {meal.fat}g</Text>
+          </View>
+          <View style={styles.bmiInfoColumn}>
+            <Text style={styles.bmiInfoLabel}>BMI</Text>
+            <Text style={styles.bmiInfoValue}>
+              {bmi ? bmi.toFixed(1) : "—"}
             </Text>
           </View>
         </View>
-      ))}
+      </View>
+
+      {/* Recommendation Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recommended Meals</Text>
+        <Text style={styles.sectionSubtitle}>Based on your BMI profile</Text>
+      </View>
+
+      {/* Meal Cards */}
+      {recommendedMeals.length > 0 ? (
+        recommendedMeals.map((meal, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.mealCard}
+            onPress={() => toggleExpand(index)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.mealHeader}>
+              <Text style={styles.mealName}>{meal.name}</Text>
+              <View style={styles.goalBadge}>
+                <Text style={styles.goalText}>{meal.bodyGoal}</Text>
+              </View>
+            </View>
+
+            <View style={styles.macroRow}>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{meal.calorie}</Text>
+                <Text style={styles.macroLabel}>calories</Text>
+              </View>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{meal.protein}g</Text>
+                <Text style={styles.macroLabel}>protein</Text>
+              </View>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{meal.carb}g</Text>
+                <Text style={styles.macroLabel}>carbs</Text>
+              </View>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{meal.fat}g</Text>
+                <Text style={styles.macroLabel}>fat</Text>
+              </View>
+            </View>
+
+            {expanded === index && (
+              <View style={styles.mealDetails}>
+                <View style={styles.divider} />
+                <Text style={styles.detailsText}>
+                  This meal is recommended for your {bmiCategory.toLowerCase()}{" "}
+                  BMI profile. It provides a balanced mix of nutrients to
+                  support your health goals.
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))
+      ) : (
+        <View style={styles.noMealsCard}>
+          <Text style={styles.noMealsText}>
+            No meal recommendations available
+          </Text>
+          <Text style={styles.noMealsSubtext}>
+            Check back later or try updating your profile
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -151,9 +222,12 @@ export default function Diet() {
 const COLORS = {
   background: "#1B1B1D",
   card: "#2C2C34",
+  cardLight: "#343440",
   textLight: "#FFF",
   textMedium: "#AAA",
+  textDark: "#777",
   accent: "#FF2E63",
+  divider: "#3A3A42",
 };
 
 const styles = StyleSheet.create({
@@ -163,86 +237,156 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingVertical: 16,
+    paddingBottom: 40,
   },
-  topBox: {
-    flexDirection: "row",
+  bmiCard: {
     backgroundColor: COLORS.card,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  bmiHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
-  inputBox: {
-    flex: 1,
-    marginRight: 8,
-  },
-  label: {
-    color: "red",
-    fontFamily: "KeaniaOne",
-  },
-  textInput: {
-    backgroundColor: "#3A3A42",
-    color: COLORS.textLight,
-    borderRadius: 4,
-    padding: 8,
-    marginBottom: 12,
-  },
-  bmiBox: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#3A3A42",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  bmiCategory: {
+  bmiHeaderText: {
     color: COLORS.textLight,
     fontSize: 18,
     fontFamily: "KeaniaOne",
+  },
+  bmiCategoryBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  bmiCategoryText: {
+    color: COLORS.textLight,
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  bmiInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.cardLight,
+    borderRadius: 8,
+    padding: 12,
+  },
+  bmiInfoColumn: {
+    flex: 1,
+    alignItems: "center",
+  },
+  bmiInfoLabel: {
+    color: COLORS.textMedium,
+    fontSize: 12,
     marginBottom: 4,
   },
-  bmiValue: {
-    color: COLORS.textMedium,
+  bmiInfoValue: {
+    color: COLORS.textLight,
+    fontSize: 16,
+    fontWeight: "bold",
   },
-  mealSectionTitle: {
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
     fontSize: 20,
     fontFamily: "KeaniaOne",
     color: COLORS.textLight,
-    marginBottom: 12,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    color: COLORS.textMedium,
+    fontSize: 14,
   },
   mealCard: {
-    flexDirection: "row",
     backgroundColor: COLORS.card,
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
-    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  mealImage: {
-    width: 100,
-    height: 100,
-  },
-  mealInfo: {
-    flex: 1,
-    padding: 8,
-    justifyContent: "center",
+  mealHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
   },
   mealName: {
-    color: "white",
-    fontFamily: "KeaniaOne",
     fontSize: 16,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  mealDetailLine: {
-    marginBottom: 4,
     fontFamily: "KeaniaOne",
+    color: COLORS.textLight,
+    flex: 1,
   },
-  bodyGoalDetail: {
-    color: "white",
+  goalBadge: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  goalText: {
+    color: COLORS.textLight,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  macroRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.cardLight,
+    borderRadius: 8,
+    padding: 12,
+  },
+  macroItem: {
+    alignItems: "center",
+  },
+  macroValue: {
+    color: COLORS.textLight,
     fontSize: 14,
-    fontFamily: "KeaniaOne",
+    fontWeight: "bold",
   },
-  value: {
-    color: "grey",
+  macroLabel: {
+    color: COLORS.textMedium,
+    fontSize: 10,
+  },
+  mealDetails: {
+    marginTop: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.divider,
+    marginVertical: 12,
+  },
+  detailsText: {
+    color: COLORS.textMedium,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  noMealsCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noMealsText: {
+    color: COLORS.textLight,
+    fontSize: 16,
+    fontFamily: "KeaniaOne",
+    marginBottom: 4,
+  },
+  noMealsSubtext: {
+    color: COLORS.textMedium,
+    textAlign: "center",
   },
 });
