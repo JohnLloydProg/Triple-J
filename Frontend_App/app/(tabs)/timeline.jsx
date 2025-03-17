@@ -124,7 +124,8 @@ const TimelineScreen = () => {
       alert("Permission denied")
     }else {
       const result = await ImagePicker.launchImageLibraryAsync({
-        base64 : true
+        base64 : true,
+        quality : 0
       });
       if (!result.canceled) {
         const asset = result.assets.pop()
