@@ -1,49 +1,259 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import colors from '../../constants/globalStyles';
+import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import bodyIcon from '@/assets/images/sample-full-body.jpg';
+import { RefreshControl } from 'react-native';
+import {refreshAccessToken} from '../../components/refreshToken';
+import * as ImagePicker from 'expo-image-picker';
 
+//{'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img}
+// might need to add dependencies for the image picker library
 
-const timelineData = [
-  { date: 'Jan 13, 2025', bmi: 20, weight: '100 lbs' },
-  { date: 'Jan 11, 2025', bmi: 20, weight: '100 lbs' },
-  { date: 'Jan 09, 2025', bmi: 20, weight: '100 lbs' },
-  { date: 'Jan 07, 2025', bmi: 20, weight: '100 lbs' },
-  { date: 'Jan 05, 2025', bmi: 20, weight: '100 lbs' },
-];
+async function timelineRequest() {
+  let accessToken = await SecureStore.getItemAsync("accessToken");
+  const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
+    method : "GET",
+    headers : {
+      "Content-Type" : "application/json",
+      "Authorization": `Bearer ${accessToken}`
+    },
+    credentials : "same-origin"
+  })
+  if (!response.ok) {
+    try {
+      refreshAccessToken();
+    }catch (err) {
+      return "";
+    }
+    return timelineRequest()
+  }
+  const body = await response.json();
+  return body;
+}
+
+async function timelineSaveRequest(height, weight, image=null) {
+  let accessToken = await SecureStore.getItemAsync("accessToken");
+  const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
+    method : "POST",
+    headers : {
+      "Content-Type" : "application/json",
+      "Authorization": `Bearer ${accessToken}`
+    },
+    body : JSON.stringify({
+      'height' : parseFloat(height),
+      'weight' : parseFloat(weight),
+      'img' : image
+    }),
+    credentials : "same-origin"
+  })
+  if (!response.ok) {
+    try {
+      refreshAccessToken();
+    }catch (err) {
+      return "";
+    }
+  }
+  return response;
+}
+
+function BMICategory(height, weight) {
+  bmi_category = ""
+  if (height != null && weight != null) {
+      bmi = calculateBMI(height, weight)
+      if (bmi < 18.5) {
+        bmi_category = 'Under Weight'
+      }else if (bmi < 25){
+        bmi_category = 'Healthy Weight'
+      }else if (bmi < 30) {
+        bmi_category = 'Over Weight'
+      }else {
+        bmi_category = 'Obese'
+      }
+  }
+  return bmi_category;
+}
+
+function calculateBMI(height, weight) {
+  return parseInt(weight / (height**2))
+}
 
 const TimelineScreen = () => {
+  const [timelineData, setTimelineData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [modalVisble, setModalVisible] = useState(false);
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    timelineRequest().then(data => setTimelineData(data));
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  useEffect(() => {
+    timelineRequest().then(data => setTimelineData(data));
+  }, []);
+
+  const save = async () => {
+    console.log('pressed');
+    const response = await timelineSaveRequest(height, weight, imageFile);
+    if (response.ok){
+      setModalVisible(false);
+    }
+  }
+
+  const add = () => {
+    let height = SecureStore.getItem('height');
+    let weight = SecureStore.getItem('weight');
+    setHeight(height);
+    setWeight(weight);
+    setModalVisible(true);
+  }
+
+  const selectImage = async () => {
+    console.log("image pressed")
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission denied")
+    }else {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        base64 : true
+      });
+      if (!result.canceled) {
+        const asset = result.assets.pop()
+        const uri = asset.uri;
+
+        setImage(uri);
+        setImageFile(asset.base64);
+      }
+    }
+    
+  }
+
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <AntDesign name="arrowleft" size={24} color="white" />
-        <Text style={styles.title}>Workout</Text>
-      </View>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
+      }>
         <View style={styles.timeline}>
-          <View style={styles.line} />
-          {timelineData.map((item, index) => (
+          <View id='timeline-holder' style={styles.line}/>
+          {timelineData.map((timeline, index) => {
+            {console.log(`${index}: ${timeline.date}`)}
+            return (
             <View key={index} style={styles.itemContainer}>
-              <Text style={styles.dateText}>{item.date}</Text>
+              <Text style={styles.dateText}>{timeline.date}</Text>
               <View style={styles.card}>
-                <Image source={require('@/assets/images/sample-full-body.jpg')} style={styles.image} />
+                <Image source={{uri: image}} style={styles.image}/>
                 <View style={styles.details}>
-                  <Text style={styles.status}>Healthy Weight</Text>
-                  <Text style={styles.info}>BMI: {item.bmi}</Text>
-                  <Text style={styles.info}>Weight: {item.weight}</Text>
+                  <Text style={styles.status}>{BMICategory(timeline.height, timeline.weight)}</Text>
+                  <Text style={styles.info}>BMI: {calculateBMI(timeline.height, timeline.weight)}</Text>
+                  <Text style={styles.info}>Weight: {timeline.weight}</Text>
                 </View>
               </View>
             </View>
-          ))}
+            )
+          })}
         </View>
-        <TouchableOpacity style={styles.addButton}>
+      </ScrollView>
+      <Modal animationType="slide" visible={modalVisble} onRequestClose={() => {
+        setModalVisible(!modalVisble);
+      }}>
+        <View style={modalStyles.background}>
+          <View style={modalStyles.textView}>
+            <TouchableOpacity onPress={() => {selectImage()}}>
+              <Image source={{uri : image}} style={modalStyles.image}/>
+            </TouchableOpacity>
+            <View style={modalStyles.flex}>
+                <Text style={modalStyles.textInputLabel}>Height (M): </Text>
+                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setHeight(newText)} value={height}></TextInput>
+            </View>
+            <View style={modalStyles.flex}>
+                <Text style={modalStyles.textInputLabel}>Weight (Kg): </Text>
+                <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setWeight(newText)} value={weight}></TextInput>
+            </View>
+          </View>
+          <View style={modalStyles.footer}>
+            <TouchableOpacity style={modalStyles.closeBtn} onPress={() => setModalVisible(false)}> 
+              <Text style={modalStyles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={modalStyles.addBtn} onPress={() => save()}> 
+              <Text style={modalStyles.closeBtnText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <TouchableOpacity style={styles.addButton} onPress={() => add()}>
           <AntDesign name="plus" size={24} color="white" />
         </TouchableOpacity>
-      </ScrollView>
     </SafeAreaView>
   );
 };
+
+const modalStyles = StyleSheet.create({
+  background : {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+    alignItems: 'center'
+  },
+  closeBtn:{
+      backgroundColor: colors.redAccent,
+      padding: 10,
+      borderRadius: 10,
+  },
+  closeBtnText:{
+    fontSize: 20,
+    color: 'white',
+    fontFamily: 'KeaniaOne',
+    textAlign: 'center'
+  },
+  flex: {
+    flexDirection: 'row'
+  },
+  textInputLabel: {
+    width: 140,
+    fontSize: 18,
+    color: colors.redAccent,
+    fontFamily: 'KeaniaOne',
+    textAlign: 'left',
+    textAlignVertical: 'center'
+  },
+  choiceInputCont:{
+    backgroundColor: '#5E5C5C',
+    borderRadius: 22,
+    height: 50,
+    width: 150,
+    color: 'white',
+    paddingLeft: 20,
+    paddingRight: 20,
+  },
+  textView: {
+    gap: 40,
+    margin: 'auto'
+  },
+  addBtn: {
+    backgroundColor: '#76D09C',
+    padding: 10,
+    borderRadius: 10,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: 60,
+    marginBottom: 20,
+  },
+  image: {
+    width: 240,
+    height: 320,
+    alignSelf: 'center',
+    borderRadius: 23
+  }
+});
 
 const styles = StyleSheet.create({
   safeContainer: {
@@ -76,7 +286,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: 8,
     height: '100%',
-    backgroundColor: 'red',
+    backgroundColor: colors.redAccent,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -136,9 +346,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: 'green',
+    backgroundColor: '#76D09C',
     padding: 15,
-    borderRadius: 50,
+    borderRadius: 20,
   },
   timeline: {
     paddingLeft: 40,
