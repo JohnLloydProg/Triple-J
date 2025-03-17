@@ -18,16 +18,12 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/gym/progress", {
-        method : "POST",
+    fetch(baseURL + "api/attendance/qr-code", {
+        method : "GET",
         headers : {
             "Content-Type" : "application/json",
             "Authorization": `Bearer ${data['access']}`
         },
-        body : JSON.stringify({
-            'height': 1.6,
-            'weight': 80
-        }),
         credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {
@@ -40,8 +36,7 @@ fetch(baseURL + "api/account/token", {
             return response.blob();
         }
     }).then((data) => {
-        console.log(data);
-        window.open(data['details']['link'])        
+        console.log(data);    
     }).catch((error) => console.error("Fetch error", error));
 }).catch(
     (error) => console.error("Fetch error", error)

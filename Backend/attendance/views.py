@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.views import View
 import qrcode
-import json
+import base64
 
 # Create your views here.
 
@@ -26,10 +26,10 @@ class QRCodeView(generics.GenericAPIView):
                 qrObject.delete()
                 return JsonResponse({'details' : 'QR code is expired'})
             
-            response = HttpResponse(content_type='image/jpg')
+            
             qrImage = qrcode.make(qrObject.content)
-            qrImage.save(response, 'JPEG')
-            return response
+            data = {'image' : str(base64.b64encode(qrImage.get_image().tobytes()))}
+            return JsonResponse(data)
         except QRCode.DoesNotExist:
             return JsonResponse({'details':'Account does not have any QR code'})
     
@@ -43,10 +43,9 @@ class QRCodeView(generics.GenericAPIView):
             qrObject.setExpirationDate()
             qrObject.save()
 
-            response = HttpResponse(content_type='image/jpg')
             qrImage = qrcode.make(qrObject.content)
-            qrImage.save(response, 'JPEG')
-            return response
+            data = {'image' : str(base64.b64encode(qrImage.get_image().tobytes()))}
+            return JsonResponse(data)
 
 
 class LoggingView(generics.GenericAPIView):
