@@ -154,7 +154,7 @@ class TimelineRecordsView(generics.GenericAPIView):
             print(request.data)
             return JsonResponse({'details':'Does not contain information'}, status=400)
         record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'))
-        record.img.save('image.jpg', File(open(request.data.get('img'),'r')))
+        record.img.save(f'{record.date.isoformat()}-image.jpg', File(open(request.data.get('img'),'r')))
         record.save()
         response = {'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight}
         if (record.img):
