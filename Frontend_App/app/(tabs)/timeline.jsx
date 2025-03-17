@@ -137,6 +137,10 @@ const TimelineScreen = () => {
     
   }
 
+  const getImage = async () => {
+
+  }
+
   return (
     <SafeAreaView style={styles.safeContainer}>
       <ScrollView style={styles.container} refreshControl={
@@ -145,12 +149,12 @@ const TimelineScreen = () => {
         <View style={styles.timeline}>
           <View id='timeline-holder' style={styles.line}/>
           {timelineData.map((timeline, index) => {
-            {console.log(`${index}: ${timeline.date}`)}
+            {console.log(`https://triple-j.onrender.com${timeline.img}`)}
             return (
             <View key={index} style={styles.itemContainer}>
               <Text style={styles.dateText}>{timeline.date}</Text>
               <View style={styles.card}>
-                <Image source={{uri: image}} style={styles.image}/>
+                <Image source={{uri:`https://triple-j.onrender.com${timeline.img}`}} style={styles.image}/>
                 <View style={styles.details}>
                   <Text style={styles.status}>{BMICategory(timeline.height, timeline.weight)}</Text>
                   <Text style={styles.info}>BMI: {calculateBMI(timeline.height, timeline.weight)}</Text>
@@ -322,7 +326,7 @@ const styles = StyleSheet.create({
   image: {
     width: 80,
     height: 120,
-    borderRadius: 0,
+    borderRadius: 10,
     marginRight: 10,
   },
   details: {
