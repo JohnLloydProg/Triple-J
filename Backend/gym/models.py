@@ -12,7 +12,7 @@ weekdays = {
             }
 
 def timelineRecordPath(instance, filename):
-    return f'user_{str(instance.member.pk)}/timeline/{filename}'
+    return f'user_{str(instance.member.pk)}/timeline/{now().isoformat()}-{filename}'
 
 
 class Program(models.Model):
