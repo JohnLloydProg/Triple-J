@@ -7,7 +7,7 @@ import push from '@/assets/images/push.png';
 import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
-
+import { router, useRouter } from 'expo-router';
 
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
@@ -100,6 +100,8 @@ const [selectedProgram, setSelectedProgram] = useState([]);
 const [selectedWorkoutItem, setselectedWorkoutItem] = useState([]);
 const [selectedWorkoutRecord, setselectedWorkoutRecord] = useState([]);
 
+const [currentTimeLineInfo, setcurrentTimeLineInfo] = useState([]);
+
 const [reps,setReps] = useState("");
 const [sets,setSets] = useState("");
 const [time,setTime] = useState("");
@@ -113,6 +115,47 @@ const resetChoiceValues = () => {
   setWeight("");
   setDistance("");
 };
+
+//get current timeline info
+async function getCurrentTimeline()  {
+  try {
+    let accessToken = await SecureStore.getItemAsync("accessToken");
+    let refreshToken = await SecureStore.getItemAsync("refreshToken");
+    let userId = await SecureStore.getItemAsync("userId");
+    parseInt(userId);
+
+    let response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      console.log(data);
+      setcurrentTimeLineInfo(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
 
 //function for fetching available workouts within the app
 async function newTestApi()  {
@@ -604,6 +647,7 @@ useEffect(() => {
   useEffect(()=>{
     testApi();
     newTestApi();
+    getCurrentTimeline();
   },[]);
 
 // refreshed modal after calling the updateProgram function
@@ -998,26 +1042,44 @@ const WorkoutModalItem = ({workout}) => {
 
 
 
-      <View style={styles.progressContainer}>
-        <View style={{marginRight: 15}}>
-          <Image source={jordi} style={styles.profileImage} />
+      <TouchableOpacity onPress={()=>{router.push('/timeline')}}>
+
+        <View style={styles.progressContainer}>
+          <View style={{marginRight: 15}}>
+            <Image source={jordi} style={styles.profileImage} />
+          </View>
+
+          <View>
+            <Text style={styles.progressText}>
+              Date: {currentTimeLineInfo.date}
+            </Text>
+            <Text style={styles.progressText}>
+            BMI: {Math.round(currentTimeLineInfo.weight / (currentTimeLineInfo.height ** 2))} 
+                {" "}
+                ({(() => {
+                  const bmi = Math.round(currentTimeLineInfo.weight / (currentTimeLineInfo.height ** 2));
+                  
+                  if (bmi < 18.5) {
+                    return "Underweight";
+                  } else if (bmi >= 18.5 && bmi < 24.9) {
+                    return "Normal weight";
+                  } else if (bmi >= 25 && bmi < 29.9) {
+                    return "Overweight";
+                  } else {
+                    return "Obese";
+                  }
+                })()})
+            </Text>
+            <Text style={styles.progressText}>
+              Weight: {currentTimeLineInfo.weight + "kg"}
+            </Text>
+            <Text style={styles.progressText} >
+              Height: {currentTimeLineInfo.height + "m"}
+            </Text>
+          </View>
         </View>
 
-        <View>
-          <Text style={styles.progressText}>
-            January 13, 2025
-          </Text>
-          <Text style={styles.progressText}>
-            BMI: 20 (Healthy Weight)
-          </Text>
-          <Text style={styles.progressText}>
-            Wieght: 100lbs
-          </Text>
-          <Text style={styles.progressText} >
-            Height: 5' 0''
-          </Text>
-        </View>
-      </View>
+      </TouchableOpacity>
       
       
       <FlatList
