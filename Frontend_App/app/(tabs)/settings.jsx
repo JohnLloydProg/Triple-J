@@ -11,26 +11,28 @@ import { ScrollView } from 'react-native';
 import {refreshAccessToken} from '../../components/refreshToken';
 
 
-//deletes the tokens for authentication and redirects to login page
+//deletes information stored based on logged in account and redirects to login page
  async function logoutDetails() {
   try {
     await SecureStore.deleteItemAsync("accessToken");
     await SecureStore.deleteItemAsync("refreshToken");
     await SecureStore.deleteItemAsync("username");
+    await SecureStore.deleteItemAsync("password");
+
     await SecureStore.deleteItemAsync("userId");
     await SecureStore.deleteItemAsync("weight");
     await SecureStore.deleteItemAsync("height");
-    await SecureStore.deleteItemAsync("password");
     await SecureStore.deleteItemAsync("membershipType");
+    await SecureStore.deleteItemAsync("address");
+    await SecureStore.deleteItemAsync("birthDate");
+    await SecureStore.deleteItemAsync("email");
+    await SecureStore.deleteItemAsync("firstName");
+    await SecureStore.deleteItemAsync("gymTrainerId");
+    await SecureStore.deleteItemAsync("lastName");
+    await SecureStore.deleteItemAsync("mobileNumber");
+    await SecureStore.deleteItemAsync("sex");
+    await SecureStore.deleteItemAsync("profilePic");
 
-    console.log(`Item with key  access: '${"accessToken"}' has been deleted.`);
-    console.log(`Item with key  refresh: '${"refreshToken"}' has been deleted.`);
-    console.log(`Item with key  username: '${"username"}' has been deleted.`);
-    console.log(`Item with key  userID: '${"userID"}' has been deleted.`);
-    console.log(`Item with key  weight: '${"weight"}' has been deleted.`);
-    console.log(`Item with key  height: '${"height"}' has been deleted.`);
-    console.log(`Item with key  password: '${"password"}' has been deleted.`);
-    console.log(`Item with key  membershipType: '${"membershipType"}' has been deleted.`);
 
     router.push('/');
     
