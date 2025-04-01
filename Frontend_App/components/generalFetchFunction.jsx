@@ -428,3 +428,85 @@ export async function deleteWorkout(programId, workoutId) {
       console.error("Error:", error);
     }
 }
+
+//gets all the records associated with a workout
+export async function getRecord(programWorkout)  {
+  try {
+    let accessToken = await getToken("accessToken");
+    let userId = await getToken("userId");
+    parseInt(userId);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//sets the record for a specific workout
+export async function setRecord(programWorkout, mainDetails)  {
+  try {
+    let accessToken = await getToken("accessToken");
+    let userId = await getToken("userId");
+    parseInt(userId);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },body: JSON.stringify({
+        'details': mainDetails
+      })
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },body: JSON.stringify({
+          'details': mainDetails
+        })
+      });
+    }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}

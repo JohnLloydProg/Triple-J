@@ -19,7 +19,7 @@ import { useEffect, useState } from 'react';
 
 import {refreshAccessToken} from '../../components/refreshToken';
 
-import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram, deleteProgram, updateProgram, getWorkout, addWorkout, deleteWorkout} from '@/components/generalFetchFunction';
+import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram, deleteProgram, updateProgram, getWorkout, addWorkout, deleteWorkout, getRecord, setRecord} from '@/components/generalFetchFunction';
 
 import { color, fonts } from '@rneui/base';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -111,94 +111,6 @@ const resetChoiceValues = () => {
   setWeight("");
   setDistance("");
 };
-
-
-
-
-async function getRecord(programWorkout)  {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-  
-
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-      console.log( data);
-      return data;
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
-
-async function setRecord(programWorkout, mainDetails)  {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-  
-
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },body: JSON.stringify({
-        'details': mainDetails
-      })
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },body: JSON.stringify({
-          'details': mainDetails
-        })
-      });
-    }
-
-      const data = await response.json();
-      console.log( data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
 
 //funnction to handle the modal of selected program
 const handlePress =  async (item) => {
