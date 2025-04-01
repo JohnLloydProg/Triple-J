@@ -302,3 +302,129 @@ export async function updateProgram(programId,mainDate) {
       console.error("Error: ", error);
     }
 }
+
+//function to get all workouts associated with a program
+export async function getWorkout(programId) {
+  try {
+    let accessToken = await getToken("accessToken");
+    parseInt(programId);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to add a workout
+export async function addWorkout(programId, workoutType, mainDetails) {
+  try {
+    let accessToken = await getToken("accessToken");
+    parseInt(programId);
+    parseInt(workoutType);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },body: JSON.stringify({
+        'workout': workoutType,
+        'details': mainDetails
+      
+      })
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },body: JSON.stringify({
+          'workout': workoutType,
+          'details': mainDetails
+        })
+      });
+    }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+//function to delete a workout
+export async function deleteWorkout(programId, workoutId) {
+  try {
+    let accessToken = await getToken("accessToken");
+    parseInt(programId);
+    parseInt(workoutId);
+
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+        
+      });
+    }
+
+    const data = await response.json();
+    return data;
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
