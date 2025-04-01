@@ -1,6 +1,5 @@
 import {RefreshControl, Image, StyleSheet, Platform, View, Text, TextInput, Button, TouchableOpacity,Modal, ScrollView} from 'react-native';
 import colors from '../../constants/globalStyles';
-import jordi from '@/assets/images/jordi.png';
 import React from 'react';
 import upper from '@/assets/images/Upper-Workout-icon.png';
 import push from '@/assets/images/push.png';
@@ -8,6 +7,8 @@ import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 import { router, useRouter } from 'expo-router';
+
+import jordi from '@/assets/images/jordi.png';
 
 import { useFonts } from 'expo-font';
 import {Link} from 'expo-router';
@@ -17,18 +18,14 @@ import jwtDecode from "jwt-decode";
 import { useEffect, useState } from 'react';
 
 import {refreshAccessToken} from '../../components/refreshToken';
+
+import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram } from '@/components/generalFetchFunction';
+
 import { color, fonts } from '@rneui/base';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 import { SelectList } from 'react-native-dropdown-select-list'
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart
-} from "react-native-chart-kit";
+import {LineChart} from "react-native-chart-kit";
 import { Dimensions } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
@@ -115,175 +112,6 @@ const resetChoiceValues = () => {
   setWeight("");
   setDistance("");
 };
-
-//get current timeline info
-async function getCurrentTimeline()  {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-
-    const response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-    
-      return data;
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
-
-//function for fetching available workouts within the app
-async function newTestApi()  {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-    console.log(userId);
-
-    let response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-      setAvailableWorkouts(data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
-
-//function to fetch the programs and associated workouts
-async function testApi() {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-    
-    console.log("access: " + accessToken);
-    console.log("refresh: " + refreshToken);
-
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-      setProgramData(data);
-      console.log(data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
-
-//function to add blank programs
-async function addProgram() {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let userId = await SecureStore.getItemAsync("userId");
-    parseInt(userId);
-    
-    console.log("access: " + accessToken);
-    console.log("refresh: " + refreshToken);
-
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-}
 
 
 //fucntion to delete a program
@@ -644,8 +472,8 @@ useEffect(() => {
 
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
-    testApi();
-    newTestApi();
+    getProgram().then(data => {setProgramData(data)});
+    getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
       console.log(data);
       setcurrentTimeLineInfo(data);
@@ -681,7 +509,7 @@ const WorkoutItem = ({ title, workouts, programId }) => (
       <Text style={styles.programText}>{title}</Text>
       <TouchableOpacity style={styles.deleteProg} onPress={ async ()=>{
         await deleteProgram(programId);
-        await testApi();
+        await getProgram().then(data => {setProgramData(data)});
         console.log(programData);
         console.log()
         
@@ -978,20 +806,11 @@ const WorkoutModalItem = ({workout}) => {
         await deleteWorkout(selectedProgram.id,workout.id);
         const updatedItem = await viewWorkout(selectedProgram.id);
         setSelectedItem(updatedItem);
-        testApi();
+        getProgram().then(data => {setProgramData(data)});
         }}>
           
         <FontAwesome6 name="minus" size={20} color="black" />
       </TouchableOpacity>
-
-      {/* <TouchableOpacity style={[{backgroundColor: 'blue'}, {position:'absolute'},{right: 80}]} onPress={async ()=>{
-          console.log("workout id: " + workout.id);
-          setTimeout(async () => {
-            await getRecord(workout.id);
-          }, 0);
-        }}>
-        <FontAwesome6 name="chart-simple" size={20} color="black" />
-      </TouchableOpacity> */}
 
     </View>
 
@@ -1047,8 +866,8 @@ const [refreshing, setRefreshing] = React.useState(false);
       setRefreshing(false);
     }, 2000);
 
-    testApi();
-    newTestApi();
+    getProgram().then(data => {setProgramData(data)});
+    getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
       console.log(data);
       setcurrentTimeLineInfo(data);
@@ -1067,9 +886,14 @@ const [refreshing, setRefreshing] = React.useState(false);
       <TouchableOpacity onPress={()=>{router.push('/timeline')}}>
 
         <View style={styles.progressContainer}>
+        {currentTimeLineInfo.img ? (
           <View style={{marginRight: 15}}>
-            <Image source={{uri : `https://triple-j.onrender.com${currentTimeLineInfo.img}`}} style={styles.profileImage} />
+            <Image 
+              source={{uri: `https://triple-j.onrender.com${currentTimeLineInfo.img}`}} 
+              style={styles.profileImage} 
+            />
           </View>
+        ) : null}
 
           <View>
             <Text style={styles.progressText}>
@@ -1148,7 +972,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                       console.log("IDDDDDDDDDD" + selectedProgram.id + " DAYYYYY: " +selectedProgram.day);
                       console.log(daysOfWeekOrder[selectedProgram.day]);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
-                      await testApi();
+                      await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
                       setSelectedItem(...updatedItem);
                       //setModalVisible(false);
@@ -1273,8 +1097,8 @@ const [refreshing, setRefreshing] = React.useState(false);
               addWorkout(selectedProgram.id,selectedWorkoutItem.id, choiceData);
               const updatedItem = await viewWorkout(selectedProgram.id);
               setSelectedItem(updatedItem);
-              await testApi();
-              await newTestApi();
+              await getProgram().then(data => {setProgramData(data)});
+              await getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
               setmodalChoiceVisible(false);
 
             }}>
@@ -1359,14 +1183,12 @@ const [refreshing, setRefreshing] = React.useState(false);
 
       
       
-      
     </ScrollView>
  
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
       await addProgram();
-      await testApi();
+      await getProgram().then(data => {setProgramData(data)});
       console.log(programData);
-      console.log()
       
       }} >
       <Text style={{fontSize: 40}}>

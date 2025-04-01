@@ -5,7 +5,7 @@ import { router, Link } from 'expo-router';
 
 import colors from '../constants/globalStyles';
 import { getToken,saveToken } from '@/components/storageComponent';
-import { validateLoginInfo, getMemberInfo } from '@/components/generalFunction';
+import { validateLoginInfo, getMemberInfo } from '@/components/generalFetchFunction';
 
 
 export default function HomeScreen() {
