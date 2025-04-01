@@ -218,3 +218,87 @@ export async function addProgram() {
       console.error("Error:", error);
     }
 }
+
+//fucntion to delete a program
+export async function deleteProgram(programId) {
+  try {
+    let accessToken = await getToken("accessToken");
+    let userId = await getToken("userId");
+    parseInt(userId);
+    parseInt(programId);
+  
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error from delete prog:", error);
+    }
+}
+
+//function to update program with a specific day of the week
+export async function updateProgram(programId,mainDate) {
+  try {
+    let accessToken = await getToken("accessToken");
+    let userId = await getToken("userId");
+    parseInt(userId);
+    parseInt(programId);
+
+    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        'day':mainDate
+      }),
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          'day':mainDate
+        }),
+      });
+    }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error: ", error);
+    }
+}
