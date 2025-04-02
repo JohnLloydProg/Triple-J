@@ -186,7 +186,6 @@ const processData = (data) => {
 const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible,resetChoiceValues}) => {
 
   const handlePressRecord =  async (item, workoutid) => {
-        console.log(workoutid);
         resetChoiceValues();
         setselectedWorkoutId(workoutid);
         setselectedWorkoutRecord(item);
@@ -218,10 +217,8 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
   };
 
   useEffect(() => {
-    console.log("awdadwawdw", availableWorkouts);
     const fetchRecord = async () => {
       try {
-        console.log("Fetching record for workout:", workout.id);
         const data = await getRecord(workout.id);
         // Ensure data is valid before setting state
         if (data && Array.isArray(data)) {
@@ -302,7 +299,6 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
         
       </View>
       <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
-        console.log("selected workout for deletion:" +workout.workout.name + "id: " + workout.id);
         await deleteWorkout(selectedProgram.id,workout.id);
         const updatedItem = await getWorkout(selectedProgram.id);
         setSelectedItem(updatedItem);

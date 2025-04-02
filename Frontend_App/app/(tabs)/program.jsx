@@ -16,6 +16,7 @@ import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram, delet
 
 import WorkoutItem from '@/components/ui/WorkoutItem';
 import WorkoutModalItem from '@/components/ui/WorkoutModalItem';
+import AvailableWorkoutModal from '@/components/ui/AvailableWorkoutModal';
 
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SelectList } from 'react-native-dropdown-select-list'
@@ -66,9 +67,12 @@ const [selected, setSelected] = useState("");
 const [selectedWorkoutId, setselectedWorkoutId ] = useState("")
 
 const [programData, setProgramData] = useState([]);
+
 const [modalVisible, setModalVisible] = useState(false);
 const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
 const [modalRecordVisible, setmodalRecordVisible] = useState(false);
+const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
+
 const [selectedItem, setSelectedItem] = useState(null);
 const [availableWorkouts, setAvailableWorkouts] = useState([]);
 const [selectedProgram, setSelectedProgram] = useState([]);
@@ -299,7 +303,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                 setmodalRecordVisible={setmodalRecordVisible}
                 resetChoiceValues={resetChoiceValues}/>
               )) : (
-                <View>
+                <View style={{alignItems: 'center'}}>
                   <Text style={styles.noWorkoutModal}>No workout/s today</Text>
                 </View>
               )}
@@ -307,37 +311,27 @@ const [refreshing, setRefreshing] = React.useState(false);
 
               {/* renders the available workouts */}
 
-            <View style={styles.modalTitleCont}>
-                <Text style={styles.modalTitle}> Available Workout/s </Text>
-            </View>
+              <Modal visible={availWorkoutVisible} animationType="slide" transparent={true}>
+                <AvailableWorkoutModal
+                  availableWorkouts={availableWorkouts}
+                  workoutTypes={workoutTypes}
+                  handlePressChoice={handlePressChoice}
+                  setavailWorkoutVisible={setavailWorkoutVisible}
+                  
+                />
+              </Modal>
 
-            <View style={styles.modalWorkoutCont}>
-              {availableWorkouts.length > 0 ? availableWorkouts.map((workout, index) => (
-                <View style={styles.indivWorkoutModalViewCont} key={`${workout.name}-${index}`}>
-                  <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+              <View style={styles.directionalBtnCont}>
+                <TouchableOpacity style={styles.addworkoutBtn} onPress={() => setavailWorkoutVisible(true)}> 
+                  <Text style={styles.closeBtnText} >Add Workout</Text>
+                </TouchableOpacity>
 
-                  <View>
-                    <Text style={styles.workoutNameModal}>{workout.name}</Text>
-                  </View>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}> 
+                  <Text style={styles.closeBtnText} >Close</Text>
+                </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
-                    handlePressChoice(workout);
-                    }}>
-                    <FontAwesome6 name="plus" size={20} color="black" />
-                  </TouchableOpacity>
-
-                </View>
-              )) : (
-                <View>
-                  <Text style={styles.noWorkoutModal}>No workout/s available</Text>
-                </View>
-              )}
-            </View>
-
-
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}> 
-                <Text style={styles.closeBtnText} >Close</Text>
-              </TouchableOpacity>
+              </View>
+              
 
             </>
            )}
@@ -485,7 +479,6 @@ const [refreshing, setRefreshing] = React.useState(false);
     </Modal>
 
       
-      
     </ScrollView>
  
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
@@ -551,7 +544,7 @@ const styles = StyleSheet.create({
   //modal styles
   modalContainer:{
     flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)'
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     width: "100%",
@@ -559,7 +552,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: colors.primaryBackground,
     borderRadius: 10,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalTitle:{
     fontSize: 20,
@@ -574,8 +567,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  directionalBtnCont:{
+    flexDirection: 'row',
+
+  },
   closeBtn:{
     backgroundColor: colors.redAccent,
+    padding: 10,
+    borderRadius: 10,
+    marginLeft: 15,
+  },
+  addworkoutBtn:{
+    backgroundColor: colors.greenAccent,
     padding: 10,
     borderRadius: 10,
   },
@@ -592,11 +595,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     
   },
-  workoutNameModal:{
-    fontSize: 20,
-    color: 'white',
-    fontFamily: 'KeaniaOne',
-  },
   workoutdetailsModal:{
     fontSize: 15,
     color: 'gray',
@@ -611,14 +609,6 @@ const styles = StyleSheet.create({
     width: "100%",
    
   },
-  indivWorkoutModalViewCont:{
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    backgroundColor: '#1E1F26',
-    padding: 15,
-    borderRadius: 20,
-  },
   updateDaySelection:{
     flexDirection: 'row',
     alignItems: 'center',
@@ -630,13 +620,6 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
    
-  },
-  addProgramBtn:{
-    backgroundColor: colors.redAccent,
-    padding: 10,
-    borderRadius: 10,
-    position: 'absolute',
-    right: 15
   },
   modalChoiceCont:{
     flex: 1,
