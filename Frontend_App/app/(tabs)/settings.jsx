@@ -2,37 +2,43 @@ import { Image, StyleSheet, Platform, View, Text, Linking, TouchableOpacity,Text
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import { router, useRouter } from 'expo-router';
 import { ScrollView } from 'react-native';
+
 import {refreshAccessToken} from '../../components/refreshToken';
+import {setMemberHW, getMembershipInfo, getMemberInfo, startPayment} from '@/components/generalFetchFunction';
+import { getToken,saveToken, delToken } from '@/components/storageComponent';
 
 
 //deletes information stored based on logged in account and redirects to login page
  async function logoutDetails() {
   try {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
-    await SecureStore.deleteItemAsync("username");
-    await SecureStore.deleteItemAsync("password");
+    await delToken("accessToken");
+    await delToken("refreshToken");
+    await delToken("username");
+    await delToken("password");
 
-    await SecureStore.deleteItemAsync("userId");
-    await SecureStore.deleteItemAsync("weight");
-    await SecureStore.deleteItemAsync("height");
-    await SecureStore.deleteItemAsync("membershipType");
-    await SecureStore.deleteItemAsync("address");
-    await SecureStore.deleteItemAsync("birthDate");
-    await SecureStore.deleteItemAsync("email");
-    await SecureStore.deleteItemAsync("firstName");
-    await SecureStore.deleteItemAsync("gymTrainerId");
-    await SecureStore.deleteItemAsync("lastName");
-    await SecureStore.deleteItemAsync("mobileNumber");
-    await SecureStore.deleteItemAsync("sex");
-    await SecureStore.deleteItemAsync("profilePic");
+    await delToken("userId");
+    await delToken("weight");
+    await delToken("height");
+    await delToken("membershipType");
+    await delToken("address");
+    await delToken("birthDate");
+    await delToken("email");
+    await delToken("firstName");
+    await delToken("gymTrainerId");
+    await delToken("lastName");
+    await delToken("mobileNumber");
+    await delToken("sex");
+    await delToken("profilePic");
 
+    await delToken("memberId");
+    await delToken("startDate");
+    await delToken("expirationDate");
+    await delToken("price");
 
     router.push('/');
     
@@ -51,8 +57,8 @@ export default function Settings() {
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
-    getMemberInfo();
-    getMembershipInfo();
+    handlegetMemberInfo();
+    handlegetMembershipInfo();
   }, []);
 
   const [memberInfo, setMemberInfo] = useState([]);
@@ -64,202 +70,24 @@ export default function Settings() {
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
-  async function startPayment() {
-    try {
-      let accessToken = await SecureStore.getItemAsync("accessToken");
-      let refreshToken = await SecureStore.getItemAsync("refreshToken");
-      let username = await SecureStore.getItemAsync("username");
-      
-      console.log("access: " + accessToken);
-      console.log("refresh: " + refreshToken);
-      console.log("username: " + username);
-  
-      let response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-  
-      if (response.status === 401) {
-        console.log("Access token expired");
-        accessToken = await refreshAccessToken();
-        console.log("New access token: " + accessToken);
-        if (!accessToken) {
-          throw new Error("Failed to refresh access token");
-        }
-        
-        response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-          }
-        });
-      }
-  
-        const data = await response.json();
-        console.log(data.details.link);
-        Linking.openURL(data.details.link).catch(err => console.error('An error occurred', err));
-      } catch (error) {
-        console.error("Error:", error);
-      }
-  
+  const handlegetMemberInfo = async () => {
+    const response = await getMemberInfo();
+    setMemberInfo(response);
   }
-  
-  
-  //function to retrieve member information such as name, membership type, and expiry of membership
-async function getMemberInfo() {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let username = await SecureStore.getItemAsync("username");
-    
-    console.log("access: " + accessToken);
-    console.log("refresh: " + refreshToken);
-    console.log("username: " + username);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-      const data = await response.json();
-      setMemberInfo(data);
-      console.log(data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-
-}
-
-//function to update height and weight of member
-async function setMemberHW(newHeight,newWeight) {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let username = await SecureStore.getItemAsync("username");
-    let membershipType = memberInfo.membershipType;
-    
-    console.log("access: " + accessToken);
-    console.log("refresh: " + refreshToken);
-    console.log("username: " + username);
-
-    let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-      method: "PUT",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        'height':newHeight,
-        'weight':newWeight,
-        'username': username,
-        'membershipType':membershipType,
-      }),
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          'height':newHeight,
-          'weight':newWeight,
-          'username': username,
-          'membershipType':membershipType,
-        }),
-      });
-    }
-
-      const data = await response.json();
-      console.log(data);
-      await SecureStore.setItemAsync("weight",data.weight.toString());
-      await SecureStore.setItemAsync("height",data.height.toString());
-      getMemberInfo();
-    } catch (error) {
-      console.error("Error:", error);
-    }
-
-}
-
-
-async function getMembershipInfo() {
-  try {
-    let accessToken = await SecureStore.getItemAsync("accessToken");
-    let refreshToken = await SecureStore.getItemAsync("refreshToken");
-    let username = await SecureStore.getItemAsync("username");
-
-    let response = await fetch("https://triple-j.onrender.com/api/account/membership", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (response.status === 401) {
-      console.log("Access token expired");
-      accessToken = await refreshAccessToken();
-      console.log("New access token: " + accessToken);
-      if (!accessToken) {
-        throw new Error("Failed to refresh access token");
-      }
-      
-      response = await fetch("https://triple-j.onrender.com/api/account/membership", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-      const data = await response.json(); 
-      setMembershipInfo(data);
-      console.log(data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-
-}
+  const handlegetMembershipInfo = async () => {
+    const response = await getMembershipInfo();
+    await saveToken("memberId", response.member.toString());
+    await saveToken("startDate", response.startDate.toString());
+    await saveToken("expirationDate", response.expirationDate.toString());
+    await saveToken("price", response.price.toString());
+    setMembershipInfo(response);
+  }
 
 useEffect(() => {
-  getMemberInfo();
-  getMembershipInfo();
+  handlegetMemberInfo();
+  handlegetMembershipInfo();
 }, []);
-
-
 
 
  return(
@@ -323,7 +151,13 @@ useEffect(() => {
           </View>
 
           <TouchableOpacity onPress={async ()=>{
-            await setMemberHW(memberHeight,memberWeight);
+            const response = await setMemberHW(memberHeight,memberWeight);
+
+            await saveToken("weight", response.weight.toString());
+            await saveToken("height", response.height.toString());
+            await handlegetMemberInfo();
+
+
           }}  style={styles.loginBtn}>
                   <Text style={styles.loginBtnTxt}>
                     Update
@@ -355,8 +189,6 @@ useEffect(() => {
           </Text>
 
         </View>
-
-
 
       </View>
 

@@ -50,7 +50,8 @@ export function validateLoginInfo(username, password) {
           }
         });
       }
-      return response;
+      const data = await response.json();
+      return data;
       } catch (error) {
         console.error("Error:", error);
       }
@@ -509,4 +510,135 @@ export async function setRecord(programWorkout, mainDetails)  {
     } catch (error) {
       console.error("Error:", error);
     }
+}
+
+
+//settings page
+
+//function to update height and weight of member
+export async function setMemberHW(newHeight,newWeight) {
+  try {
+    let accessToken = await getToken("accessToken");
+    let username = await getToken("username");
+    let membershipType = await getToken("membershipType");
+    
+    let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        'height':newHeight,
+        'weight':newWeight,
+        'username': username,
+        'membershipType':membershipType,
+      }),
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          'height':newHeight,
+          'weight':newWeight,
+          'username': username,
+          'membershipType':membershipType,
+        }),
+      });
+    }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+}
+
+
+export async function getMembershipInfo() {
+  try {
+    let accessToken = await getToken("accessToken");
+
+    let response = await fetch("https://triple-j.onrender.com/api/account/membership", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch("https://triple-j.onrender.com/api/account/membership", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+      const data = await response.json(); 
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+}
+
+
+export async function startPayment() {
+  try {
+    let accessToken = await getToken("accessToken");
+
+    let response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+      const data = await response.json();
+      console.log(data.details.link);
+      Linking.openURL(data.details.link).catch(err => console.error('An error occurred', err));
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
 }

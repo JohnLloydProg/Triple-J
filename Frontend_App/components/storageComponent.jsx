@@ -15,3 +15,11 @@ export async function getToken(key) {
     console.log(error);
   }
 } 
+
+export async function delToken(key) {
+  try{
+    return await SecureStore.deleteItemAsync(key);
+  }catch(error){
+    console.log(error);
+  }
+} 
