@@ -57,12 +57,6 @@ const workoutTypes = {
 
 export default function program() {
 
-const [modalKey, setModalKey] = useState(0);
-
-const forceRenderModal = () => {
-  setModalKey(prevKey => prevKey + 1); // Update the key to trigger a re-render
-};
-
 const [selected, setSelected] = useState("");
 const [selectedWorkoutId, setselectedWorkoutId ] = useState("")
 
@@ -95,7 +89,14 @@ const resetChoiceValues = () => {
   setDistance("");
 };
 
-//funnction to handle the modal of selected program
+//re-renders graphs after adding a record
+const [modalKey, setModalKey] = useState(0);
+
+const forceRenderModal = () => {
+  setModalKey(prevKey => prevKey + 1); 
+};
+
+//funnctions to handle the modal of selected program
 const handlePress =  async (item) => {
   setSelectedProgram(item);
   setSelectedItem(await getWorkout(item.id));
@@ -111,16 +112,10 @@ const handlePressChoice =  async (item) => {
   setmodalChoiceVisible(true);
 };
 
-
-
+//re-renders the modal after adding a record to a workout
 useEffect(() => {
   console.log("Updated Selected Program: ", selectedProgram);
 }, [selectedProgram]);
-
-  //loads the needed custom font styles
-  const [fontsLoaded] = useFonts({
-    KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
-  });
 
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
@@ -143,8 +138,6 @@ useEffect(() => {
     
   }, [programData]);
   
-  
-  
   //sorts the programs from monday-sunday
   const sortedProgramData = [...programData].sort((a, b) => {
     const dayA = daysOfWeekOrder[daysOfWeek[a.day]] ?? 0; 
@@ -152,8 +145,7 @@ useEffect(() => {
     return dayA - dayB;
   });
 
-
-
+  //handles the refreshing of the page
 const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(() => {
@@ -177,7 +169,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
     } style={styles.container}>
 
-
+       {/*Displays user information and current timeline photo */}
 
       <TouchableOpacity onPress={()=>{router.push('/timeline')}}>
 
@@ -223,7 +215,7 @@ const [refreshing, setRefreshing] = React.useState(false);
 
       </TouchableOpacity>
       
-      
+      {/*Component to render all the programs and their associated workouts */}
       <FlatList
       style={{marginBottom:25}}
       data={sortedProgramData}
@@ -236,21 +228,23 @@ const [refreshing, setRefreshing] = React.useState(false);
       showsVerticalScrollIndicator={false}
       />
 
-
-    
     
     <Modal key={modalKey} visible={modalVisible} animationType="slide" transparent={true}>
         <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
           <View style={styles.modalContent}> 
             
+          {/*Component to render all the programs and their associated workouts */}
            {selectedItem && (
             <>
+
+              {/*Display and allows users to set a day of the week to a blank program*/}
               <View style={styles.modalTitleCont}>
                 {daysOfWeek[selectedProgram.day]  ? (
                   <Text style={styles.modalTitle}>{daysOfWeek[selectedProgram.day]}</Text>
                 ) : (
 
                   <View style={styles.updateDaySelection}>
+
                     <SelectList 
                         setSelected={(val) => setSelected(val)} 
                         data={dataDropdown} 
@@ -261,17 +255,13 @@ const [refreshing, setRefreshing] = React.useState(false);
                         boxStyles={[{ width: 300 },{borderWidth:0}]}
                         placeholder='Select Program Day'
                         search={false}
-
-                        
                     />
+
                     <TouchableOpacity onPress={ async ()=>{
-                      console.log("IDDDDDDDDDD" + selectedProgram.id + " DAYYYYY: " +selectedProgram.day);
-                      console.log(daysOfWeekOrder[selectedProgram.day]);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
                       setSelectedItem(...updatedItem);
-                      //setModalVisible(false);
 
                       }} style={styles.updateButton}>
                         
@@ -280,6 +270,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                         </View>
 
                     </TouchableOpacity>
+
                   </View>
               
                 )}
@@ -309,18 +300,6 @@ const [refreshing, setRefreshing] = React.useState(false);
               )}
             </View>
 
-              {/* renders the available workouts */}
-
-              <Modal visible={availWorkoutVisible} animationType="slide" transparent={true}>
-                <AvailableWorkoutModal
-                  availableWorkouts={availableWorkouts}
-                  workoutTypes={workoutTypes}
-                  handlePressChoice={handlePressChoice}
-                  setavailWorkoutVisible={setavailWorkoutVisible}
-                  
-                />
-              </Modal>
-
               <View style={styles.directionalBtnCont}>
                 <TouchableOpacity style={styles.addworkoutBtn} onPress={() => setavailWorkoutVisible(true)}> 
                   <Text style={styles.closeBtnText} >Add Workout</Text>
@@ -329,89 +308,31 @@ const [refreshing, setRefreshing] = React.useState(false);
                 <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}> 
                   <Text style={styles.closeBtnText} >Close</Text>
                 </TouchableOpacity>
-
               </View>
               
-
             </>
            )}
           </View>
         </ScrollView>
     </Modal>
 
-    {/* renders the modal for adjusting details of workouts */}
-
-    <Modal visible={modalChoiceVisible} animationType="slide" transparent={true}>
-      <View style={styles.modalChoiceCont}>
-
-          <View style={styles.mainInputCont}>
-            {selectedWorkoutItem.reps && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Reps:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
-              </View>
-              
-            )}
-            {selectedWorkoutItem.sets && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Sets:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
-              </View>
-            )}
-            {selectedWorkoutItem.time && (
-               <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Time:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
-               </View>
-            )}
-            {selectedWorkoutItem.weight && (
-                <View style={styles.workoutChoiceCont}>
-                  <Text style={styles.workoutdetailsModal}>Weight:  </Text>
-                  <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
-                </View>
-
-            )}
-            {selectedWorkoutItem.distance && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Distance: </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
-              </View>
-              
-            )}
-          </View>
-          <View style={styles.mainButtonCont}>
-
-            <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
-              const choiceData = {
-                ...(reps && { reps }),
-                ...(sets && { sets }),
-                ...(time && { time }),
-                ...(weight && { weight }),
-                ...(distance && { distance })
-              };
-              console.log(choiceData);
-              addWorkout(selectedProgram.id,selectedWorkoutItem.id, choiceData);
-              const updatedItem = await getWorkout(selectedProgram.id);
-              setSelectedItem(updatedItem);
-              await getProgram().then(data => {setProgramData(data)});
-              await getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
-              setmodalChoiceVisible(false);
-
-            }}>
-              <Text style={styles.closeBtnText}>Create Workout</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalChoiceVisible(false)}> 
-              <Text style={styles.closeBtnText} >Cancel </Text>
-            </TouchableOpacity>
-
-          </View>
-
-      </View>
+    {/* renders the available workouts */}
+    <Modal visible={availWorkoutVisible} animationType="slide" transparent={true}>
+        <AvailableWorkoutModal
+          availableWorkouts={availableWorkouts}
+          workoutTypes={workoutTypes}
+          handlePressChoice={handlePressChoice}
+          setavailWorkoutVisible={setavailWorkoutVisible}
+          modalChoiceVisible={modalChoiceVisible}
+          selectedProgram={selectedProgram}
+          setSelectedItem={setSelectedItem}
+          setAvailableWorkouts={setAvailableWorkouts}
+          setmodalChoiceVisible={setmodalChoiceVisible}
+          selectedWorkoutItem={selectedWorkoutItem}
+        />
     </Modal>
 
     {/* renders the modal for adding records to a workout */}
-
     <Modal visible={modalRecordVisible} animationType="slide" transparent={true}>
       <View style={styles.modalChoiceCont}>
 
@@ -477,8 +398,7 @@ const [refreshing, setRefreshing] = React.useState(false);
 
       </View>
     </Modal>
-
-      
+  
     </ScrollView>
  
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{

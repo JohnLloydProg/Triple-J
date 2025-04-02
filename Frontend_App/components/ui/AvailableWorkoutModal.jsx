@@ -3,9 +3,17 @@ import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacit
 import React from 'react';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
+import {addWorkout, getProgram, getWorkout,getAvailableWorkouts} from '@/components/generalFetchFunction';
+import {useState} from 'react';
 
 
-const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible }) => {
+const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible, modalChoiceVisible, selectedProgram, setSelectedItem, setAvailableWorkouts, setmodalChoiceVisible,selectedWorkoutItem }) => {
+  const [reps,setReps] = useState("");
+  const [sets,setSets] = useState("");
+  const [time,setTime] = useState("");
+  const [weight,setWeight] = useState("");
+  const [distance,setDistance] = useState("");
+
  return (
     <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
 
@@ -39,7 +47,80 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
             <TouchableOpacity style={styles.closeBtn} onPress={() => setavailWorkoutVisible(false)}> 
                 <Text style={styles.closeBtnText} >Close </Text>
             </TouchableOpacity>
+
+            {/* renders the modal for adjusting details of workouts */}
+            
+                <Modal visible={modalChoiceVisible} animationType="slide" transparent={true}>
+                  <View style={styles.modalChoiceCont}>
+            
+                      <View style={styles.mainInputCont}>
+                        {selectedWorkoutItem.reps && (
+                          <View style={styles.workoutChoiceCont}>
+                            <Text style={styles.workoutdetailsModal}>Reps:  </Text>
+                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
+                          </View>
+                          
+                        )}
+                        {selectedWorkoutItem.sets && (
+                          <View style={styles.workoutChoiceCont}>
+                            <Text style={styles.workoutdetailsModal}>Sets:  </Text>
+                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
+                          </View>
+                        )}
+                        {selectedWorkoutItem.time && (
+                           <View style={styles.workoutChoiceCont}>
+                            <Text style={styles.workoutdetailsModal}>Time:  </Text>
+                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
+                           </View>
+                        )}
+                        {selectedWorkoutItem.weight && (
+                            <View style={styles.workoutChoiceCont}>
+                              <Text style={styles.workoutdetailsModal}>Weight:  </Text>
+                              <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
+                            </View>
+            
+                        )}
+                        {selectedWorkoutItem.distance && (
+                          <View style={styles.workoutChoiceCont}>
+                            <Text style={styles.workoutdetailsModal}>Distance: </Text>
+                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
+                          </View>
+                          
+                        )}
+                      </View>
+                      <View style={styles.mainButtonCont}>
+            
+                        <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
+                          const choiceData = {
+                            ...(reps && { reps }),
+                            ...(sets && { sets }),
+                            ...(time && { time }),
+                            ...(weight && { weight }),
+                            ...(distance && { distance })
+                          };
+                          console.log(choiceData);
+                          addWorkout(selectedProgram.id,selectedWorkoutItem.id, choiceData);
+                          const updatedItem = await getWorkout(selectedProgram.id);
+                          setSelectedItem(updatedItem); 
+                          setmodalChoiceVisible(false);
+
+                        }}>
+                          <Text style={styles.closeBtnText}>Create Workout</Text>
+                        </TouchableOpacity>
+            
+                        <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalChoiceVisible(false)}> 
+                          <Text style={styles.closeBtnText} >Cancel </Text>
+                        </TouchableOpacity>
+            
+                      </View>
+            
+                  </View>
+                </Modal>
+
+            
     </ScrollView>
+
+    
  )
 }
 export default AvailableWorkoutModal;
@@ -110,4 +191,65 @@ const styles = StyleSheet.create({
         color: 'white',
         fontFamily: 'KeaniaOne',
     },  
+
+
+
+    modalChoiceCont:{
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        width: "100%",
+        height: "100%",
+        padding: 20,
+        backgroundColor: colors.primaryBackground,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    mainInputCont:{
+        width:'100%',
+        flexDirection: 'row',
+        justifyContent: 'center'
+    },
+    workoutChoiceCont:{
+        marginRight: 5,
+        marginLeft: 5,
+        alignItems: 'center',
+    },
+    workoutdetailsModal:{
+        fontSize: 15,
+        color: 'gray',
+        fontFamily: 'KeaniaOne',
+    },
+    choiceInputCont:{
+        backgroundColor: '#5E5C5C',
+        borderRadius: 22,
+        height: 50,
+        width: 100,
+        color: 'white',
+        paddingLeft: 20,
+        paddingRight: 20,
+    },
+    mainButtonCont:{
+        flexDirection: 'row',
+        marginTop:20,
+    },
+    createWorkoutBtn:{
+        backgroundColor: colors.greenAccent,
+        padding: 10,
+        borderRadius: 10,
+        marginRight: 15,
+        marginBottom: 40,
+    },
+    closeBtnText:{
+      fontSize: 20,
+      color: 'white',
+      fontFamily: 'KeaniaOne',
+    },
+    closeBtn:{
+        backgroundColor: colors.redAccent,
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 40,
+      },
+
 })
