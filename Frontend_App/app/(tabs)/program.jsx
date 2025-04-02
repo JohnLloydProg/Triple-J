@@ -59,21 +59,18 @@ export default function program() {
 
 const [selected, setSelected] = useState("");
 const [selectedWorkoutId, setselectedWorkoutId ] = useState("")
-
 const [programData, setProgramData] = useState([]);
-
-const [modalVisible, setModalVisible] = useState(false);
-const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
-const [modalRecordVisible, setmodalRecordVisible] = useState(false);
-const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
-
 const [selectedItem, setSelectedItem] = useState(null);
 const [availableWorkouts, setAvailableWorkouts] = useState([]);
 const [selectedProgram, setSelectedProgram] = useState([]);
 const [selectedWorkoutItem, setselectedWorkoutItem] = useState([]);
 const [selectedWorkoutRecord, setselectedWorkoutRecord] = useState([]);
-
 const [currentTimeLineInfo, setcurrentTimeLineInfo] = useState({});
+
+const [modalVisible, setModalVisible] = useState(false);
+const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
+const [modalRecordVisible, setmodalRecordVisible] = useState(false);
+const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
 
 const [reps,setReps] = useState("");
 const [sets,setSets] = useState("");
@@ -292,7 +289,12 @@ const [refreshing, setRefreshing] = React.useState(false);
                 setselectedWorkoutId={setselectedWorkoutId}
                 setselectedWorkoutRecord={setselectedWorkoutRecord}
                 setmodalRecordVisible={setmodalRecordVisible}
-                resetChoiceValues={resetChoiceValues}/>
+                resetChoiceValues={resetChoiceValues}
+                modalRecordVisible={modalRecordVisible}
+                selectedWorkoutRecord={selectedWorkoutRecord}
+                selectedWorkoutId={selectedWorkoutId}
+                forceRenderModal={forceRenderModal}
+                />
               )) : (
                 <View style={{alignItems: 'center'}}>
                   <Text style={styles.noWorkoutModal}>No workout/s today</Text>
@@ -332,72 +334,6 @@ const [refreshing, setRefreshing] = React.useState(false);
         />
     </Modal>
 
-    {/* renders the modal for adding records to a workout */}
-    <Modal visible={modalRecordVisible} animationType="slide" transparent={true}>
-      <View style={styles.modalChoiceCont}>
-
-          <View style={styles.mainInputCont}>
-            {selectedWorkoutRecord.reps && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Reps:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
-              </View>
-              
-            )}
-            {selectedWorkoutRecord.sets && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Sets:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
-              </View>
-            )}
-            {selectedWorkoutRecord.time && (
-               <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Time:  </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
-               </View>
-            )}
-            {selectedWorkoutRecord.weight && (
-                <View style={styles.workoutChoiceCont}>
-                  <Text style={styles.workoutdetailsModal}>Weight:  </Text>
-                  <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
-                </View>
-
-            )}
-            {selectedWorkoutRecord.distance && (
-              <View style={styles.workoutChoiceCont}>
-                <Text style={styles.workoutdetailsModal}>Distance: </Text>
-                <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
-              </View>
-              
-            )}
-          </View>
-          <View style={styles.mainButtonCont}>
-
-            <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
-              const choiceData = {
-                ...(reps && { reps }),
-                ...(sets && { sets }),
-                ...(time && { time }),
-                ...(weight && { weight }),
-                ...(distance && { distance })
-              };
-              console.log(choiceData);
-              await setRecord(selectedWorkoutId, choiceData);
-              forceRenderModal();
-              setmodalRecordVisible(false);
-
-            }}>
-              <Text style={styles.closeBtnText}>Add Record</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalRecordVisible(false)}> 
-              <Text style={styles.closeBtnText} >Cancel </Text>
-            </TouchableOpacity>
-
-          </View>
-
-      </View>
-    </Modal>
   
     </ScrollView>
  
@@ -435,12 +371,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 20,
-   },
-   indivWorkCont:{
-    flex: 1,
-    flexDirection: 'row',
-    marginBottom: 10,
-    
    },
    progressText:{
     color: 'white',
@@ -515,11 +445,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     
   },
-  workoutdetailsModal:{
-    fontSize: 15,
-    color: 'gray',
-    fontFamily: 'KeaniaOne',
-  },
 
   modalWorkoutCont:{
     height: "auto",
@@ -540,46 +465,6 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
    
-  },
-  modalChoiceCont:{
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    width: "100%",
-    height: "100%",
-    padding: 20,
-    backgroundColor: colors.primaryBackground,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mainInputCont:{
-    width:'100%',
-    flexDirection: 'row',
-    justifyContent: 'center'
-  },
-  choiceInputCont:{
-    backgroundColor: '#5E5C5C',
-    borderRadius: 22,
-    height: 50,
-    width: 100,
-    color: 'white',
-    paddingLeft: 20,
-    paddingRight: 20,
-  },
-  workoutChoiceCont:{
-    marginRight: 5,
-    marginLeft: 5,
-    alignItems: 'center',
-  },
-  mainButtonCont:{
-    flexDirection: 'row',
-    marginTop:20,
-  },
-  createWorkoutBtn:{
-    backgroundColor: colors.greenAccent,
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 15,
   },
 
   modalChoiceAnalyticsCont:{
@@ -630,6 +515,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
-
-
 });

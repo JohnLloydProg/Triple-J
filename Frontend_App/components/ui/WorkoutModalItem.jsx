@@ -1,5 +1,5 @@
 import {LineChart} from "react-native-chart-kit";
-import { Image, StyleSheet, View, Text,TouchableOpacity} from 'react-native';
+import { Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal} from 'react-native';
 import { useEffect, useState } from 'react';
 import React from 'react';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -12,7 +12,7 @@ import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 
 import colors from '../../constants/globalStyles';
-import { getProgram, getWorkout, deleteWorkout, getRecord} from '@/components/generalFetchFunction';
+import { getProgram, getWorkout, deleteWorkout, getRecord, setRecord} from '@/components/generalFetchFunction';
 
 
 const screenWidth = Dimensions.get("window").width;
@@ -26,6 +26,7 @@ const workoutTypes = {
   'PL': pull,    
   'N/A': 'Rest Day'
 };
+
 
 
 const getWorkoutDetails = (workoutName, availableWorkouts) => {
@@ -183,7 +184,13 @@ const processData = (data) => {
 
 
 //main component being exported
-const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible,resetChoiceValues}) => {
+const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible,resetChoiceValues, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal}) => {
+
+  const [reps,setReps] = useState("");
+  const [sets,setSets] = useState("");
+  const [time,setTime] = useState("");
+  const [weight,setWeight] = useState("");
+  const [distance,setDistance] = useState("");
 
   const handlePressRecord =  async (item, workoutid) => {
         resetChoiceValues();
@@ -345,6 +352,73 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
       
     </View>
 
+    {/* renders the modal for adding records to a workout */}
+        <Modal visible={modalRecordVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalChoiceCont}>
+    
+              <View style={styles.mainInputCont}>
+                {selectedWorkoutRecord.reps && (
+                  <View style={styles.workoutChoiceCont}>
+                    <Text style={styles.workoutdetailsModal}>Reps:  </Text>
+                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
+                  </View>
+                  
+                )}
+                {selectedWorkoutRecord.sets && (
+                  <View style={styles.workoutChoiceCont}>
+                    <Text style={styles.workoutdetailsModal}>Sets:  </Text>
+                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
+                  </View>
+                )}
+                {selectedWorkoutRecord.time && (
+                   <View style={styles.workoutChoiceCont}>
+                    <Text style={styles.workoutdetailsModal}>Time:  </Text>
+                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
+                   </View>
+                )}
+                {selectedWorkoutRecord.weight && (
+                    <View style={styles.workoutChoiceCont}>
+                      <Text style={styles.workoutdetailsModal}>Weight:  </Text>
+                      <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
+                    </View>
+    
+                )}
+                {selectedWorkoutRecord.distance && (
+                  <View style={styles.workoutChoiceCont}>
+                    <Text style={styles.workoutdetailsModal}>Distance: </Text>
+                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
+                  </View>
+                  
+                )}
+              </View>
+              <View style={styles.mainButtonCont}>
+    
+                <TouchableOpacity style={styles.createRecordBtn} onPress={ async ()=>{
+                  const choiceData = {
+                    ...(reps && { reps }),
+                    ...(sets && { sets }),
+                    ...(time && { time }),
+                    ...(weight && { weight }),
+                    ...(distance && { distance })
+                  };
+                  console.log(choiceData);
+                  await setRecord(selectedWorkoutId, choiceData);
+                  forceRenderModal();
+                  setmodalRecordVisible(false);
+    
+                }}>
+                  <Text style={styles.closeBtnText}>Add Record</Text>
+                </TouchableOpacity>
+    
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalRecordVisible(false)}> 
+                  <Text style={styles.closeBtnText} >Cancel </Text>
+                </TouchableOpacity>
+    
+              </View>
+    
+          </View>
+        </Modal>
+
 
     </View>
   )
@@ -401,4 +475,62 @@ const styles = StyleSheet.create({
         fontFamily: 'KeaniaOne',
         textAlign: 'center'
     },
+
+
+    modalChoiceCont:{
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      width: "100%",
+      height: "100%",
+      padding: 20,
+      backgroundColor: colors.primaryBackground,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mainInputCont:{
+      width:'100%',
+      flexDirection: 'row',
+      justifyContent: 'center'
+    },
+    workoutChoiceCont:{
+      marginRight: 5,
+      marginLeft: 5,
+      alignItems: 'center',
+    },
+    workoutdetailsModal:{
+      fontSize: 15,
+      color: 'gray',
+      fontFamily: 'KeaniaOne',
+    },
+    choiceInputCont:{
+      backgroundColor: '#5E5C5C',
+      borderRadius: 22,
+      height: 50,
+      width: 100,
+      color: 'white',
+      paddingLeft: 20,
+      paddingRight: 20,
+    },
+    mainButtonCont:{
+      flexDirection: 'row',
+      marginTop:20,
+    },
+    createRecordBtn:{
+      backgroundColor: colors.greenAccent,
+      padding: 10,
+      borderRadius: 10,
+      marginRight: 15,
+    },
+    closeBtnText:{
+      fontSize: 20,
+      color: 'white',
+      fontFamily: 'KeaniaOne',
+    },
+    closeBtn:{
+        backgroundColor: colors.redAccent,
+        padding: 10,
+        borderRadius: 10,
+        marginLeft: 15,
+      },
 });
