@@ -1,6 +1,5 @@
 import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView} from 'react-native';
 import { router} from 'expo-router';
-import { useFonts } from 'expo-font';
 import { FlatList } from 'react-native';
 import { useEffect, useState, useContext } from 'react';
 
@@ -12,7 +11,7 @@ import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 
-import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram, deleteProgram, updateProgram, getWorkout, addWorkout, deleteWorkout, getRecord, setRecord} from '@/components/generalFetchFunction';
+import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram,  updateProgram, getWorkout} from '@/components/generalFetchFunction';
 
 import WorkoutItem from '@/components/ui/WorkoutItem';
 import WorkoutModalItem from '@/components/ui/WorkoutModalItem';
@@ -20,12 +19,9 @@ import AvailableWorkoutModal from '@/components/ui/AvailableWorkoutModal';
 
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SelectList } from 'react-native-dropdown-select-list'
-import {LineChart} from "react-native-chart-kit";
 import { Dimensions } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
-const WorkoutContext = React.createContext();
-
 
 const dataDropdown = [
   { key: '0', value: 'Monday' },
@@ -54,7 +50,6 @@ const workoutTypes = {
   'N/A': 'Rest Day'
 };
 
-
 export default function program() {
 
 const [selected, setSelected] = useState("");
@@ -71,20 +66,6 @@ const [modalVisible, setModalVisible] = useState(false);
 const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
 const [modalRecordVisible, setmodalRecordVisible] = useState(false);
 const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
-
-const [reps,setReps] = useState("");
-const [sets,setSets] = useState("");
-const [time,setTime] = useState("");
-const [weight,setWeight] = useState("");
-const [distance,setDistance] = useState("");
-
-const resetChoiceValues = () => {
-  setReps("");
-  setSets("");
-  setTime("");
-  setWeight("");
-  setDistance("");
-};
 
 //re-renders graphs after adding a record
 const [modalKey, setModalKey] = useState(0);
@@ -104,7 +85,6 @@ const handlePress =  async (item) => {
 const handlePressChoice =  async (item) => {
   const updatedItem = [...selectedItem];
   setSelectedItem(updatedItem);
-  resetChoiceValues();
   setselectedWorkoutItem(item);
   setmodalChoiceVisible(true);
 };
@@ -289,7 +269,6 @@ const [refreshing, setRefreshing] = React.useState(false);
                 setselectedWorkoutId={setselectedWorkoutId}
                 setselectedWorkoutRecord={setselectedWorkoutRecord}
                 setmodalRecordVisible={setmodalRecordVisible}
-                resetChoiceValues={resetChoiceValues}
                 modalRecordVisible={modalRecordVisible}
                 selectedWorkoutRecord={selectedWorkoutRecord}
                 selectedWorkoutId={selectedWorkoutId}
@@ -334,7 +313,6 @@ const [refreshing, setRefreshing] = React.useState(false);
         />
     </Modal>
 
-  
     </ScrollView>
  
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
@@ -365,7 +343,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
     maxHeight: 140
-    
    },
    profileImage:{
     width: 100,
@@ -390,8 +367,6 @@ const styles = StyleSheet.create({
     bottom:10,
     right: 20
   },
-
-  //modal styles
   modalContainer:{
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -419,7 +394,6 @@ const styles = StyleSheet.create({
   },
   directionalBtnCont:{
     flexDirection: 'row',
-
   },
   closeBtn:{
     backgroundColor: colors.redAccent,
@@ -443,76 +417,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     fontSize: 20,
-    
   },
-
   modalWorkoutCont:{
     height: "auto",
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
     width: "100%",
-   
   },
   updateDaySelection:{
     flexDirection: 'row',
     alignItems: 'center',
-    
   },
   updateButton:{
     marginLeft: 20,
     width: "10%",
     height: 45,
     justifyContent: 'center',
-   
-  },
-
-  modalChoiceAnalyticsCont:{
-    alignItems: 'center',
-    flexDirection: 'row',
-    padding: 10
-  },
-
-  recordChoiceBtnCont:{
-    backgroundColor: colors.greenAccent,
-    padding: 10,
-    paddingLeft: 20,
-    paddingRight: 20,
-    borderRadius: 10
-  },
-
-  mainRecordContainer:{
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%'
-    
-  },
-  
-  setAnalyticsBtn:{
-    fontFamily: 'KeaniaOne',
-    color: 'white',
-  },
-
-  analyticsInfoCont:{
-    flexDirection: 'row',
-    marginTop: 20,
-    backgroundColor: colors.primaryBackground,
-    borderRadius: 10,
-    padding: 10,
-  },
-  analyticText:{
-    fontFamily: 'KeaniaOne',
-    color: 'white',
-    fontSize: 20,
-  },
-  indivAnalyticsCont:{
-    marginLeft: 10,
-    marginRight:10,
-    alignItems: 'center',
-  },
-  analyticSubText:{
-    fontFamily: 'KeaniaOne',
-    fontSize: 16,
-    color: 'gray',
   },
 });

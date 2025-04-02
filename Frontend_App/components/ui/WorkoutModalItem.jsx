@@ -184,7 +184,7 @@ const processData = (data) => {
 
 
 //main component being exported
-const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible,resetChoiceValues, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal}) => {
+const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal}) => {
 
   const [reps,setReps] = useState("");
   const [sets,setSets] = useState("");
@@ -193,7 +193,6 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
   const [distance,setDistance] = useState("");
 
   const handlePressRecord =  async (item, workoutid) => {
-        resetChoiceValues();
         setselectedWorkoutId(workoutid);
         setselectedWorkoutRecord(item);
         setmodalRecordVisible(true);
