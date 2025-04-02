@@ -1,5 +1,6 @@
 import { getToken,saveToken } from './storageComponent';
 import {refreshAccessToken} from './refreshToken';
+import {Linking} from 'react-native';
 
 //index page
 
