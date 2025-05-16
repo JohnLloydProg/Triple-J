@@ -1,13 +1,12 @@
-from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
 from account.permissions import IsTrainer
 from scheduling.serializers import ScheduleSerializer
 from scheduling.models import Schedule
 from account.models import Member
 from django.utils.timezone import now
-from django.http.response import JsonResponse
 
 # Create your views here.
 
@@ -15,9 +14,13 @@ from django.http.response import JsonResponse
 class SchedulesView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsTrainer]
     
-    def get(self, request):
+    def get(self, request:Request) -> Response:
         schedules = []
-        trainer = Member.objects.get(pk=self.request.user)
+        try:
+            trainer = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Trainer does not exist')
+        
         for schedule in Schedule.objects.all():
             if (schedule.trainee.gymTrainer == trainer):
                 schedules.append(ScheduleSerializer(schedule).data)
@@ -27,13 +30,17 @@ class SchedulesView(generics.GenericAPIView):
 class NextScheduleView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def get(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
         schedules = Schedule.objects.filter(trainee=member).order_by('day')
         for schedule in schedules: 
             if (schedule.day >= now().weekday()):
                 return Response(ScheduleSerializer(schedule).data)
-        return JsonResponse({})
+        return Response({})
 
 
 class ScheduleCreateView(generics.CreateAPIView):

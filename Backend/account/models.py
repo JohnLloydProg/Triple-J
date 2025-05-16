@@ -42,6 +42,9 @@ class Member(User):
     facebookAccount = models.URLField(null=True, blank=True)
     profilePic = models.ImageField(upload_to=userProfilePath, null=True, blank=True)
 
+    def __str__(self):
+        return f'{self.username} ({str(self.pk)})'
+
 
 class Membership(models.Model):
     """

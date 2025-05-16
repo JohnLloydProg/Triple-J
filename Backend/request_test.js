@@ -6,8 +6,8 @@ fetch(baseURL + "api/account/token", {
         "Content-Type" : "application/json"
     },
     body : JSON.stringify({
-        'username':'admin',
-        'password':'admin12345'
+        'username':'its_lloyd',
+        'password':'Unida12345'
     }),
     credentials: 'same-origin',
 }).then((response) => {
@@ -18,8 +18,8 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/attendance/logging", {
-        method : "GET",
+    fetch(baseURL + "api/gym/program/1/delete/4", {
+        method : "DELETE",
         headers : {
             "Authorization": `Bearer ${data['access']}`,
             "Content-Type" : "application/json"

@@ -1,6 +1,3 @@
-from django.contrib.auth import authenticate, login
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -10,6 +7,7 @@ from account.serializers import DailyMembershipSerializer, MonthlyMembershipSeri
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from account.permissions import IsTrainer
 from rest_framework.response import Response
+from rest_framework.request import Request
 from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
@@ -160,16 +158,23 @@ class TrainerView(generics.RetrieveAPIView):
 class MembersView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsTrainer]
 
-    def get(self, request):
-        trainer = Member.objects.get(pk=self.request.user)
+    def get(self, request:Request) -> Response:
+        try:
+            trainer = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Trainer does not exist')
         return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data)
 
 
 class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def get(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
         if (member.membershipType == 'Daily'):
             membership = DailyMembership.objects.get(member=member)
             serializer = DailyMembershipSerializer(membership)
@@ -182,8 +187,15 @@ class MembershipView(generics.GenericAPIView):
 class MembershipChangeView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
-    def post(self, request, user):
-        member = Member.objects.get(pk=user)
+    def post(self, request:Request, user:int) -> Response:
+        try:
+            member = Member.objects.get(pk=user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
+        if (request.data.get('changeTo') not in ['Daily', 'Monthly']):
+            return Response('Invalid membership type (Daily or Monthly only)')
+
         if (request.data.get('changeTo') == 'Monthly'):
             oldMembership = DailyMembership.objects.get(member=member)
             newMembership = MonthlyMembership(startDate=oldMembership.startDate, member=member)
@@ -199,14 +211,20 @@ class MembershipChangeView(generics.GenericAPIView):
             member.membershipType = 'Daily'
             member.save()
             oldMembership.delete()
-        return JsonResponse({'details':'Membership successfully changed'})
+        return Response('Membership successfully changed')
 
 
 class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def post(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+
+        if (member.membershipType != 'Monthly'):
+            return Response('Member does not have a monthly subscription')
         
         url = "https://api.paymongo.com/v1/checkout_sessions"
 
@@ -245,10 +263,10 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
 class SuccessfulPaymentView(generics.GenericAPIView):
     permission_classes = []
 
-    def post(self, request):
+    def post(self, request:Request) -> Response:
         data = request.data.get('data')
         memberCheckout = MemberCheckout.objects.get(checkoutId=data.get('attributes').get('data').get('id'))
         membership = MonthlyMembership.objects.get(member=memberCheckout.member)
         membership.extendExpirationDate()
         membership.save()
-        return HttpResponse("You have successfully paid the membership!")
+        return Response("You have successfully paid the membership!")

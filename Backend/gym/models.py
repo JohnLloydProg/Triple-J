@@ -23,7 +23,7 @@ class Program(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{weekdays[self.day]} ({str(self.pk)})'
+        return f'{weekdays[self.day]} ({str(self.pk)})' if (self.day) else f'No Day ({str(self.pk)})'
 
 
 class Workout(models.Model):

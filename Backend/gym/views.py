@@ -1,43 +1,41 @@
-from django.http import HttpRequest, JsonResponse
-from django.shortcuts import render, redirect
 from account.models import Member
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 from gym.serializers import ProgramSerializer, ProgramWorkoutSerializer, WorkoutSerializer, ProgramWorkoutRecordSerializer, TimelineRecordSerializer
 from django.utils.timezone import now
-from django.views import View
-from datetime import date
 from gym.models import Program, ProgramWorkout, Workout, ProgramWorkoutRecord, TimelineRecord
 from django.core.files.base import ContentFile
-from django.core.files import File
-import json
 import base64
 
 # Create your views here.
 
 
-class ProgramCreateView(generics.CreateAPIView):
+class ProgramCreateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProgramSerializer
 
-    def get_queryset(self):
-        member = Member.objects.get(pk=self.kwargs.get('user'))
-        return Program.objects.filter(member=member)
+    def post(self, request:Request, user:int) -> Response:
+        try:
+            member = Member.objects.get(pk=user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
 
-    def perform_create(self, serializer):
-        member = Member.objects.get(pk=self.kwargs.get('user'))
-        if serializer.is_valid():
-            serializer.save(member=member)
-        else:
-            print(serializer.errors)
+        program = Program(member=member)
+        program.save()
+        return Response('Successfully Created')
+        
 
 
 class ProgramView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request, user):
-        member = Member.objects.get(pk=user)
+    def get(self, request:Request, user:int) -> Response:
+        try:
+            member = Member.objects.get(pk=user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
         programs = Program.objects.filter(member=member)
         data = []
         for program in programs:
@@ -51,123 +49,207 @@ class ProgramView(generics.GenericAPIView):
 class CurrentProgramView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        member = Member.objects.get(pk=self.request.user)
-        
+    def get(self, request:Request) -> Response:
         try:
-            program = Program.objects.get(member=member, day=now().weekday())
-            programWorkouts = ProgramWorkout.objects.filter(program=program)
-            data = {'day':program.day, 'workouts':[]}
-            for programWorkout in programWorkouts:
-                data['workouts'].append({programWorkout.workout.name:programWorkout.details, 'type':programWorkout.workout.type})
-            return Response(data)            
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        try:
+            program = Program.objects.get(member=member, day=now().weekday())            
         except Program.DoesNotExist:
-            return JsonResponse({})
+            return Response({})
+        
+        programWorkouts = ProgramWorkout.objects.filter(program=program)
+        data = {'day':program.day, 'workouts':[]}
+        for programWorkout in programWorkouts:
+            data['workouts'].append({programWorkout.workout.name:programWorkout.details, 'type':programWorkout.workout.type})
+        return Response(data)
 
 
-class ProgramUpdateView(generics.UpdateAPIView):
+class ProgramUpdateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProgramSerializer
-
-    def get_queryset(self):
-        member = Member.objects.get(pk=self.kwargs.get('user'))
-        return Program.objects.filter(member=member)
+    
+    def put(self, request:Request, user:int, pk:int) -> Response:
+        try:
+            member = Member.objects.get(pk=user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        try:
+            program = Program.objects.get(member=member, pk=pk)
+        except Program.DoesNotExist:
+            return Response("Program does not exist or Program is not the member's")
+        
+        day = request.data.get('day')
+        if (not day):
+            return Response("Please provide the day to updated")
+        
+        program.day = day
+        program.save()
+        return Response(ProgramSerializer(program).data)
         
 
-class ProgramDeleteView(generics.DestroyAPIView):
+class ProgramDeleteView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProgramSerializer
 
-    def get_queryset(self):
-        member = Member.objects.get(pk=self.kwargs.get('user'))
-        return Program.objects.filter(member=member)
+    def delete(self, request:Request, user:int, pk:int) -> Response:
+        try:
+            member = Member.objects.get(pk=user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        try:
+            program = Program.objects.get(member=member, pk=pk)
+        except Program.DoesNotExist:
+            return Response("Program does not exist or Program is not the member's")
+        
+        program.delete()
+        return Response('Successfully Deleted')
+
 
 
 class ProgramWorkoutCreateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProgramWorkoutSerializer
     
-    def get(self, request, program):
+    def get(self, request:Request, program:int) -> Response:
         programWorkouts = ProgramWorkoutSerializer(ProgramWorkout.objects.filter(program=program), many=True).data
         for programWorkout in programWorkouts:
             programWorkout['workout'] = WorkoutSerializer(Workout.objects.get(pk=programWorkout['workout'])).data
         return Response(programWorkouts)
 
-    def post(self, request, program):
-        program = Program.objects.get(pk=program)
-        workout = Workout.objects.get(pk=request.data.get('workout'))
+    def post(self, request:Request, program:int) -> Response:
+        try:
+            program = Program.objects.get(pk=program)
+        except Program.DoesNotExist:
+            return Response('Program does not exist')
+        try:
+            workout = Workout.objects.get(pk=request.data.get('workout'))
+        except Workout.DoesNotExist:
+            return Response('Workout does not exist')
+
         programWorkout = ProgramWorkout(workout=workout, program=program, details=request.data.get('details'))
         programWorkout.save()
         return Response(ProgramWorkoutSerializer(programWorkout).data)
 
 
-class ProgramWorkoutUpdateView(generics.UpdateAPIView):
+class ProgramWorkoutUpdateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProgramWorkoutSerializer
+    
+    def put(self, request:Request, program:int, pk:int) -> Response:
+        try:
+            programObject = Program.objects.get(pk=program)
+        except Program.DoesNotExist:
+            return Response('Program does not exist')
+        try:
+            programWorkout = ProgramWorkout.objects.get(program=programObject, pk=pk)
+        except ProgramWorkout.DoesNotExist:
+            return Response('ProgramWorkout does not exist')
+        
+        program = request.data.get('program')
+        if (program):
+            try:
+                programObject = Program.objects.get(pk=program)
+            except Program.DoesNotExist:
+                return Response('Program does not exist')
+            programWorkout.program = programObject
+        details = request.data.get('details')
+        if (details):
+            programWorkout.details = details
+        programWorkout.save()
 
-    def get_queryset(self):
-        return ProgramWorkout.objects.filter(program=self.kwargs['program'])
+        return Response(ProgramWorkoutSerializer(programWorkout).data)
     
 
-class ProgramWorkoutDeleteView(generics.DestroyAPIView):
+class ProgramWorkoutDeleteView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProgramWorkoutSerializer
 
-    def get_queryset(self):
-        return ProgramWorkout.objects.filter(program=self.kwargs['program'])
+    def delete(self, request:Request, program:int, pk:int) -> Response:
+        try:
+            programObject = Program.objects.get(pk=program)
+        except Program.DoesNotExist:
+            return Response('Program does not exist')
+        try:
+            programWorkout = ProgramWorkout.objects.get(program=programObject, pk=pk)
+        except ProgramWorkout.DoesNotExist:
+            return Response('Workout does not exist or Workout does not belong to the Program')
+        
+        programWorkout.delete()
+        return Response('Successfully deleted')
 
 
-class WorkoutsView(generics.ListAPIView):
+class WorkoutsView(generics.GenericAPIView):
     permission_classes = []
-    serializer_class = WorkoutSerializer
-    queryset = Workout.objects.all()
+
+    def get(self, request:Request) -> Response:
+        return Response(WorkoutSerializer(Workout.objects.all(), many=True).data)
 
 
 class ProgramWorkoutRecordsView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, programWorkout):
-        programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+    def get(self, request:Request, programWorkout:int) -> Response:
+        try:
+            programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+        except ProgramWorkout.DoesNotExist:
+            return Response('ProgramWorkout does not exist')
+        
         records = ProgramWorkoutRecord.objects.filter(programWorkout=programWorkout).order_by('-date')
         return Response(ProgramWorkoutRecordSerializer(records, many=True).data)
 
-    def post(self, request, programWorkout):
-        programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+    def post(self, request:Request, programWorkout:int) -> Response:
+        try:
+            programWorkout = ProgramWorkout.objects.get(pk=programWorkout)
+        except ProgramWorkout.DoesNotExist:
+            return Response('ProgramWorkout does not exist')
+
         records = ProgramWorkoutRecord.objects.filter(programWorkout=programWorkout)
         if (len(records) == 10):
             records.first().delete()
         details = request.data.get('details')
         if (not details):
-            return JsonResponse({'details':'Does not contain details'}, status=400)
+            return Response({'details':'Does not contain details'}, status=400)
         record = ProgramWorkoutRecord(programWorkout=programWorkout, details=details)
         record.save()
-        return JsonResponse({'id':record.pk, 'date':record.date, 'details':record.details})
+
+        return Response({'id':record.pk, 'date':record.date, 'details':record.details})
 
 
 class TimelineRecordsView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def get(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
         records = TimelineRecord.objects.filter(member=member).order_by('-date')
         return Response(TimelineRecordSerializer(records, many=True).data)
 
-    def post(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def post(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+
         if (not request.data):
-            print(request.data)
-            return JsonResponse({'details':'Does not contain information'}, status=400)
+            return Response('Does not contain information', status=400)
         record = TimelineRecord(member=member, height=request.data.get('height'), weight=request.data.get('weight'))
-        record.img.save('image.jpg', ContentFile(base64.b64decode(request.data.get('img'))))
+        img = request.data.get('img')
+        if (img):
+            record.img.save('image.jpg', ContentFile(base64.b64decode(img)))
         record.save()
-        return Response({'details': 'successfully uploaded'})
+        return Response('Successfully Created')
 
 
 class CurrentTimelineRecordView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        member = Member.objects.get(pk=self.request.user)
+    def get(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
+        
         records = TimelineRecord.objects.filter(member=member).order_by('-date')
         return Response(TimelineRecordSerializer(records.first()).data)
 

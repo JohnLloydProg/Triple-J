@@ -1,14 +1,10 @@
-from django.shortcuts import render
-from django.contrib.auth import get_user
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, HttpRequest, JsonResponse
 from account.models import MonthlyMembership, DailyMembership, Member
 from attendance.models import Attendance
 from django.utils.timezone import now
 from attendance.models import QRCode
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
 from attendance.serializers import QRCodeSerializer
 from django.views import View
@@ -21,71 +17,77 @@ import os
 class QRCodeView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        member = self.request.user
+    def get(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
         try:
             qrObject = QRCode.objects.get(member=member)
-            if (qrObject.isExpired()):
-                qrObject.delete()
-                return JsonResponse({'details' : 'QR code is expired'})
-            return Response(QRCodeSerializer(qrObject).data)
-            
         except QRCode.DoesNotExist:
-            return JsonResponse({'details':'Account does not have any QR code'})
+            return Response('Account does not have any QR code')
+        
+        if (qrObject.isExpired()):
+            qrObject.delete()
+            return Response('QR code is expired')
+        return Response(QRCodeSerializer(qrObject).data)
     
-    def post(self, request):
-        member = self.request.user
+    def post(self, request:Request) -> Response:
+        try:
+            member = Member.objects.get(pk=self.request.user)
+        except Member.DoesNotExist:
+            return Response('Member does not exist')
         try:
             qrObject = QRCode.objects.get(member=member)
-            return JsonResponse({'details' : 'The account already has a QR Code'})
+            return Response('The account already has a QR Code')
         except:
             qrObject = QRCode(member=Member.objects.get(pk=member))
             qrObject.generate()
             qrObject.setExpirationDate()
             qrObject.save()
-            return JsonResponse({'details':'success'})
+            return Response('Success')
 
 
 class LoggingView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request:Request) -> Response:
         attendances = Attendance.objects.filter(timeOut=None, date=now())
         ratio = {}
         for attendance in attendances:
             ratio[attendance.member.sex] = ratio.get(attendance.member.sex, 0) + 1
-        return JsonResponse({'Number' : len(attendances.all()), 'Ratio':ratio})
+        return Response({'Number' : len(attendances.all()), 'Ratio':ratio})
         
-    def post(self, request):
+    def post(self, request:Request) -> Response:
         qrCode = request.data.get('qrCode')
         if (not self.request.user.is_superuser):
-            return JsonResponse({'details' : 'You are not the owner!'}, status=401)
-        
+            return Response('You are not the owner!')
+
         try:
             qrObject = QRCode.objects.get(content=qrCode)
-            if (now().date() > qrObject.expirationDate):
-                qrObject.delete()
-                return JsonResponse({'details' : 'QR code is expired'})
-            member = qrObject.member
         except QRCode.DoesNotExist:
-            return JsonResponse({'details' : 'QR code does not exist'})
+            return Response('QR code does not exist')
         
+        if (now().date() > qrObject.expirationDate):
+            qrObject.delete()
+            return Response('QR code is expired')
+
         try:
-            attendance = Attendance.objects.get(member=member, date=now())
+            attendance = Attendance.objects.get(member=qrObject.member, date=now())
             attendance.logOut()
             attendance.save()
-            return JsonResponse({'details' : 'Successfuly logged out'})
+            return Response('Successfuly logged out')
         except Attendance.DoesNotExist:
-            attendance = Attendance(member=member)
+            attendance = Attendance(member=qrObject.member)
             attendance.save()
             data = {}
             data['details'] = 'Successfuly logged in'
-            if (member.membershipType == 'Daily'):
-                data['price'] = DailyMembership.objects.get(member=member).price
+            if (qrObject.member.membershipType == 'Daily'):
+                data['price'] = DailyMembership.objects.get(member=qrObject.member).price
                 data['paid'] = False
             else:
-                membership = MonthlyMembership.objects.get(member=member)
+                membership = MonthlyMembership.objects.get(member=qrObject.member)
                 data['price'] = membership.price
                 data['paid'] = False if (now().date() > membership.expirationDate) else True
-            return JsonResponse(data)
+            return Response(data)
             
