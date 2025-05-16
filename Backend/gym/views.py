@@ -57,7 +57,9 @@ class CurrentProgramView(generics.GenericAPIView):
         try:
             program = Program.objects.get(member=member, day=now().weekday())
             programWorkouts = ProgramWorkout.objects.filter(program=program)
-            data = {'day':program.day, 'workouts':ProgramWorkoutSerializer(programWorkouts, many=True).data}
+            data = {'day':program.day, 'workouts':[]}
+            for programWorkout in programWorkouts:
+                data['workouts'].append({programWorkout.workout.name:programWorkout.details, 'type':programWorkout.workout.type})
             return Response(data)            
         except Program.DoesNotExist:
             return JsonResponse({})

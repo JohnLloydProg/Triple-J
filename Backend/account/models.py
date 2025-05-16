@@ -6,7 +6,7 @@ from datetime import timedelta
 
 # Create your models here.
 
-def userProfilePath(instance, filename):
+def userProfilePath(instance, filename:str) -> str:
     return f'user_{str(instance.user.id)}/{filename}'
 
 
@@ -19,7 +19,7 @@ class ValidationSession(models.Model):
     email = models.EmailField(max_length=255, verbose_name="Email")
     expirationDate = models.DateField(null=True, verbose_name='Expiration Date')
 
-    def setExpirationDate(self):
+    def setExpirationDate(self) -> None:
         self.expirationDate = now().date() + timedelta(days=1)
 
 
@@ -73,7 +73,7 @@ class MonthlyMembership(Membership):
     expirationDate = models.DateField(default=now)
     price = 1000.00
 
-    def extendExpirationDate(self):
+    def extendExpirationDate(self) -> None:
         self.expirationDate += timedelta(days=30)
 
 

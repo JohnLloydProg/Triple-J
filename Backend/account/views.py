@@ -142,6 +142,7 @@ class AccountRegistrationCont(View):
 
         return render(request, 'accountRegistered.html')
 
+
 class MemberView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = MemberSerializer
@@ -156,13 +157,12 @@ class TrainerView(generics.RetrieveAPIView):
     lookup_field = 'username'
 
 
-class MembersView(generics.ListAPIView):
+class MembersView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsTrainer]
-    serializer_class = MemberSerializer
 
-    def get_queryset(self):
+    def get(self, request):
         trainer = Member.objects.get(pk=self.request.user)
-        return Member.objects.filter(gymTrainer=trainer)
+        return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data)
 
 
 class MembershipView(generics.GenericAPIView):

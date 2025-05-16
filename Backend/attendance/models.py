@@ -20,10 +20,10 @@ class QRCode(models.Model):
     content = models.UUIDField(primary_key=True, default=uuid.uuid1, editable=False)
     image = models.ImageField(upload_to=timelineRecordPath, null=True, blank=True)
     member = models.OneToOneField(Member, on_delete=models.CASCADE)
-    expirationDate = models.DateField(null=True)
+    expirationDate = models.DateField(default=now)
 
     def generate(self):
-        qrImage = qrcode.make(self.content)
+        qrImage = qrcode.make(str(self.content))
         qrImage.save('temp-qr.png')
         self.image.save('code.png', File(open('temp-qr.png', 'rb')))
 
