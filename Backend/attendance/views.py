@@ -51,7 +51,10 @@ class LoggingView(generics.GenericAPIView):
 
     def get(self, request):
         attendances = Attendance.objects.filter(timeOut=None, date=now())
-        return JsonResponse({'Number' : len(attendances.all())})
+        ratio = {}
+        for attendance in attendances:
+            ratio[attendance.member.sex] = ratio.get(attendance.member.sex, 0) + 1
+        return JsonResponse({'Number' : len(attendances.all()), 'Ratio':ratio})
         
     def post(self, request):
         qrCode = request.data.get('qrCode')
