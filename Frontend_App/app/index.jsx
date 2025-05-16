@@ -1,185 +1,113 @@
-import { Image, StyleSheet, Platform, View, Alert, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
-import colors from '../constants/globalStyles';
+import { StyleSheet, View, Alert, Text, TextInput, TouchableOpacity, Linking} from 'react-native';
 import React, { useState } from 'react';
-import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
-import * as SplashScreen from 'expo-splash-screen';
-import { router, useRouter } from 'expo-router';
+import { router, Link } from 'expo-router';
 
-import { CheckBox, withTheme } from '@rneui/themed';
-import {Link} from 'expo-router';
-import jwtDecode from "jwt-decode";
-
-import * as Keychain from 'react-native-keychain';
-import * as SecureStore from 'expo-secure-store';
-
-async function saveToken(key, value) {
-
-  try{
-  await SecureStore.setItemAsync(key,value);
-  }catch(error){
-    console.log(error);
-  }
-}
-
-async function getToken(key) {
-  return await SecureStore.getItemAsync(key);
-}  
-
+import colors from '../constants/globalStyles';
+import { getToken,saveToken } from '@/components/storageComponent';
+import { validateLoginInfo, getMemberInfo } from '@/components/generalFetchFunction';
 
 
 export default function HomeScreen() {
 
-  //loads the appropriate fonts
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    KeaniaOne: require('../assets/fonts/KeaniaOne-Regular.ttf'),
-  });
-    
-
-  //store variables for the login credentials
-  const [check1, setCheck1] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPass] = useState('');
 
-  useEffect(() => {
-    const checkToken = async () => {
-      let accessToken = await getToken("accessToken");
-      let refreshToken = await getToken("refreshToken");
 
-      if (accessToken && refreshToken) {
-        router.push('/(tabs)/home');
-      }
-    };
-
-    checkToken();
-  }, []);
-
-  //handles the appropriate http request to validate login credentials
-
-    const route = useRouter();
-
-  function validateInfo() {
-
-   //fetches user id
-   async function getMemberInfo() {
-    try {
-      let accessToken = await SecureStore.getItemAsync("accessToken");
-      let refreshToken = await SecureStore.getItemAsync("refreshToken");
-      let username = await SecureStore.getItemAsync("username");
+  const setMemberInfo = async () => {
+    try{
+      const response = await getMemberInfo();
       
-      console.log("access: " + accessToken);
-      console.log("refresh: " + refreshToken);
-      console.log("username: " + username);
-      console.log("password: " + password);
+      const data = await response.json();
 
+      //console.log("Member Information: ",data);
 
-      
-  
-      let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-  
-      if (response.status === 401) {
-        console.log("Access token expired");
-        accessToken = await refreshAccessToken();
-        console.log("New access token: " + accessToken);
-        if (!accessToken) {
-          throw new Error("Failed to refresh access token");
-        }
-        
-        response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-          }
-        });
-      }
-  
-        const data = await response.json();
-        console.log("user id: " + data.id);
-        saveToken("userId", data.id.toString());
+      await saveToken("address", data.address ? data.address.toString() : "");
+      await saveToken("birthDate", data.birthDate ? data.birthDate.toString() : "");
+      await saveToken("email", data.email ? data.email.toString() : "");
+      await saveToken("firstName", data.first_name ? data.first_name.toString() : "");
+      await saveToken("gymTrainerId", data.gymTrainer ? data.gymTrainer.toString() : "");
+      await saveToken("lastName", data.last_name ? data.last_name.toString() : "");
+      await saveToken("membershipType", data.membershipType ? data.membershipType.toString() : "");
+      await saveToken("mobileNumber", data.mobileNumber ? data.mobileNumber.toString() : "");
+      await saveToken("sex", data.sex ? data.sex.toString() : "");
+      await saveToken("userId", data.id ? data.id.toString() : "");
+      await saveToken("height", data.height ? data.height.toString() : "");
+      await saveToken("weight", data.weight ? data.weight.toString() : "");
+      await saveToken("profilePic", data.profilePic ? data.profilePic.toString() : "");
 
-        
+      //console.log("Member information saved to secure storage.");
 
-        await saveToken("height", data.height.toString());
-        await saveToken("weight", data.weight.toString());
-        
-
-
-
-      } catch (error) {
-        console.error("Error:", error);
-      }
-  
-  }
-
-    fetch("https://triple-j.onrender.com/api/account/token", {
-      method: "POST",
-      body: JSON.stringify({
-        "username": username,
-        "password": password,
-      }),
-      credentials: 'same-origin',
-      headers: {
-       "Content-Type": "application/json;",
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        console.log('mali');
-        Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.')
-      
-        throw new Error("Login failed with status: " + response.status);
-        
-      }
-      return response.json(); 
-    })
-    .then(async (data) => {
-
-
-        let accessToken = data.access;
-        let refreshToken = data.refresh;
-        
-
-
-        await saveToken("accessToken", accessToken);
-        await saveToken("refreshToken", refreshToken);
-        await saveToken("username", username);
-        await saveToken("password",password);
-        
-        
-
-        console.log(data)
-        await getMemberInfo();
-        router.push('/(tabs)/home');
-      
-    })
-    .catch(error => {
+    }catch (error) {
       console.error("Error:", error);
-    });
+    }
+    
   }
 
+  const loginAccount = async (mainUsername,mainPassword) => {
+    try {
+      console.log("Clicked login button");
 
- 
+      const response = await validateLoginInfo(mainUsername,mainPassword);
+
+      if (!response.ok) {
+        Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.');
+        console.log(response.status);
+        return;
+      }
+  
+      const data = await response.json();
+
+      await saveToken("username", username);
+      await saveToken("password", password);
+
+      let accessToken = data.access;
+      let refreshToken = data.refresh;
+  
+      await saveToken("accessToken", accessToken);
+      await saveToken("refreshToken", refreshToken);
+      
+  
+      console.log("User data:", data);
+  
+      await setMemberInfo();
+
+      router.push('/(tabs)/home');
+  
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    const autoLogin = async () => {
+      const response = await getToken("username");
+      if (response){
+      await setMemberInfo();
+      router.push('/(tabs)/home');
+    }};
+
+    try{
+      autoLogin();
+    }catch(error){
+      console.error("Error:", error);
+    }
+   
+  }, []);
 
   return (
     <View style={styles.container}>
 
       <View style={{marginBottom: 20}}>
         <Text style={styles.titleText}>
-          Login with e-mail/username
+          Login your Account
         </Text>
       </View>
 
       <View  style={{marginBottom: 40}}>
         <Text style={styles.titleSubText}>
-          Get started with the latest news and annoucements from Triple J Gym
+          Get started and try latest features of our gym's dedicated fitness app.
         </Text>
       </View>
 
@@ -197,41 +125,12 @@ export default function HomeScreen() {
         <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
       </View>
 
-    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
-      <CheckBox
-        title="Remember me"
-        checked={check1}
-        onPress={() => setCheck1(!check1)}
-        containerStyle={{backgroundColor: colors.primaryBackground, height: 30, padding: 0}}
-        textStyle={styles.checkText}
-      />
-
-      <View>
-        <Text onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')} style={styles.forgotButtonText}>
-          Forgot Password?
-        </Text>
-      </View>
-
-    </View>
-
-    <Link href="#" asChild>
-      <TouchableOpacity onPress={()=>{validateInfo()}}  style={styles.loginBtn}>
+      <TouchableOpacity onPress={()=>{loginAccount(username,password)}}  style={styles.loginBtn}>
         <Text style={styles.loginBtnTxt}>
           Login
         </Text>
       </TouchableOpacity>
     
-    </Link>
-
-    <View>
-      <Text style={[styles.titleSubText, {fontSize:12}]}
-      onPress={() => Linking.openURL('https://www.facebook.com/triplejfitnesscenter')}>
-        Don't have an account yet? <Text style={[styles.forgotButtonText, {fontSize:12}]}>Sign Up</Text> 
-      </Text>
-    </View>
-
-
-  
 
     </View>
   );
@@ -267,15 +166,6 @@ const styles = StyleSheet.create({
   paddingLeft: 20,
   paddingRight: 20,
  },
- forgotButtonText:{
-  fontFamily: 'KeaniaOne',
-  color: '#4259CA', 
-  opacity: 0.6,  
-  textAlign: 'right', 
-  fontSize: 12, 
-  bottom: 2, 
-  textDecorationLine: 'underline'
-},
  loginBtn:{
     backgroundColor: '#4259CA',
     padding: 15,
@@ -288,13 +178,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
 },
- checkText:
-  { color: 'white', 
-    opacity: 0.6, 
-    right: 5, 
-    fontSize: 12,
-    fontFamily: 'KeaniaOne',
-    fontWeight: 'normal'
-  },
-  
+ 
 });
