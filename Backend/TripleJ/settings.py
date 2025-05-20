@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'gym', 'account', 'attendance',
     'scheduling', 'dietary',
     'analytics', 'owner',
+    'announcement',
     'corsheaders', 'rest_framework'
 ]
 
