@@ -18,7 +18,7 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/announcement/latest", {
+    fetch(baseURL + "api/attendance/attendances/2025/4/20", {
         method : "GET",
         headers : { 
             "Authorization": `Bearer ${data['access']}`,

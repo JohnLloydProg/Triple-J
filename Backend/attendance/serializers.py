@@ -18,8 +18,8 @@ class AttendanceSerializer(serializers.ModelSerializer):
         model = Attendance
         fields = ['id', 'date', 'timeIn', 'timeOut', 'member']
         extra_kwargs = {
-            'member':{'read_only'},
-            'date':{'read_only'},
-            'timeIn':{'read_only'},
-            'timeOut':{'read_only'}
+            'member':{'read_only':True},
+            'date':{'read_only':True},
+            'timeIn':{'read_only':True},
+            'timeOut':{'read_only':True}
             }

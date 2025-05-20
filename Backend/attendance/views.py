@@ -5,12 +5,9 @@ from attendance.models import QRCode
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.permissions import IsAuthenticated
-from attendance.serializers import QRCodeSerializer
-from django.views import View
-from django.conf import settings
-import json
-import os
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from attendance.serializers import QRCodeSerializer, AttendanceSerializer
+from datetime import date
 
 # Create your views here.
 
@@ -90,4 +87,12 @@ class LoggingView(generics.GenericAPIView):
                 data['price'] = membership.price
                 data['paid'] = False if (now().date() > membership.expirationDate) else True
             return Response(data)
+    
+
+class AttendanceView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request:Request, year:int, month:int, day:int) -> Response:
+        attendances = Attendance.objects.filter(date=date(year, month, day)).order_by('timeIn')
+        return Response(AttendanceSerializer(attendances, many=True).data)
             
