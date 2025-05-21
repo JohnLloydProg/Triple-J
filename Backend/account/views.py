@@ -1,62 +1,21 @@
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from email.mime.multipart import MIMEMultipart
 from rest_framework import generics
 from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from account.permissions import IsTrainer
 from rest_framework.response import Response
 from rest_framework.request import Request
-from email.mime.text import MIMEText
 from django.views import View
 from datetime import date
 from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
 import requests
-import smtplib
-import ssl
 
 # Create your views here.
 
-html = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verified</title>
-</head>
-<body style="font-family: 'Keania One', sans-serif;display: flex;justify-content: center;align-items: center;min-height: 100vh;
-background-color: #313030;margin: 0 auto;overflow: hidden;font-size: 20px;">
-
-    <div class="container" style="text-align: center;background-color: #313030;padding: 20px;border-radius: 8px;
-    box-shadow: 0 0 10px rgba(49, 48, 48, 0.1);width: 100%;height: 100%;box-sizing: border-box;display: flex;
-    flex-direction: column;justify-content: center;align-items: center;">
-        <div class="checkmark-container" style="width: 80px;height: 80px;border-radius: 50%; background-color: #76D09C; 
-        display: flex; justify-content: center;align-items: center;margin-bottom: 20px;">
-            <div class="checkmark" style="width: 60%;height: 60%;">
-                <svg viewBox="0 0 52 52" preserveAspectRatio="xMidYMid meet">
-                    <path d="M4 32 L16 48 L48 8" style="fill: none;stroke: #fff; stroke-width: 8;stroke-linecap: round;stroke-linejoin: round;animation: checkmark 1s ease-in-out forwards;"/>
-                </svg>
-            </div>
-        </div>
-        <h1 style="color: #4CAF50;font-size: 2em;">Email Verified!</h1>
-        <p style="font-size: 1.1em;margin-bottom: 20px;color: #fff;max-width: 320px;">Your email address has been successfully verified.</p>
-        <a style="display: inline-block;padding: 10px 20px;background-color: #76D09C;color: #fff;text-decoration: none;border-radius: 5px;font-size: 1em;" href="{link}">Proceed to registration</a>
-    </div>
-
-</body>
-</html>
 """
-
-
 class EmailValidation(View):
-    """
-    View responsible for sending and creating the validation session to the user's email address for validation and account registration.
-    The get method simple provides the form for providing the user's email. The post method uses that email to check if an account is already linked to the email.
-    If not, create a validation and send a message to that email for registration.
-    """
-
     context = ssl.create_default_context()
 
     def get(self, request:HttpRequest):
@@ -82,14 +41,9 @@ class EmailValidation(View):
 
             return JsonResponse({'details':"Email sent successfully"}, status=200)
         return JsonResponse({'details':"Email is already registered in the system"}, status=400)
-    
+"""
 
 class AccountRegistration(View):
-    """
-    View that handles the account registration. The get method checks if the validation session is still valid and gives the registration form.
-    The post method handles the registration of the account into the database.
-    """
-
     def get(self, request:HttpRequest, validationCode:str):
         try:
             validationSession = ValidationSession.objects.get(validationCode=validationCode)
@@ -119,6 +73,40 @@ class AccountRegistration(View):
         return redirect(reverse('account registration cont', args=[validationCode]))
 
 
+class AccountRegistrationView(generics.GenericAPIView):
+    permission_classes = []
+
+    def post(self, request:Request, validationCode:str) -> Response:
+        try:
+            validationSession = ValidationSession.objects.get(validationCode=validationCode)
+            if (date.today() > validationSession.expirationDate):
+                validationSession.delete()
+                return Response('Validation Session Expired!')
+        except ValidationSession.DoesNotExist:
+            return Response('Validation Code does not exist!')
+
+        email = request.data.get('email')
+        username = request.data.get('username')
+        password = request.data.get('password')
+        membershipType = request.data.get('membership')
+
+        if (not username or not email or not password or not membershipType):
+            return Response('Missing required fields')
+
+        member = Member(username=username, email=email, membershipType=membershipType)
+        member.set_password(password)
+        member.save()
+
+        if (member.membershipType == 'Monthly'):
+            membership = MonthlyMembership(member=member)
+            membership.extendExpirationDate()
+        else:
+            membership = DailyMembership(member=member)
+        membership.save()
+
+        return Response('Account successfully registered!')
+        
+
 class AccountRegistrationCont(View):
     
     def get(self, request:HttpRequest, validationCode:str):
@@ -140,6 +128,25 @@ class AccountRegistrationCont(View):
 
         return render(request, 'accountRegistered.html')
 
+
+class AccountRegistrationContView(generics.GenericAPIView):
+    permission_classes = []
+
+    def post(self, request:Request, validationCode:str) -> Response:
+        try:
+            validationSession = ValidationSession.objects.get(validationCode=validationCode)
+            if (date.today() > validationSession.expirationDate):
+                validationSession.delete()
+                return Response('Validation Session Expired!')
+        except ValidationSession.DoesNotExist:
+            return Response('Validation Code does not exist!')
+        
+        member = Member.objects.get(email=validationSession.email)
+        for key, value in request.data.items():
+            setattr(member, key, value)
+        member.save()
+
+        return Response('Account successfully registered!')
 
 class MemberView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]

@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'gym', 'account', 'attendance',
     'scheduling', 'dietary',
-    'analytics', 'owner',
-    'announcement',
+    'analytics', 'announcement',
     'corsheaders', 'rest_framework'
 ]
 

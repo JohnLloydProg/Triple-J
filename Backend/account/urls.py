@@ -4,7 +4,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 urlpatterns = [
-    path('email-validation', views.EmailValidation.as_view(), name='email validation'),
     path('registration/<str:validationCode>', views.AccountRegistration.as_view(), name='account registration'),
     path('registration-cont/<str:validationCode>', views.AccountRegistrationCont.as_view(), name='account registration cont'),
     path('member/<str:username>', views.MemberView.as_view(), name='member'),
