@@ -12,8 +12,6 @@ from datetime import date
 from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
 import requests
 
-# Create your views here.
-
 """
 class EmailValidation(View):
     context = ssl.create_default_context()
