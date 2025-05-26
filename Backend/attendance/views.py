@@ -79,12 +79,15 @@ class LoggingView(generics.GenericAPIView):
             attendance.save()
             data = {}
             data['details'] = 'Successfuly logged in'
+            data['name'] = f'{qrObject.member.first_name} {qrObject.member.last_name}'
+            data['type'] = qrObject.member.membershipType
             if (qrObject.member.membershipType == 'Daily'):
                 data['price'] = DailyMembership.objects.get(member=qrObject.member).price
                 data['paid'] = False
             else:
                 membership = MonthlyMembership.objects.get(member=qrObject.member)
                 data['price'] = membership.price
+                data['expiry'] = membership.expirationDate
                 data['paid'] = False if (now().date() > membership.expirationDate) else True
             return Response(data)
     

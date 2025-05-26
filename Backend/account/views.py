@@ -4,6 +4,8 @@ from django.urls import reverse
 from rest_framework import generics
 from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from account.permissions import IsTrainer
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -11,18 +13,47 @@ from django.views import View
 from datetime import date
 from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
 import requests
+import smtplib
+import ssl
 
-# Create your views here.
+html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified</title>
+</head>
+<body style="font-family: 'Keania One', sans-serif;display: flex;justify-content: center;align-items: center;min-height: 100vh;
+background-color: #313030;margin: 0 auto;overflow: hidden;font-size: 20px;">
 
+    <div class="container" style="text-align: center;background-color: #313030;padding: 20px;border-radius: 8px;
+    box-shadow: 0 0 10px rgba(49, 48, 48, 0.1);width: 100%;height: 100%;box-sizing: border-box;display: flex;
+    flex-direction: column;justify-content: center;align-items: center;">
+        <div class="checkmark-container" style="width: 80px;height: 80px;border-radius: 50%; background-color: #76D09C; 
+        display: flex; justify-content: center;align-items: center;margin-bottom: 20px;">
+            <div class="checkmark" style="width: 60%;height: 60%;">
+                <svg viewBox="0 0 52 52" preserveAspectRatio="xMidYMid meet">
+                    <path d="M4 32 L16 48 L48 8" style="fill: none;stroke: #fff; stroke-width: 8;stroke-linecap: round;stroke-linejoin: round;animation: checkmark 1s ease-in-out forwards;"/>
+                </svg>
+            </div>
+        </div>
+        <h1 style="color: #4CAF50;font-size: 2em;">Email Verified!</h1>
+        <p style="font-size: 1.1em;margin-bottom: 20px;color: #fff;max-width: 320px;">Your email address has been successfully verified.</p>
+        <a style="display: inline-block;padding: 10px 20px;background-color: #76D09C;color: #fff;text-decoration: none;border-radius: 5px;font-size: 1em;" href="{link}">Proceed to registration</a>
+    </div>
+
+</body>
+</html>
 """
-class EmailValidation(View):
+
+# Email Validation View
+
+class EmailValidationView(generics.GenericAPIView):
     context = ssl.create_default_context()
 
-    def get(self, request:HttpRequest):
-        return render(request, 'emailVerification.html')
-
-    def post(self, request:HttpRequest):
-        memberEmail = request.POST.get('email')
+    def post(self, request:Request) -> Response:
+        memberEmail = request.data.get('email')
         try:
             member = Member.objects.get(email=memberEmail)
         except Member.DoesNotExist:
@@ -32,7 +63,7 @@ class EmailValidation(View):
 
             validationMSG = MIMEMultipart()
             validationMSG['Subject'] = "Email Validation for Tripple J System"
-            link = 'https://triple-j.onrender.com/api/account/registration/' + str(validationSession.validationCode)
+            link = 'https://triple-j-web.onrender.com/registerStart.html?validationCode=' + str(validationSession.validationCode)
             validationMSG.attach(MIMEText(html.format(link=link), 'html'))
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=self.context) as smtp:
@@ -41,7 +72,7 @@ class EmailValidation(View):
 
             return JsonResponse({'details':"Email sent successfully"}, status=200)
         return JsonResponse({'details':"Email is already registered in the system"}, status=400)
-"""
+
 
 class AccountRegistration(View):
     def get(self, request:HttpRequest, validationCode:str):

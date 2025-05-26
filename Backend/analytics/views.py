@@ -7,8 +7,6 @@ from attendance.models import Attendance
 from account.models import Member, MonthlyMembership, DailyMembership, MemberCheckout
 from gym.models import ProgramWorkout
 
-# Create your views here.
-
 def objectsThisMonth(_object, month, **kwargs):
     objects = []
     for obj in _object.objects.filter(**kwargs):
