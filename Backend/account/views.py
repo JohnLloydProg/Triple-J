@@ -63,7 +63,7 @@ class EmailValidationView(generics.GenericAPIView):
 
             validationMSG = MIMEMultipart()
             validationMSG['Subject'] = "Email Validation for Tripple J System"
-            link = 'https://triple-j.onrender.com/api/account/registration/' + str(validationSession.validationCode)
+            link = 'https://triple-j-web.onrender.com/registerStart.html?validationCode=' + str(validationSession.validationCode)
             validationMSG.attach(MIMEText(html.format(link=link), 'html'))
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=self.context) as smtp:
