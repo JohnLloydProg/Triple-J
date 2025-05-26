@@ -4,6 +4,8 @@ from django.urls import reverse
 from rest_framework import generics
 from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from account.permissions import IsTrainer
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -11,16 +13,16 @@ from django.views import View
 from datetime import date
 from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
 import requests
+import smtplib
+import ssl
+import html
 
-"""
-class EmailValidation(View):
+
+class EmailValidationView(generics.GenericAPIView):
     context = ssl.create_default_context()
 
-    def get(self, request:HttpRequest):
-        return render(request, 'emailVerification.html')
-
-    def post(self, request:HttpRequest):
-        memberEmail = request.POST.get('email')
+    def post(self, request:Request) -> Response:
+        memberEmail = request.data.get('email')
         try:
             member = Member.objects.get(email=memberEmail)
         except Member.DoesNotExist:
@@ -39,7 +41,7 @@ class EmailValidation(View):
 
             return JsonResponse({'details':"Email sent successfully"}, status=200)
         return JsonResponse({'details':"Email is already registered in the system"}, status=400)
-"""
+
 
 class AccountRegistration(View):
     def get(self, request:HttpRequest, validationCode:str):
