@@ -47,6 +47,7 @@ background-color: #313030;margin: 0 auto;overflow: hidden;font-size: 20px;">
 </html>
 """
 
+# Email Validation View
 
 class EmailValidationView(generics.GenericAPIView):
     context = ssl.create_default_context()
