@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -111,10 +112,11 @@ WSGI_APPLICATION = 'TripleJ.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default='postgresql://triple_j_database_user:kPT1zpMRhJvXrt9n923Kr6v5l8yNVSWk@dpg-d0qbisumcj7s73dt6b60-a.singapore-postgres.render.com/triple_j_database',
+        conn_max_age=600
+    )
 }
 
 
