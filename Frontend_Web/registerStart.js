@@ -19,7 +19,6 @@ function continueRegister(){
   
 
 
-
     window.location.href = "registerNext.html" 
    }else{
     alert("mali ka");

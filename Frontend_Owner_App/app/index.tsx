@@ -4,11 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React from "react";
 import AsynchStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from "expo-router";
+import { useCameraPermissions } from "expo-camera";
 
 export async function login(username:string, password:string, router:any) {
   console.log(username)
   console.log(password)
-    
+
   const data = await fetch("https://triple-j.onrender.com/api/account/token", {
     method: "POST",
     headers: {
@@ -39,7 +40,12 @@ export async function login(username:string, password:string, router:any) {
 export default function Index() {
   const [username, onUserChangeText] = React.useState("")
   const [password, onPassChangeText] = React.useState("")
+  const [permission, requestPermission] = useCameraPermissions();
   const router = useRouter();
+
+  if (!permission?.granted) {
+    requestPermission();
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-primary pb-32">

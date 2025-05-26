@@ -1,0 +1,25 @@
+<HomeScreen>:
+    MDAnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, 1
+        MDBoxLayout:
+            orientation: 'vertical'
+            adaptive_height: True
+            size_hint_x: 0.8
+            size_hint_max_x: 600
+            spacing: 20
+            MDBoxLayout:
+                orientation: 'vertical'
+                adaptive_height: True
+                MDTextField:
+                    id: email
+                    size_hint_x: 1
+                    hint_text: 'Enter your email address'
+                MDRaisedButton:
+                    text: "Register Email"
+                    size_hint_x: 1
+                    on_press: root.register_email(email.text)
+            MDRaisedButton:
+                text: "Go to Settings"
+                size_hint_x: 1
