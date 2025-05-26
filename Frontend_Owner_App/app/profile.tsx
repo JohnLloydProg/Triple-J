@@ -1,4 +1,4 @@
-import { Text, View, TextInput, TouchableOpacity, Dimensions} from 'react-native'
+import { Text, View, Dimensions} from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CameraView } from 'expo-camera'
@@ -87,7 +87,7 @@ export default function Profile() {
         </View>
         <CameraView
           style={{ width: camera_width, height: camera_width, borderRadius: 20 }}
-          facing='back'
+          facing='front'
           onBarcodeScanned={(event) => {
             if (!cooldown) {
               setCounter(counter + 1);
