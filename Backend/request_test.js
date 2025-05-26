@@ -18,12 +18,15 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/attendance/qr-code", {
+    fetch(baseURL + "api/account/email-validation", {
         method : "POST",
         headers : { 
             "Authorization": `Bearer ${data['access']}`,
             "Content-Type" : "application/json"
         },
+        body : JSON.stringify({
+            'email': 'gmateo4002@gmail.com'
+        }),
         credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {
