@@ -30,7 +30,7 @@ const dataDropdown = [
   { key: '3', value: 'Thursday' },
   { key: '4', value: 'Friday' },
   { key: '5', value: 'Saturday' },
-  { key: '6', value: 'Sundays' },
+  { key: '6', value: 'Sunday' },
 ];
 
 //constants for processing dates and workout types
@@ -235,6 +235,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                     />
 
                     <TouchableOpacity onPress={ async ()=>{
+                      console.log("Selected Program Date:", selected);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
