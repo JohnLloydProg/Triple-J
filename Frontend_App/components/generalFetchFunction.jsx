@@ -2,11 +2,13 @@ import { getToken,saveToken } from './storageComponent';
 import {refreshAccessToken} from './refreshToken';
 import {Linking} from 'react-native';
 
+const tripleJ_URL = "https://triple-j.onrender.com/api";
+
 //index page
 
 //validates the given login credentials (username and password) given by the user
 export function validateLoginInfo(username, password) {
-    let response = fetch("https://triple-j.onrender.com/api/account/token", {
+    let response = fetch(tripleJ_URL + "/account/token", {
       method: "POST",
       body: JSON.stringify({
         "username": username,
@@ -27,7 +29,7 @@ export function validateLoginInfo(username, password) {
       let username = await getToken("username");
       
 
-      let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+      let response = await fetch(tripleJ_URL + `/account/member/${username}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -43,7 +45,7 @@ export function validateLoginInfo(username, password) {
           throw new Error("Failed to refresh access token");
         }
         
-        response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+        response = await fetch(tripleJ_URL + `/account/member/${username}`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${accessToken}`,
@@ -70,7 +72,7 @@ export async function getCurrentTimeline()  {
     let userId = await getToken("userId");
     parseInt(userId);
 
-    const response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
+    const response = await fetch(tripleJ_URL + "/gym/progress/current", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -86,7 +88,7 @@ export async function getCurrentTimeline()  {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch("https://triple-j.onrender.com/api/gym/progress/current", {
+      response = await fetch(tripleJ_URL + "/gym/progress/current", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -110,7 +112,7 @@ export async function getAvailableWorkouts()  {
     let userId = await getToken("userId");
     parseInt(userId);
 
-    let response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
+    let response = await fetch(tripleJ_URL + "/gym/workouts", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -126,7 +128,7 @@ export async function getAvailableWorkouts()  {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch("https://triple-j.onrender.com/api/gym/workouts", {
+      response = await fetch(tripleJ_URL + "/gym/workouts", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -148,7 +150,7 @@ export async function getProgram() {
     let userId = await getToken("userId");
     parseInt(userId);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/program/${userId}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -164,7 +166,7 @@ export async function getProgram() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}`, {
+      response = await fetch(tripleJ_URL + `/gym/program/${userId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -189,7 +191,7 @@ export async function addProgram() {
     parseInt(userId);
     
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
+    let response = await fetch(tripleJ_URL + `/gym/program/${userId}/create`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -205,7 +207,7 @@ export async function addProgram() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/create`, {
+      response = await fetch(tripleJ_URL + `/gym/program/${userId}/create`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -229,7 +231,7 @@ export async function deleteProgram(programId) {
     parseInt(userId);
     parseInt(programId);
   
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/program/${userId}/delete/${programId}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -245,7 +247,7 @@ export async function deleteProgram(programId) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/delete/${programId}`, {
+      response = await fetch(tripleJ_URL + `/gym/program/${userId}/delete/${programId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -268,7 +270,7 @@ export async function updateProgram(programId,mainDate) {
     parseInt(userId);
     parseInt(programId);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/program/${userId}/update/${programId}`, {
       method: "PUT",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -287,7 +289,7 @@ export async function updateProgram(programId,mainDate) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/program/${userId}/update/${programId}`, {
+      response = await fetch(tripleJ_URL + `/gym/program/${userId}/update/${programId}`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -311,7 +313,7 @@ export async function getWorkout(programId) {
     let accessToken = await getToken("accessToken");
     parseInt(programId);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/workout/${programId}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -327,7 +329,7 @@ export async function getWorkout(programId) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      response = await fetch(tripleJ_URL + `/gym/workout/${programId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -350,7 +352,7 @@ export async function addWorkout(programId, workoutType, mainDetails) {
     parseInt(programId);
     parseInt(workoutType);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/workout/${programId}`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -370,7 +372,7 @@ export async function addWorkout(programId, workoutType, mainDetails) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}`, {
+      response = await fetch(tripleJ_URL + `/gym/workout/${programId}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -397,7 +399,7 @@ export async function deleteWorkout(programId, workoutId) {
     parseInt(workoutId);
 
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+    let response = await fetch(tripleJ_URL + `/gym/workout/${programId}/delete/${workoutId}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -413,7 +415,7 @@ export async function deleteWorkout(programId, workoutId) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout/${programId}/delete/${workoutId}`, {
+      response = await fetch(tripleJ_URL + `/gym/workout/${programId}/delete/${workoutId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -438,7 +440,7 @@ export async function getRecord(programWorkout)  {
     let userId = await getToken("userId");
     parseInt(userId);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+    let response = await fetch(tripleJ_URL + `/gym/workout-record/${programWorkout}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -454,7 +456,7 @@ export async function getRecord(programWorkout)  {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+      response = await fetch(tripleJ_URL + `/gym/workout-record/${programWorkout}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -477,7 +479,7 @@ export async function setRecord(programWorkout, mainDetails)  {
     let userId = await getToken("userId");
     parseInt(userId);
 
-    let response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+    let response = await fetch(tripleJ_URL + `/gym/workout-record/${programWorkout}`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -495,7 +497,7 @@ export async function setRecord(programWorkout, mainDetails)  {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/gym/workout-record/${programWorkout}`, {
+      response = await fetch(tripleJ_URL + `/gym/workout-record/${programWorkout}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -523,7 +525,7 @@ export async function setMemberHW(newHeight,newWeight) {
     let username = await getToken("username");
     let membershipType = await getToken("membershipType");
     
-    let response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+    let response = await fetch(tripleJ_URL + `/account/member/${username}`, {
       method: "PUT",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -545,7 +547,7 @@ export async function setMemberHW(newHeight,newWeight) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/account/member/${username}`, {
+      response = await fetch(tripleJ_URL + `/account/member/${username}`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -573,7 +575,7 @@ export async function getMembershipInfo() {
   try {
     let accessToken = await getToken("accessToken");
 
-    let response = await fetch("https://triple-j.onrender.com/api/account/membership", {
+    let response = await fetch(tripleJ_URL + "/account/membership", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -589,7 +591,7 @@ export async function getMembershipInfo() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch("https://triple-j.onrender.com/api/account/membership", {
+      response = await fetch(tripleJ_URL + "/account/membership", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -610,7 +612,7 @@ export async function startPayment() {
   try {
     let accessToken = await getToken("accessToken");
 
-    let response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+    let response = await fetch(tripleJ_URL + `/account/membership/subscription`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -626,7 +628,7 @@ export async function startPayment() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(`https://triple-j.onrender.com/api/account/membership/subscription`, {
+      response = await fetch(tripleJ_URL + `/account/membership/subscription`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
