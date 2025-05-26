@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { router, Link } from 'expo-router';
 
 import colors from '../constants/globalStyles';
+import {refreshAccessToken} from '@/components/refreshToken';
 import { getToken,saveToken } from '@/components/storageComponent';
 import { validateLoginInfo, getMemberInfo } from '@/components/generalFetchFunction';
 
@@ -16,27 +17,27 @@ export default function HomeScreen() {
 
   const setMemberInfo = async () => {
     try{
-      const response = await getMemberInfo();
-      
-      const data = await response.json();
+      const member_data = await getMemberInfo();
 
-      //console.log("Member Information: ",data);
+      console.log("Member Information: ",member_data);
 
-      await saveToken("address", data.address ? data.address.toString() : "");
-      await saveToken("birthDate", data.birthDate ? data.birthDate.toString() : "");
-      await saveToken("email", data.email ? data.email.toString() : "");
-      await saveToken("firstName", data.first_name ? data.first_name.toString() : "");
-      await saveToken("gymTrainerId", data.gymTrainer ? data.gymTrainer.toString() : "");
-      await saveToken("lastName", data.last_name ? data.last_name.toString() : "");
-      await saveToken("membershipType", data.membershipType ? data.membershipType.toString() : "");
-      await saveToken("mobileNumber", data.mobileNumber ? data.mobileNumber.toString() : "");
-      await saveToken("sex", data.sex ? data.sex.toString() : "");
-      await saveToken("userId", data.id ? data.id.toString() : "");
-      await saveToken("height", data.height ? data.height.toString() : "");
-      await saveToken("weight", data.weight ? data.weight.toString() : "");
-      await saveToken("profilePic", data.profilePic ? data.profilePic.toString() : "");
+      await saveToken("address", member_data.address ? member_data.address.toString() : "");
+      await saveToken("birthDate", member_data.birthDate ? member_data.birthDate.toString() : "");
+      await saveToken("email", member_data.email ? member_data.email.toString() : "");
+      await saveToken("firstName", member_data.first_name ? member_data.first_name.toString() : "");
+      await saveToken("gymTrainerId", member_data.gymTrainer ? member_data.gymTrainer.toString() : "");
+      await saveToken("lastName", member_data.last_name ? member_data.last_name.toString() : "");
+      await saveToken("membershipType", member_data.membershipType ? member_data.membershipType.toString() : "");
+      await saveToken("mobileNumber", member_data.mobileNumber ? member_data.mobileNumber.toString() : "");
+      await saveToken("sex", member_data.sex ? member_data.sex.toString() : "");
+      await saveToken("userId", member_data.id ? member_data.id.toString() : "");
+      await saveToken("height", member_data.height ? member_data.height.toString() : "");
+      await saveToken("weight", member_data.weight ? member_data.weight.toString() : "");
+      await saveToken("profilePic", member_data.profilePic ? member_data.profilePic.toString() : "");
 
-      //console.log("Member information saved to secure storage.");
+      console.log("Member information saved to secure storage.");
+
+      router.push('/(tabs)/home');
 
     }catch (error) {
       console.error("Error:", error);
@@ -68,11 +69,11 @@ export default function HomeScreen() {
       await saveToken("refreshToken", refreshToken);
       
   
-      console.log("User data:", data);
+      console.log("User data tokens:", data);
   
       await setMemberInfo();
+      
 
-      router.push('/(tabs)/home');
   
     } catch (error) {
       console.error("Error:", error);
@@ -82,11 +83,19 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const autoLogin = async () => {
-      const response = await getToken("username");
-      if (response){
-      await setMemberInfo();
-      router.push('/(tabs)/home');
-    }};
+      try{
+        //tests if there is already a token, saved if not proceed to manual login
+        const response_Test = await refreshAccessToken();
+        console.log("Auto-login username:", response_Test);
+        if (response_Test){
+        await setMemberInfo();
+        router.push('/(tabs)/home');
+        }
+      }catch(error) {
+        console.error("Error during auto-login:", error);
+        Alert.alert('Notification', 'Auto-login failed. Please log in manually.');
+      }
+    };
 
     try{
       autoLogin();
