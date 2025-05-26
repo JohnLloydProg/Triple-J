@@ -40,17 +40,30 @@ async function customFetch(url: string, body: any, method: string = 'POST') {
     return data;
   });
   
-  console.log(response);
   return response;
 }
 
-export async function scan(event:any) {
+export async function scan(event:any, setName:CallableFunction, setMembership:CallableFunction, setExpiry:CallableFunction, setReminder:CallableFunction) {
   console.log(event.data);
   
   if (event.data) {
-    const response = await customFetch("https://triple-j.onrender.com/api/attendance/logging", {"qrCode": event.data}, 'POST');
-    return response;
-  } 
+    const responseData = await customFetch("https://triple-j.onrender.com/api/attendance/logging", {"qrCode": event.data}, 'POST');
+    console.log(responseData);
+    if (responseData === "Successfuly logged out") {
+      setReminder("Have a good day!");
+    }else {
+      setName(responseData['name']);
+      setMembership(responseData['type']);
+      if (responseData['paid']) {
+        setReminder("Your membership is still active!");
+      }else {
+        setReminder("Pay your overdue membership!");
+      }
+      if (responseData['expiry']) {
+        setExpiry(responseData['expiry']);
+      }
+    }
+  }
   
 }
 
@@ -61,6 +74,7 @@ export default function Profile() {
   const [expiry, setExpiry] = React.useState("");
   const [cooldown, setCooldown] = React.useState(false);
   const [counter, setCounter] = React.useState(0);
+  const [reminder, setReminder] = React.useState("");
 
 
   return (
@@ -73,15 +87,15 @@ export default function Profile() {
         </View>
         <CameraView
           style={{ width: camera_width, height: camera_width, borderRadius: 20 }}
-          facing='front'
+          facing='back'
           onBarcodeScanned={(event) => {
             if (!cooldown) {
               setCounter(counter + 1);
-              scan(event);
+              scan(event, setName, setMembershipType, setExpiry, setReminder);
               setCooldown(true);
               setTimeout(() => {
                 setCooldown(false);
-              }, 1000);
+              }, 1500);
             }
           }}
         />
@@ -94,6 +108,7 @@ export default function Profile() {
             <Text className='text-lg text-white'>Name: {name}</Text>
             <Text className='text-lg text-white'>Membership Type: {membershipType}</Text>
             <Text className='text-lg text-white'>Membership Expiry: {expiry}</Text>
+            <Text className='text-xl text-accent'>{reminder}</Text>
           </View>
         </View>
     </SafeAreaView>

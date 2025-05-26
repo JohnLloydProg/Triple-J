@@ -6,8 +6,8 @@ fetch(baseURL + "api/account/token", {
         "Content-Type" : "application/json"
     },
     body : JSON.stringify({
-        'username':'its_mateo',
-        'password':'Mateo12345'
+        'username':'admin',
+        'password':'admin12345'
     }),
     credentials: 'same-origin',
 }).then((response) => {
@@ -18,12 +18,15 @@ fetch(baseURL + "api/account/token", {
 }).then((data) => {
     console.log(data);
 
-    fetch(baseURL + "api/attendance/qr-code", {
+    fetch(baseURL + "api/account/email-validation", {
         method : "POST",
         headers : { 
             "Authorization": `Bearer ${data['access']}`,
             "Content-Type" : "application/json"
         },
+        body : JSON.stringify({
+            'email': 'johnlloydunida0@gmail.gcmat'
+        }),
         credentials: 'same-origin'
     }).then((response) => {
         if (!response.ok) {
