@@ -82,11 +82,19 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const autoLogin = async () => {
-      const response = await getToken("username");
-      if (response){
-      await setMemberInfo();
-      router.push('/(tabs)/home');
-    }};
+      try{
+        //tests if there is already a token, saved if not proceed to manual login
+        accessToken = await refreshAccessToken();
+        const response = await getToken("username");
+        if (response){
+        await setMemberInfo();
+        router.push('/(tabs)/home');
+        }
+      }catch(error) {
+        console.error("Error during auto-login:", error);
+        Alert.alert('Notification', 'Auto-login failed. Please log in manually.');
+      }
+    };
 
     try{
       autoLogin();
