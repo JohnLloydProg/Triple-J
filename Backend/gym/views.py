@@ -79,8 +79,8 @@ class ProgramUpdateView(generics.GenericAPIView):
         except Program.DoesNotExist:
             return Response("Program does not exist or Program is not the member's")
         
-        day = request.data.get('day')
-        if (not day):
+        day = request.data.get('day', -1)
+        if (day < 0):
             return Response("Please provide the day to updated")
         
         program.day = day
