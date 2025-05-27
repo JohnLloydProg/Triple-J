@@ -100,6 +100,6 @@ class AttendanceView(generics.GenericAPIView):
         data = AttendanceSerializer(attendances, many=True).data
         for attendance in data:
             member = Member.objects.get(pk=attendance['member'])
-            attendance['member'] = f'{member.first_name} {member.last_name}'
+            attendance['member'] = member.username
         return Response(data)
             
