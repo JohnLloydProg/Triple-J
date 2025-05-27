@@ -22,18 +22,38 @@
                         text: "Register Email"
                         size_hint_x: 1
                         on_press: root.register_email(email.text)
-                MDRaisedButton:
-                    text: "Go to Settings"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    adaptive_height: True
                     size_hint_x: 1
-        ScrollView:
+                    spacing: '10dp'
+                    MDTextField:
+                        id: year
+                    MDRaisedButton:
+                        id: months_btn
+                        text: "Item"
+                        size_hint_x: 1
+                        on_release: root.open_menu(self)
+                    MDTextField:
+                        id: day
+
+        MDBoxLayout:
+            orientation: 'vertical'
             size_hint: 0.5, 1
-            MDBoxLayout:
-                id: container
-                adaptive_height: True
+            spacing: '15dp'
+            MDRaisedButton:
+                text:'Refresh'
                 size_hint_x: 1
-                padding: [10, 0, 10, 0]
-                AttendanceComponent:
-                
+                on_press: root.get_attendances()
+            ScrollView:
+                size_hint: 1, 1
+                MDBoxLayout:
+                    id: container
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    size_hint_x: 1
+                    padding: [10, 0, 10, 0]
+
 
 <AttendanceComponent>:
     orientation: 'vertical'
