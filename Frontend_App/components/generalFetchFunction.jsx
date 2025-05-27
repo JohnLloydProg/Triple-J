@@ -647,3 +647,183 @@ export async function startPayment() {
     }
 
 }
+
+//home page 
+
+import * as SecureStore from 'expo-secure-store';
+
+
+const BASE_URL = 'https://triple-j.onrender.com/api';
+
+/**
+ * Helper function to make API requests with token refresh logic.
+ * @param {string} endpoint - The API endpoint (e.g., /gym/program/current).
+ * @param {string} method - HTTP method (GET, POST, etc.).
+ * @param {object|null} body - Request body for POST/PUT requests.
+ * @returns {Promise<object>} - The JSON response from the API.
+ * @throws {Error} - Throws an error if the request fails or token refresh fails.
+ */
+async function request(endpoint, method = 'GET', body = null) {
+  let accessToken = await SecureStore.getItemAsync('accessToken');
+  const url = `${BASE_URL}${endpoint}`;
+
+  const options = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  let response = await fetch(url, options);
+
+  if (response.status === 401) {
+    try {
+      const newAccessToken = await refreshAccessToken();
+      if (!newAccessToken) {
+        console.error('Failed to refresh token: No new token received.');
+        throw new Error('Session expired. Please log in again.');
+      }
+      await SecureStore.setItemAsync('accessToken', newAccessToken); 
+      options.headers['Authorization'] = `Bearer ${newAccessToken}`;
+      response = await fetch(url, options);
+    } catch (refreshError) {
+      console.error('Error refreshing access token:', refreshError);
+     
+      throw new Error('Session refresh failed. Please log in again.');
+    }
+  }
+
+  if (!response.ok) {
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      errorData = await response.text();
+    }
+    console.error(`API Error ${response.status} for ${method} ${endpoint}:`, errorData);
+    throw new Error(errorData.detail || errorData.message || `Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchCurrentProgram(exerciseIconMap) {
+  try {
+    console.log("generalFetchFunction: Attempting to fetch current program...");
+    const rawProgramData = await request('/gym/program/current', 'GET');
+    
+    console.log("Program Data: Raw program data received from API:", JSON.stringify(rawProgramData, null, 2));
+
+    let exercisesArrayFromApi = [];
+
+    if (rawProgramData && Array.isArray(rawProgramData.workouts)) {
+        exercisesArrayFromApi = rawProgramData.workouts;
+    } else {
+        console.warn("generalFetchFunction: 'workouts' array not found or not an array in API response:", rawProgramData);
+        return []; 
+    }
+
+    if (exercisesArrayFromApi.length === 0) {
+      console.log("generalFetchFunction: Program data contains an empty 'workouts' array.");
+      return []; 
+    }
+    
+    const apiTypeToIconKey = {
+        'U': 'upper',  // Example: Lateral Raise
+        'C': 'core',   // Example: Sit-ups
+        'L': 'lower',  // Example: Squats
+        'PS': 'upper', // Example: Push-ups 
+        
+    };
+
+    const processedExercises = exercisesArrayFromApi.map((exerciseApiObj, index) => {
+      let exerciseName = '';
+      let exerciseData = null; 
+
+     
+      for (const key in exerciseApiObj) {
+        if (key !== 'type' && typeof exerciseApiObj[key] === 'object' && exerciseApiObj[key] !== null) {
+          exerciseName = key;
+          exerciseData = exerciseApiObj[key];
+          break; 
+        }
+      }
+
+      if (!exerciseName || !exerciseData) {
+        console.warn(`generalFetchFunction: Could not parse exercise object at index ${index}:`, exerciseApiObj);
+        return null; 
+      }
+
+      const apiType = exerciseApiObj.type;
+      const iconMapKey = apiTypeToIconKey[apiType]; 
+      
+      let detailsString = `Sets: ${exerciseData.sets || 'N/A'}, Reps: ${exerciseData.reps || 'N/A'}`;
+
+      if (exerciseData.weight && String(exerciseData.weight).trim() !== "" && String(exerciseData.weight).toLowerCase() !== "null") {
+          detailsString += `, Weight: ${exerciseData.weight}`;
+      }
+
+      const generatedId = `${exerciseName.replace(/\s+/g, '_').toLowerCase()}-${index}`;
+
+      return {
+        id: generatedId, 
+        name: exerciseName,
+        details: detailsString,
+        type: apiType, 
+        icon: iconMapKey ? exerciseIconMap[iconMapKey] : null, 
+        completed: false, 
+      };
+    }).filter(exercise => exercise !== null); 
+
+    return processedExercises;
+
+  } catch (error) {
+    console.error("Error in fetchCurrentProgram (generalFetchFunction):", error.message, error);
+    
+    if (error.message && (error.message.toLowerCase().includes("not found") || error.message.includes("status 404"))) {
+        console.log("generalFetchFunction: Received 404 or 'Not found', likely no program for today. Returning [].");
+        return [];
+    }
+    throw error; 
+  }
+}
+
+export async function fetchGymPopulation() {
+  try {
+    const data = await request('/attendance/logging', 'GET');
+    return data; 
+  } catch (error) {
+    console.error("Error fetching gym population in apiService:", error);
+    throw error;
+  }
+}
+
+export async function fetchQrCode() {
+  try {
+    const data = await request('/attendance/qr-code', 'GET');
+    
+    console.log("Fetched QR Code Data from API:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching QR Code in apiService:", error);
+    throw error;
+  }
+}
+
+export async function generateNewQrCode() {
+  try {
+  
+    const data = await request('/attendance/qr-code', 'POST');
+   
+    console.log("Generated New QR Code Data from API:", data);
+    return data;
+  } catch (error) {
+    console.error("Error generating new QR Code in apiService:", error);
+    throw error;
+  }
+}
