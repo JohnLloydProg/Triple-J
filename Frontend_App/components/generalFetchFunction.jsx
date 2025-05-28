@@ -22,6 +22,26 @@ export function validateLoginInfo(username, password) {
     return response;
   }
 
+  //checks if the user is a trainer or not
+export async function checkIfTrainer(){
+  try{
+    let accessToken = await getToken("accessToken");
+  
+    let response = await fetch(tripleJ_URL + "/api/account/members", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+    const data = await response.json()
+    return data;
+  }catch (error) {
+    console.error("Error:", error);
+
+    }
+}
+
  //fetches member's information
  export async function getMemberInfo() {
     try {

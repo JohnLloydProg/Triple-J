@@ -40,6 +40,8 @@ import { getToken,saveToken, delToken } from '@/components/storageComponent';
     await delToken("expirationDate");
     await delToken("price");
 
+    await delToken("isTrainer");
+
     router.push('/');
     
   } catch (error) {

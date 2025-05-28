@@ -20,6 +20,7 @@ import AvailableWorkoutModal from '@/components/ui/AvailableWorkoutModal';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SelectList } from 'react-native-dropdown-select-list'
 import { Dimensions } from "react-native";
+import { getToken } from '@/components/storageComponent';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -94,8 +95,10 @@ useEffect(() => {
   console.log("Updated Selected Program: ", selectedProgram);
 }, [selectedProgram]);
 
+
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
+
     getProgram().then(data => {setProgramData(data)});
     getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
@@ -191,6 +194,10 @@ const [refreshing, setRefreshing] = React.useState(false);
         </View>
 
       </TouchableOpacity>
+
+      <View>
+          {}
+      </View>
       
       {/*Component to render all the programs and their associated workouts */}
       <FlatList
