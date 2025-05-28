@@ -97,5 +97,9 @@ class AttendanceView(generics.GenericAPIView):
 
     def get(self, request:Request, year:int, month:int, day:int) -> Response:
         attendances = Attendance.objects.filter(date=date(year, month, day)).order_by('timeIn')
-        return Response(AttendanceSerializer(attendances, many=True).data)
+        data = AttendanceSerializer(attendances, many=True).data
+        for attendance in data:
+            member = Member.objects.get(pk=attendance['member'])
+            attendance['member'] = member.username
+        return Response(data)
             

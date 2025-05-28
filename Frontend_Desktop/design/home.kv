@@ -1,0 +1,75 @@
+<HomeScreen>:
+    MDBoxLayout:
+        orientation: 'horizontal'
+        size_hint: 1, 1
+        MDAnchorLayout:
+            anchor_y: 'top'
+            size_hint: 0.5, 1
+            MDBoxLayout:
+                orientation: 'vertical'
+                adaptive_height: True
+                size_hint_x: 1
+                size_hint_max_x: 600
+                spacing: 20
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    MDTextField:
+                        id: email
+                        size_hint_x: 1
+                        hint_text: 'Enter your email address'
+                    MDRaisedButton:
+                        text: "Register Email"
+                        size_hint_x: 1
+                        on_press: root.register_email(email.text)
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    size_hint_x: 1
+                    spacing: '10dp'
+                    MDTextField:
+                        id: year
+                    MDRaisedButton:
+                        id: months_btn
+                        text: "Item"
+                        size_hint_x: 1
+                        on_release: root.open_menu(self)
+                    MDTextField:
+                        id: day
+
+        MDBoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5, 1
+            spacing: '15dp'
+            MDRaisedButton:
+                text:'Refresh'
+                size_hint_x: 1
+                on_press: root.get_attendances()
+            ScrollView:
+                size_hint: 1, 1
+                MDBoxLayout:
+                    id: container
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    size_hint_x: 1
+                    padding: [10, 0, 10, 0]
+
+
+<AttendanceComponent>:
+    orientation: 'vertical'
+    adaptive_height: True
+    size_hint_x: 1
+    md_bg_color: (0, 0, 0, 1)
+    padding: 10
+    MyLabel:
+        id: username
+        text: 'Username'
+        color: (1, 1, 1, 1)
+    MyLabel:
+        id: timeIn
+        text: 'TimeIn'
+        color: (1, 1, 1, 1)
+    MyLabel:
+        id: timeOut
+        text: 'TimeOut'
+        color: (1, 1, 1, 1)
