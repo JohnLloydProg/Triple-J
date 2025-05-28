@@ -11,7 +11,7 @@ import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 
-import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram,  updateProgram, getWorkout} from '@/components/generalFetchFunction';
+import { checkIfTrainer, getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram,  updateProgram, getWorkout} from '@/components/generalFetchFunction';
 
 import WorkoutItem from '@/components/ui/WorkoutItem';
 import WorkoutModalItem from '@/components/ui/WorkoutModalItem';
@@ -68,6 +68,10 @@ const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
 const [modalRecordVisible, setmodalRecordVisible] = useState(false);
 const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
 
+const [isTrainer, setisTrainer] = useState(false);
+const [assignedMembers, setassignedMembers] = useState([]);
+const [selectedAccount, setselectedAccount] = useState("");
+
 //re-renders graphs after adding a record
 const [modalKey, setModalKey] = useState(0);
 
@@ -90,19 +94,45 @@ const handlePressChoice =  async (item) => {
   setmodalChoiceVisible(true);
 };
 
+//sets the variable to know whether or not use is a trainer
+const getIfUserTrainer = async ()=> {
+  const trainerCheck  = await getToken("isTrainer");
+  if(trainerCheck == "true"){
+    setisTrainer(true);
+  }else{
+    setisTrainer(false);
+  }
+}
+
+const getassignedMembers = async ()=>{
+  await checkIfTrainer().then(data => {
+    setassignedMembers(data.map(item => {
+      const fullName = `${item.first_name} ${item.last_name}`;
+      return {
+        key: String(item.id), // Convert ID to string as key is typically string
+        value: fullName
+      };
+    }))
+  })
+  console.log("Assigned members of trainer: " + assignedMembers);
+}
+
 //re-renders the modal after adding a record to a workout
 useEffect(() => {
   console.log("Updated Selected Program: ", selectedProgram);
 }, [selectedProgram]);
 
+useEffect(() => {
+  console.log("Assigned members of trainer: " + JSON.stringify(assignedMembers));
+}, [assignedMembers]);
 
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
-
+    getassignedMembers();
+    getIfUserTrainer();
     getProgram().then(data => {setProgramData(data)});
     getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
-      console.log(data);
       setcurrentTimeLineInfo(data);
     });
   },[]);
@@ -195,8 +225,33 @@ const [refreshing, setRefreshing] = React.useState(false);
 
       </TouchableOpacity>
 
+      {/*If a user is a trainer, it will allow the trainer to change the the usable userid so that trainers
+      would be able to edit a certain assigned member's programs*/}
       <View>
-          {}
+        <TouchableOpacity onPress={() => {console.log(selectedAccount)}} style={{width: "100%"}}>
+          <View>
+            <Text>
+              awdawipdi
+            </Text>
+          </View>
+        </TouchableOpacity>
+          {isTrainer ? (
+            
+              <View>
+                <SelectList 
+                        setSelected={(val) => setselectedAccount(val)} 
+                        data={assignedMembers} 
+                        save="key"
+                        dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
+                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
+                        dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
+                        boxStyles={[{ width: "100%" },{borderWidth:null},]}
+                        placeholder='Select Account'
+                        search={false}
+                    />
+              </View>
+            
+          ) : null}
       </View>
       
       {/*Component to render all the programs and their associated workouts */}
@@ -236,7 +291,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                         dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
                         inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
                         dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
-                        boxStyles={[{ width: 300 },{borderWidth:0}]}
+                        boxStyles={[{ width: "80%" },{borderWidth:null},]}
                         placeholder='Select Program Day'
                         search={false}
                     />

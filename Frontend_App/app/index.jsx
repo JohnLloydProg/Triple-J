@@ -38,7 +38,6 @@ export default function HomeScreen() {
 
       console.log("Member information saved to secure storage.");
 
-
       //code below is used to determine whether the user is a member or a trainer
       const isTrainer = await checkIfTrainer().then(data => {
         console.log("Trainer check response:", data);
@@ -46,6 +45,7 @@ export default function HomeScreen() {
       }
       );
       await saveToken("isTrainer", isTrainer.toString());
+      await saveToken("secondaryUserID", member_data.id ? member_data.id.toString() : "");
       console.log("Is Trainer:", isTrainer);
 
       router.push('/(tabs)/home');

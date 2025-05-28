@@ -41,6 +41,7 @@ import { getToken,saveToken, delToken } from '@/components/storageComponent';
     await delToken("price");
 
     await delToken("isTrainer");
+    await delToken("secondaryUserID");
 
     router.push('/');
     

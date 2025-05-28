@@ -22,24 +22,42 @@ export function validateLoginInfo(username, password) {
     return response;
   }
 
-  //checks if the user is a trainer or not
-export async function checkIfTrainer(){
-  try{
+  //checks if the user is a trainer or not it returns error
+  //main function is to return list of members associated to a trainer
+export async function checkIfTrainer() {
+  try {
     let accessToken = await getToken("accessToken");
-  
-    let response = await fetch(tripleJ_URL + "/api/account/members", {
+
+    let response = await fetch(tripleJ_URL + `/api/account/members`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json"
       }
     });
-    const data = await response.json()
-    return data;
-  }catch (error) {
-    console.error("Error:", error);
 
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(tripleJ_URL + `/api/account/members`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
     }
+    const data = await response.json();
+    return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
 }
 
  //fetches member's information
