@@ -20,7 +20,8 @@ import AvailableWorkoutModal from '@/components/ui/AvailableWorkoutModal';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SelectList } from 'react-native-dropdown-select-list'
 import { Dimensions } from "react-native";
-import { getToken } from '@/components/storageComponent';
+import { getToken, saveToken } from '@/components/storageComponent';
+import { color } from '@rneui/base';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -72,12 +73,25 @@ const [isTrainer, setisTrainer] = useState(false);
 const [assignedMembers, setassignedMembers] = useState([]);
 const [selectedAccount, setselectedAccount] = useState("");
 
+const [renderer ,setRenderer] = useState(false); 
+
 //re-renders graphs after adding a record
 const [modalKey, setModalKey] = useState(0);
 
 const forceRenderModal = () => {
   setModalKey(prevKey => prevKey + 1); 
 };
+
+//re-renders workouts
+useEffect(()=>{
+    getassignedMembers();
+    getIfUserTrainer();
+    getProgram().then(data => {setProgramData(data)});
+    getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
+    getCurrentTimeline().then(data => {
+      setcurrentTimeLineInfo(data);
+    });
+  },[renderer]);
 
 //funnctions to handle the modal of selected program
 const handlePress =  async (item) => {
@@ -104,17 +118,33 @@ const getIfUserTrainer = async ()=> {
   }
 }
 
-const getassignedMembers = async ()=>{
-  await checkIfTrainer().then(data => {
-    setassignedMembers(data.map(item => {
-      const fullName = `${item.first_name} ${item.last_name}`;
-      return {
-        key: String(item.id), // Convert ID to string as key is typically string
-        value: fullName
-      };
-    }))
-  })
-  console.log("Assigned members of trainer: " + assignedMembers);
+//function to add the trainer's id alongside the members assigned to the trainer
+const getassignedMembers = async () => {
+  try {
+    const fetchedData = await checkIfTrainer();
+
+    const dynamicMembers = fetchedData.map(item => ({
+      key: String(item.id),
+      value: `${item.first_name} ${item.last_name}`,
+    }));
+
+    const predefinedEntry = {
+      key: await getToken("userId"),
+      value: `${await getToken("firstName")} ${await getToken("lastName")}`,
+    };
+
+    const updatedMembers = [predefinedEntry, ...dynamicMembers];
+    setassignedMembers(updatedMembers);
+
+    // Optional: Log directly
+    console.log("Assigned members of trainer:", updatedMembers);
+  } catch (error) {
+    console.error("Error fetching assigned members:", error);
+  }
+};
+
+const changeSelectedAccount = async (selAcc) => {
+  saveToken("secondaryUserID", String(selAcc));
 }
 
 //re-renders the modal after adding a record to a workout
@@ -228,29 +258,27 @@ const [refreshing, setRefreshing] = React.useState(false);
       {/*If a user is a trainer, it will allow the trainer to change the the usable userid so that trainers
       would be able to edit a certain assigned member's programs*/}
       <View>
-        <TouchableOpacity onPress={() => {console.log(selectedAccount)}} style={{width: "100%"}}>
-          <View>
-            <Text>
-              awdawipdi
-            </Text>
-          </View>
-        </TouchableOpacity>
+  
           {isTrainer ? (
-            
-              <View>
+              <View style={[{marginBottom: 20},{backgroundColor: "#1E1F26"},{borderRadius:10}]}>
                 <SelectList 
                         setSelected={(val) => setselectedAccount(val)} 
                         data={assignedMembers} 
                         save="key"
                         dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
                         inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
-                        dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
-                        boxStyles={[{ width: "100%" },{borderWidth:null},]}
+                        dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'},{borderWidth: null} ]}
+                        boxStyles={[{ width: "100%" },{borderWidth: null}]}
                         placeholder='Select Account'
                         search={false}
+                        onSelect={async () =>{
+                          await changeSelectedAccount(selectedAccount)
+                          console.log("Selected Account:", selectedAccount);
+                          setRenderer(renderer => !renderer); 
+                        }}
+                        arrowicon={<FontAwesome6 name="chevron-down" size={20} color="red" />}
                     />
               </View>
-            
           ) : null}
       </View>
       
@@ -373,6 +401,8 @@ const [refreshing, setRefreshing] = React.useState(false);
           setAvailableWorkouts={setAvailableWorkouts}
           setmodalChoiceVisible={setmodalChoiceVisible}
           selectedWorkoutItem={selectedWorkoutItem}
+          setRenderer={setRenderer}
+          renderer={renderer}
         />
     </Modal>
 

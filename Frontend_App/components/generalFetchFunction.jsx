@@ -185,10 +185,10 @@ export async function getAvailableWorkouts()  {
 export async function getProgram() {
   try {
     let accessToken = await getToken("accessToken");
-    let userId = await getToken("userId");
-    parseInt(userId);
+    let secondaryUserID = await getToken("secondaryUserID");
+    parseInt(secondaryUserID);
 
-    let response = await fetch(tripleJ_URL + `/api/gym/program/${userId}`, {
+    let response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -204,7 +204,7 @@ export async function getProgram() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(tripleJ_URL + `/api/gym/program/${userId}`, {
+      response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -225,11 +225,11 @@ export async function getProgram() {
 export async function addProgram() {
   try {
     let accessToken = await getToken("accessToken");
-    let userId = await getToken("userId");
-    parseInt(userId);
+    let secondaryUserID = await getToken("secondaryUserID");
+    parseInt(secondaryUserID);
     
 
-    let response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/create`, {
+    let response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/create`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -245,7 +245,7 @@ export async function addProgram() {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/create`, {
+      response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/create`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -265,11 +265,11 @@ export async function addProgram() {
 export async function deleteProgram(programId) {
   try {
     let accessToken = await getToken("accessToken");
-    let userId = await getToken("userId");
-    parseInt(userId);
+    let secondaryUserID = await getToken("secondaryUserID");
+    parseInt(secondaryUserID);
     parseInt(programId);
   
-    let response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/delete/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/delete/${programId}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -285,7 +285,7 @@ export async function deleteProgram(programId) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/delete/${programId}`, {
+      response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/delete/${programId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -304,13 +304,13 @@ export async function deleteProgram(programId) {
 export async function updateProgram(programId,mainDate) {
   try {
     let accessToken = await getToken("accessToken");
-    let userId = await getToken("userId");
-    parseInt(userId);
+    let secondaryUserID = await getToken("secondaryUserID");
+    parseInt(secondaryUserID);
     parseInt(programId);
 
     console.log("Date Response", mainDate)
 
-    let response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/update/${programId}`, {
+    let response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/update/${programId}`, {
       method: "PUT",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -329,7 +329,7 @@ export async function updateProgram(programId,mainDate) {
         throw new Error("Failed to refresh access token");
       }
       
-      response = await fetch(tripleJ_URL + `/api/gym/program/${userId}/update/${programId}`, {
+      response = await fetch(tripleJ_URL + `/api/gym/program/${secondaryUserID}/update/${programId}`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
