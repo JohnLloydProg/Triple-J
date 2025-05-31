@@ -11,7 +11,7 @@ import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 
-import { getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram,  updateProgram, getWorkout} from '@/components/generalFetchFunction';
+import { checkIfTrainer, getCurrentTimeline, getAvailableWorkouts, getProgram, addProgram,  updateProgram, getWorkout} from '@/components/generalFetchFunction';
 
 import WorkoutItem from '@/components/ui/WorkoutItem';
 import WorkoutModalItem from '@/components/ui/WorkoutModalItem';
@@ -20,6 +20,8 @@ import AvailableWorkoutModal from '@/components/ui/AvailableWorkoutModal';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SelectList } from 'react-native-dropdown-select-list'
 import { Dimensions } from "react-native";
+import { getToken, saveToken } from '@/components/storageComponent';
+import { color } from '@rneui/base';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -67,12 +69,29 @@ const [modalChoiceVisible, setmodalChoiceVisible] = useState(false);
 const [modalRecordVisible, setmodalRecordVisible] = useState(false);
 const [availWorkoutVisible, setavailWorkoutVisible] = useState(false);
 
+const [isTrainer, setisTrainer] = useState(false);
+const [assignedMembers, setassignedMembers] = useState([]);
+const [selectedAccount, setselectedAccount] = useState("");
+
+const [renderer ,setRenderer] = useState(false); 
+
 //re-renders graphs after adding a record
 const [modalKey, setModalKey] = useState(0);
 
 const forceRenderModal = () => {
   setModalKey(prevKey => prevKey + 1); 
 };
+
+//re-renders workouts
+useEffect(()=>{
+    getassignedMembers();
+    getIfUserTrainer();
+    getProgram().then(data => {setProgramData(data)});
+    getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
+    getCurrentTimeline().then(data => {
+      setcurrentTimeLineInfo(data);
+    });
+  },[renderer]);
 
 //funnctions to handle the modal of selected program
 const handlePress =  async (item) => {
@@ -89,17 +108,61 @@ const handlePressChoice =  async (item) => {
   setmodalChoiceVisible(true);
 };
 
+//sets the variable to know whether or not use is a trainer
+const getIfUserTrainer = async ()=> {
+  const trainerCheck  = await getToken("isTrainer");
+  if(trainerCheck == "true"){
+    setisTrainer(true);
+  }else{
+    setisTrainer(false);
+  }
+}
+
+//function to add the trainer's id alongside the members assigned to the trainer
+const getassignedMembers = async () => {
+  try {
+    const fetchedData = await checkIfTrainer();
+
+    const dynamicMembers = fetchedData.map(item => ({
+      key: String(item.id),
+      value: `${item.first_name} ${item.last_name}`,
+    }));
+
+    const predefinedEntry = {
+      key: await getToken("userId"),
+      value: `${await getToken("firstName")} ${await getToken("lastName")}`,
+    };
+
+    const updatedMembers = [predefinedEntry, ...dynamicMembers];
+    setassignedMembers(updatedMembers);
+
+    // Optional: Log directly
+    console.log("Assigned members of trainer:", updatedMembers);
+  } catch (error) {
+    console.error("Error fetching assigned members:", error);
+  }
+};
+
+const changeSelectedAccount = async (selAcc) => {
+  saveToken("secondaryUserID", String(selAcc));
+}
+
 //re-renders the modal after adding a record to a workout
 useEffect(() => {
   console.log("Updated Selected Program: ", selectedProgram);
 }, [selectedProgram]);
 
+useEffect(() => {
+  console.log("Assigned members of trainer: " + JSON.stringify(assignedMembers));
+}, [assignedMembers]);
+
   //loads the information for programs and workouts during the first loading of the programs page
   useEffect(()=>{
+    getassignedMembers();
+    getIfUserTrainer();
     getProgram().then(data => {setProgramData(data)});
     getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
-      console.log(data);
       setcurrentTimeLineInfo(data);
     });
   },[]);
@@ -191,6 +254,33 @@ const [refreshing, setRefreshing] = React.useState(false);
         </View>
 
       </TouchableOpacity>
+
+      {/*If a user is a trainer, it will allow the trainer to change the the usable userid so that trainers
+      would be able to edit a certain assigned member's programs*/}
+      <View>
+  
+          {isTrainer ? (
+              <View style={[{marginBottom: 20},{backgroundColor: "#1E1F26"},{borderRadius:10}]}>
+                <SelectList 
+                        setSelected={(val) => setselectedAccount(val)} 
+                        data={assignedMembers} 
+                        save="key"
+                        dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
+                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
+                        dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'},{borderWidth: null} ]}
+                        boxStyles={[{ width: "100%" },{borderWidth: null}]}
+                        placeholder='Select Account'
+                        search={false}
+                        onSelect={async () =>{
+                          await changeSelectedAccount(selectedAccount)
+                          console.log("Selected Account:", selectedAccount);
+                          setRenderer(renderer => !renderer); 
+                        }}
+                        arrowicon={<FontAwesome6 name="chevron-down" size={20} color="red" />}
+                    />
+              </View>
+          ) : null}
+      </View>
       
       {/*Component to render all the programs and their associated workouts */}
       <FlatList
@@ -229,7 +319,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                         dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
                         inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
                         dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
-                        boxStyles={[{ width: 300 },{borderWidth:0}]}
+                        boxStyles={[{ width: "80%" },{borderWidth:null},]}
                         placeholder='Select Program Day'
                         search={false}
                     />
@@ -311,6 +401,8 @@ const [refreshing, setRefreshing] = React.useState(false);
           setAvailableWorkouts={setAvailableWorkouts}
           setmodalChoiceVisible={setmodalChoiceVisible}
           selectedWorkoutItem={selectedWorkoutItem}
+          setRenderer={setRenderer}
+          renderer={renderer}
         />
     </Modal>
 

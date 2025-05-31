@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { router, Link } from 'expo-router';
 
+
 import colors from '../constants/globalStyles';
 import {refreshAccessToken} from '@/components/refreshToken';
 import { getToken,saveToken } from '@/components/storageComponent';
-import { validateLoginInfo, getMemberInfo } from '@/components/generalFetchFunction';
+import { validateLoginInfo, getMemberInfo, checkIfTrainer } from '@/components/generalFetchFunction';
 
 
 export default function HomeScreen() {
@@ -36,6 +37,16 @@ export default function HomeScreen() {
       await saveToken("profilePic", member_data.profilePic ? member_data.profilePic.toString() : "");
 
       console.log("Member information saved to secure storage.");
+
+      //code below is used to determine whether the user is a member or a trainer
+      const isTrainer = await checkIfTrainer().then(data => {
+        console.log("Trainer check response:", data);
+        return data.detail ? false : true;
+      }
+      );
+      await saveToken("isTrainer", isTrainer.toString());
+      await saveToken("secondaryUserID", member_data.id ? member_data.id.toString() : "");
+      console.log("Is Trainer:", isTrainer);
 
       router.push('/(tabs)/home');
 
