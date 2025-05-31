@@ -217,7 +217,7 @@ class MembershipView(generics.GenericAPIView):
                     return Response('Do not have the authority to use query parameters!')
             else:
                 user_id = self.request.user
-            member = Member.objects.get(pk=self.request.user)
+            member = Member.objects.get(pk=user_id)
         except Member.DoesNotExist:
             return Response('Member does not exist')
         

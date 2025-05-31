@@ -31,10 +31,10 @@ class TripleJAdmin(MDApp):
 
     def build(self):
         self.sm = MDScreenManager()
-        homeScreen = HomeScreen(name='home_screen')
-        self.sm.add_widget(homeScreen)
         mainScreen = MainScreen(name='main_screen')
         self.sm.add_widget(mainScreen)
+        homeScreen = HomeScreen(name='home_screen')
+        self.sm.add_widget(homeScreen)
         self.sm.current = 'main_screen'
         return self.sm
     

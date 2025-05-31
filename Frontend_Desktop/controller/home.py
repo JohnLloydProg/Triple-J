@@ -65,13 +65,15 @@ class HomeScreen(MDScreen):
         
         data = response.json()
         if (data.get('id', None)):
-            response = requests.get(self.app.base_url + f'api/account/membership?id={str(data.get('id'))}', headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
             self.ids.time_out.text = str(timeOut)
             self.ids.time_in.text = str(timeIn)
             self.ids.member_name.text = f'{data.get('first_name')} {data.get('last_name')}'
             self.ids.membership_type.text = data.get('membershipType')
-            if (data.get('membershipType') == 'Monthly' and response.get('id')):
-                print(response.text)
+            if (data.get('membershipType') == 'Monthly'):
+                membership_response = requests.get(self.app.base_url + f'api/account/membership?id={str(data.get('id'))}', headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
+                if (membership_response.ok):
+                    membership_data = membership_response.json()
+                    self.ids.membership_expiry.text = membership_data.get('expirationDate', 'Not Found!')
 
 
 class AttendanceComponent(MDBoxLayout):
