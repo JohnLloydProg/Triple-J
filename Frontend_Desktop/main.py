@@ -1,20 +1,21 @@
 from kivy.core.window import Window
 Window.size = (1080, 720)
 Window.minimum_width, Window.minimum_height = 1080, 720
-from kivymd.app import MDApp
+from kivymd.app import MDApp, App
 from kivy.lang import Builder
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.screen import MDScreen
 from kivy.resources import resource_find, resource_add_path
-from controller.main import MainScreen
-from controller.home import HomeScreen
-from kivy.network.urlrequest import UrlRequest, UrlRequestUrllib
-import requests
+from controller.main_screen import MainScreen
+from controller.home_screen import HomeScreen
+from controller.annoucement_screen import AnnouncementScreen
+from kivy.network.urlrequest import UrlRequestUrllib
+from tools import GeneralRequest
 import json
 
 
 def load_kv_files():
-    design_files = ['./components.kv','./design/main.kv', './design/home.kv']
+    design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv']
     for design_file in design_files:
         Builder.load_file(design_file)
 
@@ -38,6 +39,8 @@ class TripleJAdmin(MDApp):
         self.sm.add_widget(mainScreen)
         homeScreen = HomeScreen(name='home_screen')
         self.sm.add_widget(homeScreen)
+        announcementScreen = AnnouncementScreen(name='announcement_screen')
+        self.sm.add_widget(announcementScreen)
         self.sm.current = 'main_screen'
         return self.sm
 
@@ -46,7 +49,7 @@ class TripleJAdmin(MDApp):
             with open('./token.json', 'r') as f:
                 token = json.loads(f.read()).get('refresh')
                 self.refresh = token
-                UrlRequest(self.base_url + 'api/account/token/refresh', on_success=self.log_in, req_body=json.dumps({'refresh': token}), req_headers={"Content-Type" : "application/json"})
+                GeneralRequest(self.base_url + 'api/account/token/refresh', json.dumps({'refresh': token}), {"Content-Type" : "application/json"}, self.log_in)
         except FileNotFoundError:
             print('no token!')
         return super().on_start()

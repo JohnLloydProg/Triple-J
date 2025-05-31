@@ -5,6 +5,7 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.pickers import MDDatePicker
 from kivy.network.urlrequest import UrlRequest, UrlRequestUrllib
 from kivymd.uix.behaviors import HoverBehavior
+from tools import GeneralRequest
 from kivy.app import App
 from datetime import date
 import json
@@ -22,10 +23,10 @@ class HomeScreen(MDScreen):
     def on_enter(self):
         self.app = App.get_running_app()
         self.ids.date_btn.text = self.selected_date.isoformat()
-        self.get_attendances = lambda: UrlRequest(
+        self.get_attendances = lambda: GeneralRequest(
             self.app.base_url + f"api/attendance/attendances/{str(self.selected_date.year)}/{str(self.selected_date.month)}/{str(self.selected_date.day)}",
-            req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, on_success=self.got_attendances
-            )
+            req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, on_success=self.got_attendances, refresh=self.app.refresh
+        )
         self.get_attendances()
     
     def got_attendances(self, request:UrlRequestUrllib, result:dict):
@@ -58,16 +59,16 @@ class HomeScreen(MDScreen):
                     )
                 ]
             )
-            UrlRequest(self.app.base_url + 'api/account/email-validation', 
-                       req_body=json.dumps({'email': email}), 
-                       req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
-                       on_success=lambda request, result: self.dialog.open()
-                       )
+            GeneralRequest(
+                self.app.base_url + 'api/account/email-validation',
+                req_body=json.dumps({'email': email}), req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
+                on_success=lambda request, result: self.dialog.open(), refresh=self.app.refresh
+            )
 
     def call_details(self, username, timeIn, timeOut):
-        UrlRequest(
+        GeneralRequest(
             self.app.base_url + f'api/account/member/{username}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
-            on_success=lambda request, result: self.display_details(username, timeIn, timeOut, result)
+            on_success=lambda request, result: self.display_details(username, timeIn, timeOut, result), refresh=self.app.refresh
         )
     
     def display_details(self, username, timeIn, timeOut, result:dict):
@@ -76,9 +77,9 @@ class HomeScreen(MDScreen):
         self.ids.member_name.text = f'{result.get('first_name')} {result.get('last_name')}'
         self.ids.membership_type.text = result.get('membershipType')
         if (result.get('membershipType') == 'Monthly'):
-            UrlRequest(
+            GeneralRequest(
                 self.app.base_url + f'api/account/membership?id={str(result.get('id'))}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, 
-                on_success=self.display_membership_expiry
+                on_success=self.display_membership_expiry, refresh=self.app.refresh
             )
     
     def display_membership_expiry(self, request, result):
