@@ -1,4 +1,31 @@
 <MyLabel@MDLabel>:
-    size_hint: 1, None
+    size_hint_y: None
     text_size: self.width, None
     height: self.texture_size[1] + 10
+
+<NavigationBar@MDBoxLayout>:
+    orientation: 'horizontal'
+    size_hint_x: 1
+    adaptive_height: True
+    md_bg_color: app.theme['secondary']
+    padding: '10dp'
+    MyLabel:
+        text: 'TRIPLE J SYSTEMS'
+        font_size: '20dp'
+        color: app.theme['accent']
+        bold: True
+        size_hint_x: 1
+    MDBoxLayout:
+        orientation: 'horizontal'
+        adaptive_width: True
+        spacing: '10dp'
+        size_hint_y: 1
+        MDFillRoundFlatButton:
+            md_bg_color: app.theme['green'] if app.sm.current != 'home_screen' else app.theme['violet'] 
+            text: 'Home'
+        MDFillRoundFlatButton:
+            md_bg_color: app.theme['green'] if app.sm.current != 'analytics_screen' else app.theme['violet'] 
+            text: 'Analytics'
+        MDFillRoundFlatButton:
+            md_bg_color: app.theme['green'] if app.sm.current != 'announcements_screen' else app.theme['violet'] 
+            text: 'Announcements'

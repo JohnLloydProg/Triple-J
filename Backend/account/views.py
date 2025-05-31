@@ -208,7 +208,15 @@ class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request:Request) -> Response:
+        user_id = request.query_params.get('id')
         try:
+            if (user_id):
+                if (self.request.user.is_superuser):
+                    user_id = int(user_id)
+                else:
+                    return Response('Do not have the authority to use query parameters!')
+            else:
+                user_id = self.request.user
             member = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
             return Response('Member does not exist')
