@@ -8,6 +8,9 @@ from kivymd.uix.screen import MDScreen
 from kivy.resources import resource_find, resource_add_path
 from controller.main import MainScreen
 from controller.home import HomeScreen
+from kivy.network.urlrequest import UrlRequest, UrlRequestUrllib
+import requests
+import json
 
 
 def load_kv_files():
@@ -37,6 +40,20 @@ class TripleJAdmin(MDApp):
         self.sm.add_widget(homeScreen)
         self.sm.current = 'main_screen'
         return self.sm
+
+    def on_start(self):
+        try:
+            with open('./token.json', 'r') as f:
+                token = json.loads(f.read()).get('refresh')
+                self.refresh = token
+                UrlRequest(self.base_url + 'api/account/token/refresh', on_success=self.log_in, req_body=json.dumps({'refresh': token}), req_headers={"Content-Type" : "application/json"})
+        except FileNotFoundError:
+            print('no token!')
+        return super().on_start()
+
+    def log_in(self, request:UrlRequestUrllib, result:dict):
+        self.access = result.get('access')
+        self.sm.current = 'home_screen'
     
 
 if __name__ == "__main__":

@@ -3,9 +3,11 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.pickers import MDDatePicker
+from kivy.network.urlrequest import UrlRequest, UrlRequestUrllib
+from kivymd.uix.behaviors import HoverBehavior
 from kivy.app import App
 from datetime import date
-import requests
+import json
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'Novermber', 'December']
 
@@ -20,16 +22,18 @@ class HomeScreen(MDScreen):
     def on_enter(self):
         self.app = App.get_running_app()
         self.ids.date_btn.text = self.selected_date.isoformat()
+        self.get_attendances = lambda: UrlRequest(
+            self.app.base_url + f"api/attendance/attendances/{str(self.selected_date.year)}/{str(self.selected_date.month)}/{str(self.selected_date.day)}",
+            req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, on_success=self.got_attendances
+            )
         self.get_attendances()
     
-    def get_attendances(self):
-        response = requests.get(self.app.base_url + f"api/attendance/attendances/{str(self.selected_date.year)}/{str(self.selected_date.month)}/{str(self.selected_date.day)}", headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
-        if (response.ok):
-            self.ids.container.clear_widgets()
-            for attendance in response.json():
-                attendanceComponent = AttendanceComponent()
-                attendanceComponent.set_details(username=attendance.get('member', "Not found"), timeIn=attendance.get('timeIn', "Not Found"), timeOut=attendance.get('timeOut', "Not Found"), root=self)
-                self.ids.container.add_widget(attendanceComponent)
+    def got_attendances(self, request:UrlRequestUrllib, result:dict):
+        self.ids.container.clear_widgets()
+        for attendance in result:
+            attendanceComponent = AttendanceComponent()
+            attendanceComponent.set_details(username=attendance.get('member', "Not found"), timeIn=attendance.get('timeIn', "Not Found"), timeOut=attendance.get('timeOut', "Not Found"), root=self)
+            self.ids.container.add_widget(attendanceComponent)
     
     def open_menu(self):
         date_picker = MDDatePicker()
@@ -44,39 +48,45 @@ class HomeScreen(MDScreen):
     
     def register_email(self, email):
         if (email):
-            response = requests.post(self.app.base_url + 'api/account/email-validation', json={'email': email}, headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
-            data = response.json()
-            print(response.text)
-            if (data.get('details') == "Email sent successfully"):
-                self.dialog = MDDialog(
-                    title="Email Sent",
-                    text="Please check your email for the verification link.",
-                    buttons=[
-                        MDFlatButton(
-                            text="OK",
-                            on_release=lambda x: self.dialog.dismiss()
-                        )
-                    ]
-                )
-                self.dialog.open()
+            self.dialog = MDDialog(
+                title="Email Sent",
+                text="Please check your email for the verification link.",
+                buttons=[
+                    MDFlatButton(
+                        text="OK",
+                        on_release=lambda x: self.dialog.dismiss()
+                    )
+                ]
+            )
+            UrlRequest(self.app.base_url + 'api/account/email-validation', 
+                       req_body=json.dumps({'email': email}), 
+                       req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
+                       on_success=lambda request, result: self.dialog.open()
+                       )
 
-    def display_details(self, username, timeIn, timeOut):
-        response = requests.get(self.app.base_url + f'api/account/member/{username}', headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
-        
-        data = response.json()
-        if (data.get('id', None)):
-            self.ids.time_out.text = str(timeOut)
-            self.ids.time_in.text = str(timeIn)
-            self.ids.member_name.text = f'{data.get('first_name')} {data.get('last_name')}'
-            self.ids.membership_type.text = data.get('membershipType')
-            if (data.get('membershipType') == 'Monthly'):
-                membership_response = requests.get(self.app.base_url + f'api/account/membership?id={str(data.get('id'))}', headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'})
-                if (membership_response.ok):
-                    membership_data = membership_response.json()
-                    self.ids.membership_expiry.text = membership_data.get('expirationDate', 'Not Found!')
+    def call_details(self, username, timeIn, timeOut):
+        UrlRequest(
+            self.app.base_url + f'api/account/member/{username}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
+            on_success=lambda request, result: self.display_details(username, timeIn, timeOut, result)
+        )
+    
+    def display_details(self, username, timeIn, timeOut, result:dict):
+        self.ids.time_out.text = str(timeOut)
+        self.ids.time_in.text = str(timeIn)
+        self.ids.member_name.text = f'{result.get('first_name')} {result.get('last_name')}'
+        self.ids.membership_type.text = result.get('membershipType')
+        if (result.get('membershipType') == 'Monthly'):
+            UrlRequest(
+                self.app.base_url + f'api/account/membership?id={str(result.get('id'))}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, 
+                on_success=self.display_membership_expiry
+            )
+    
+    def display_membership_expiry(self, request, result):
+        self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
+                
 
 
-class AttendanceComponent(MDBoxLayout):
+class AttendanceComponent(MDBoxLayout, HoverBehavior):
     def set_details(self, username, timeIn, timeOut, root:HomeScreen):
         self.root = root
         self.username = username
@@ -87,5 +97,11 @@ class AttendanceComponent(MDBoxLayout):
         self.ids.timeOut.text = str(timeOut)
     
     def on_touch_up(self, instance):
-        self.root.display_details(self.username, self.timeIn, self.timeOut)
+        self.root.call_details(self.username, self.timeIn, self.timeOut)
+    
+    def on_enter(self, *args):
+        self.md_bg_color = (80/255, 80/255, 80/255, 1)
+    
+    def on_leave(self, *args):
+        self.md_bg_color = (94/255, 92/255, 92/255, 1)
 
