@@ -14,7 +14,7 @@ def objectsThisMonth(_object, month, **kwargs):
             objects.append(obj)
     return objects
 
-class PeakHoursView(generics.GenericAPIView):
+class PeakActivityView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request:Request, month:int) -> Response:
@@ -23,17 +23,19 @@ class PeakHoursView(generics.GenericAPIView):
         for inOut in hours:
             for inHour in range(inOut[0], inOut[1]+1):
                 hourRecords[inHour] += 1
-        return Response({'x':list(hourRecords.keys()), 'y':list(hourRecords.values())})
+        
+        dayRecords = {day:0 for day in range(7)}
+        days = [attendance.date.weekday() for attendance in objectsThisMonth(Attendance, month)]
+        for day in days:
+            dayRecords[day] += 1
+        return Response({'hours': hourRecords, 'days': dayRecords})
 
 
 class PeakDaysView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request:Request, month:int) -> Response:
-        dayRecords = {day:0 for day in range(7)}
-        days = [attendance.date.weekday() for attendance in objectsThisMonth(Attendance, month)]
-        for day in days:
-            dayRecords[day] += 1
+        
         return Response({'x':list(dayRecords.keys()), 'y':list(dayRecords.values())})
 
 

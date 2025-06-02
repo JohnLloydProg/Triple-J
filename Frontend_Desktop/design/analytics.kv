@@ -14,6 +14,7 @@
                 MDBoxLayout:
                     orientation: 'horizontal'
                     adaptive_height: True
+                    spacing: '10dp'
                     MyLabel:
                         text: 'Active Members:'
                         font_size: '25dp'
@@ -22,7 +23,7 @@
                         bold: True
                     MyLabel:
                         id: member_number
-                        text: '0'
+                        text: '0 Members'
                         font_size: '25dp'
                         color: 1, 1, 1, 1
                         halign: 'left'
@@ -31,7 +32,9 @@
                     orientation: 'vertical'
                     adaptive_height: True
                     padding: '10dp'
+                    spacing: '10dp'
                     md_bg_color: app.theme['secondary']
+                    radius: 5
                     MyLabel:
                         text: 'Members Report'
                         font_size: '20dp'
@@ -42,14 +45,14 @@
                         id: pie_charts
                         orientation: 'horizontal'
                         size_hint_y: None
-                        height: 0.5*self.width
-                        spacing: '10dp'
+                        height: 0.4*self.width
                 MDBoxLayout:
                     id: months_container
                     orientation: 'horizontal'
                     adaptive_height: True
                     spacing: '5dp'
                     padding: '10dp'
+                    radius: 5
                     md_bg_color: app.theme['secondary']
                     MDFillRoundFlatButton:
                         text: "Jan"
@@ -112,4 +115,20 @@
                         on_press: root.select_month(self.text)
                         size_hint_x: 1
                 MDBoxLayout:
+                    orientation: 'vertical'
+                    padding: '10dp'
+                    spacing: '10dp'
+                    md_bg_color: app.theme['secondary']
+                    adaptive_height: True
+                    MyLabel:
+                        text: 'Activity Report'
+                        color: app.theme['accent']
+                        font_size: '20dp'
+                        bold: True
+                    BoxLayout:
+                        id: line_charts
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 0.4*self.width
+                
 
