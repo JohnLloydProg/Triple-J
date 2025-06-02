@@ -49,6 +49,9 @@ class MembersReportView(generics.GenericAPIView):
         response['memberships'] = {}
         response['memberships']['Monthly'] = len(MonthlyMembership.objects.all())
         response['memberships']['Daily'] = len(DailyMembership.objects.all())
+        programTypes = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
+        for programWorkout in ProgramWorkout.objects.all():
+            programTypes['workouts'][programWorkout.workout.type] += 1
         return Response(response)
 
 
@@ -63,14 +66,4 @@ class SalesReportView(generics.GenericAPIView):
         for memberCheckout in objectsThisMonth(MemberCheckout, month, type='membership'):
             response['monthly'][memberCheckout.date.isoformat()] = memberCheckout.price
         return Response(response)
-
-
-class WorkoutReportView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-
-    def get(self, request:Request) -> Response:
-        programTypes = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
-        for programWorkout in ProgramWorkout.objects.all():
-            programTypes[programWorkout.workout.type] += 1
-        return Response({'x':list(programTypes.keys()), 'y':list(programTypes.values())})
 

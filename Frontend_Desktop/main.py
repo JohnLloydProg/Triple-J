@@ -4,18 +4,18 @@ Window.minimum_width, Window.minimum_height = 1080, 720
 from kivymd.app import MDApp, App
 from kivy.lang import Builder
 from kivymd.uix.screenmanager import MDScreenManager
-from kivymd.uix.screen import MDScreen
 from kivy.resources import resource_find, resource_add_path
 from controller.main_screen import MainScreen
 from controller.home_screen import HomeScreen
 from controller.annoucement_screen import AnnouncementScreen
+from controller.analytics_screen import AnalyticsScreen
 from kivy.network.urlrequest import UrlRequestUrllib
 from tools import GeneralRequest
 import json
 
 
 def load_kv_files():
-    design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv']
+    design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv', './design/analytics.kv']
     for design_file in design_files:
         Builder.load_file(design_file)
 
@@ -41,6 +41,8 @@ class TripleJAdmin(MDApp):
         self.sm.add_widget(homeScreen)
         announcementScreen = AnnouncementScreen(name='announcement_screen')
         self.sm.add_widget(announcementScreen)
+        analyticsScreen = AnalyticsScreen(name='analytics_screen')
+        self.sm.add_widget(analyticsScreen)
         self.sm.current = 'main_screen'
         return self.sm
 

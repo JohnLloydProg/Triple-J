@@ -1,0 +1,115 @@
+<AnalyticsScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        md_bg_color: app.theme['primary']
+        padding: '15dp'
+        spacing: '20dp'
+        NavigationBar:
+        ScrollView:
+            size_hint: 1, 1
+            MDBoxLayout:
+                orientation: 'vertical'
+                adaptive_height: True
+                spacing: '15dp'
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    adaptive_height: True
+                    MyLabel:
+                        text: 'Active Members:'
+                        font_size: '25dp'
+                        color: app.theme['accent']
+                        halign: 'right'
+                        bold: True
+                    MyLabel:
+                        id: member_number
+                        text: '0'
+                        font_size: '25dp'
+                        color: 1, 1, 1, 1
+                        halign: 'left'
+                        bold: True
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    padding: '10dp'
+                    md_bg_color: app.theme['secondary']
+                    MyLabel:
+                        text: 'Members Report'
+                        font_size: '20dp'
+                        color: app.theme['accent']
+                        bold: True
+                        halign: 'center'
+                    BoxLayout:
+                        id: pie_charts
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 0.5*self.width
+                        spacing: '10dp'
+                MDBoxLayout:
+                    id: months_container
+                    orientation: 'horizontal'
+                    adaptive_height: True
+                    spacing: '5dp'
+                    padding: '10dp'
+                    md_bg_color: app.theme['secondary']
+                    MDFillRoundFlatButton:
+                        text: "Jan"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Feb"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Mar"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Apr"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "May"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Jun"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Jul"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Aug"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Sep"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Oct"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Nov"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                    MDFillRoundFlatButton:
+                        text: "Dec"
+                        md_bg_color: app.theme['tertiary']
+                        on_press: root.select_month(self.text)
+                        size_hint_x: 1
+                MDBoxLayout:
+
