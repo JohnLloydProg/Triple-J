@@ -49,10 +49,9 @@ class MembersReportView(generics.GenericAPIView):
         response['memberships'] = {}
         response['memberships']['Monthly'] = len(MonthlyMembership.objects.all())
         response['memberships']['Daily'] = len(DailyMembership.objects.all())
-        response['workouts'] = {}
-        programTypes = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
+        response['workouts'] = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
         for programWorkout in ProgramWorkout.objects.all():
-            programTypes['workouts'][programWorkout.workout.type] += 1
+            response['workouts'][programWorkout.workout.type] += 1
         return Response(response)
 
 
