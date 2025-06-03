@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "90d7f98d26d0d03633c5c599653e9ea18c6835cb7ec5aa88cb74d3c769cf78de"
+            "sha256": "d6a6d7f8f15c9e3778b0287574838cceed132d984e4103e266ad2b0c243c2051"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -670,13 +670,11 @@
             "version": "==0.34.0"
         },
         "whitenoise": {
-            "extras": [
-                "brotli"
-            ],
             "hashes": [
                 "sha256:8c4a7c9d384694990c26f3047e118c691557481d624f069b7f7752a2f735d609",
                 "sha256:c8a489049b7ee9889617bb4c274a153f3d979e8f51d2efd0f5b403caf41c57df"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==6.9.0"
         }

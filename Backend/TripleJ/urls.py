@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/dietary/', include('dietary.urls')),
     path('api/analytics/', include('analytics.urls')),
     path('api/announcement/', include('announcement.urls')),
+    path('api/sales/', include('sales.urls')),
     path('api-auth/', include('rest_framework.urls')),
 ]
 

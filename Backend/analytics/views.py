@@ -5,7 +5,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from attendance.models import Attendance
 from account.models import Member, MonthlyMembership, DailyMembership, MemberCheckout
+from sales.models import Sale
+from sales.serializers import SaleSerializer
 from gym.models import ProgramWorkout
+from django.utils.timezone import now
 
 def objectsThisMonth(_object, month, **kwargs):
     objects = []
@@ -31,14 +34,6 @@ class PeakActivityView(generics.GenericAPIView):
         return Response({'hours': hourRecords, 'days': dayRecords})
 
 
-class PeakDaysView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-
-    def get(self, request:Request, month:int) -> Response:
-        
-        return Response({'x':list(dayRecords.keys()), 'y':list(dayRecords.values())})
-
-
 class MembersReportView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -61,11 +56,9 @@ class SalesReportView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request:Request, month:int) -> Response:
-        response = {'daily':{}, 'monthly':{}}
-        for attendance in objectsThisMonth(Attendance, month):
-            if (attendance.member.membershipType == 'Daily'):
-                response['daily'][attendance.date.isoformat()] = 100
-        for memberCheckout in objectsThisMonth(MemberCheckout, month, type='membership'):
-            response['monthly'][memberCheckout.date.isoformat()] = memberCheckout.price
-        return Response(response)
+        sales = []
+        for sale in Sale.objects.all():
+            if sale.date.month == month:
+                sales.append(sale)
+        return Response(SaleSerializer(sales, many=True).data)
 

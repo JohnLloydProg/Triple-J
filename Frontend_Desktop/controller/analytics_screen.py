@@ -7,6 +7,8 @@ from datetime import date
 import numpy as np
 
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+routines = {'L': 'Lower', 'C': 'Core', 'U': 'Upper', 'PS': 'Push', 'PL': 'Pull'}
 
 
 class AnalyticsScreen(MDScreen):
@@ -21,6 +23,7 @@ class AnalyticsScreen(MDScreen):
             req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
             on_success=self.got_members_data, refresh=self.app.refresh
         )
+        self.get_activity_data()
     
     def got_members_data(self, request, result):
         self.ids.pie_charts.clear_widgets()
@@ -47,7 +50,7 @@ class AnalyticsScreen(MDScreen):
             value = workouts[key]
             if (value > 0):
                 workouts_x.append(value)
-                workouts_labels.append(key)
+                workouts_labels.append(routines.get(key, key))
 
         figure, axis = plt.subplots(1, 3)
         axis[0].pie(demographics_x, labels=demographics_labels)
@@ -62,10 +65,6 @@ class AnalyticsScreen(MDScreen):
         self.ids.member_number.text = f'{str(result.get('number'))} Members'
     
     def get_activity_data(self):
-        plt.figure()
-        
-        figure, self.axis = plt.subplots(1, 2)
-
         GeneralRequest(
             self.app.base_url + f'api/analytics/peak/{str(months.index(self.month)+1)}', 
             req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
@@ -73,14 +72,30 @@ class AnalyticsScreen(MDScreen):
         )
     
     def got_activity_data(self, request, result):
-        index = 0 if (self.peak_done) else 1
-        self.axis[index].plot(result.get('x'), labels=result.get('y'))
-        self.axis[index].set_title()
+        print(result)
+        self.ids.hours_chart.clear_widgets()
+        self.ids.days_chart.clear_widgets()
+        hours = result.get('hours')
+        days = result.get('days')
+
+        plt.xlim(-1, 24)
+        plt.ylim(0, max(hours.values()) + 1)
+        plt.plot(hours.keys(), hours.values())
+        plt.title('Peak Hours')
+        self.ids.hours_chart.add_widget(FigureCanvasKivyAgg(plt.gcf()))
+        plt.figure()
+        plt.xlim(-1, 7)
+        plt.ylim(0, max(days.values()) + 1)
+        plt.plot(list(map(lambda day: week[int(day)], days.keys())), days.values())
+        plt.title('Peak Days')
+        self.ids.days_chart.add_widget(FigureCanvasKivyAgg(plt.gcf()))
+        plt.figure()
         
 
     def select_month(self, month):
         self.month = month
         self.reset_btns()
+        self.get_activity_data()
     
     def reset_btns(self):
         for btn in self.ids.months_container.children:

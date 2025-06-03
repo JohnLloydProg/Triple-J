@@ -12,6 +12,8 @@ from rest_framework.request import Request
 from django.views import View
 from datetime import date
 from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
+from sales.models import Sale
+from rest_framework import status
 import requests
 import smtplib
 import ssl
@@ -299,8 +301,6 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         if (response.ok):
             data = response.json().get('data')
             memberCheckout = MemberCheckout(checkoutId=data.get('id'), member=member)
-            memberCheckout.type = 'membership'
-            memberCheckout.price = 1000
             memberCheckout.save()
             return JsonResponse({'details':{'link':data.get('attributes').get('checkout_url')}})
         return JsonResponse({'details':'paymongo api request failed'})
@@ -311,8 +311,21 @@ class SuccessfulPaymentView(generics.GenericAPIView):
 
     def post(self, request:Request) -> Response:
         data = request.data.get('data')
-        memberCheckout = MemberCheckout.objects.get(checkoutId=data.get('attributes').get('data').get('id'))
+        if (not data):
+            return Response("Invalid data received", status=status.HTTP_400_BAD_REQUEST)
+        
+        print(data)
+        try:
+            memberCheckout = MemberCheckout.objects.get(checkoutId=data.get('attributes').get('data').get('id'))
+        except MemberCheckout.DoesNotExist:
+            return Response("Member checkout session does not exist", status=status.HTTP_404_NOT_FOUND)
+
         membership = MonthlyMembership.objects.get(member=memberCheckout.member)
         membership.extendExpirationDate()
         membership.save()
+
+        sales = Sale(amount=1000.00, description='Monthly Membership', receipt_no=memberCheckout.checkoutId)
+        sales.save()
+
+        memberCheckout.delete()
         return Response("You have successfully paid the membership!")

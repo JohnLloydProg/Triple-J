@@ -6,6 +6,7 @@ from account.permissions import IsTrainer
 from scheduling.serializers import ScheduleSerializer
 from scheduling.models import Schedule
 from account.models import Member
+from rest_framework import status
 from django.utils.timezone import now
 
 # Create your views here.
@@ -36,11 +37,10 @@ class NextScheduleView(generics.GenericAPIView):
         except Member.DoesNotExist:
             return Response('Member does not exist')
         
-        schedules = Schedule.objects.filter(trainee=member).order_by('day')
-        for schedule in schedules: 
-            if (schedule.day >= now().weekday()):
-                return Response(ScheduleSerializer(schedule).data)
-        return Response({})
+        schedules = Schedule.objects.filter(trainee=member).order_by('-datetime')
+        if not schedules:
+            return Response('No schedules found for this member', status=status.HTTP_404_NOT_FOUND)
+        return Response(ScheduleSerializer(schedules[0]).data)
 
 
 class ScheduleCreateView(generics.CreateAPIView):
