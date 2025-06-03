@@ -107,8 +107,8 @@ class AnalyticsScreen(MDScreen):
             sale_component.set_details(
                 date=sale.get('date'),
                 amount=sale.get('amount'),
-                description=sale.get('description'),
-                receipt_no=sale.get('receipt_no')
+                description=sale.get('description', 'N/A'),
+                receipt_no=sale.get('receipt_no', 'N/A')
             )
             self.ids.sales_container.add_widget(sale_component)
 
@@ -128,7 +128,7 @@ class AnalyticsScreen(MDScreen):
 
 class SalesComponent(MDBoxLayout):
     def set_details(self, date, amount, description, receipt_no):
-        self.ids.date.text = date.isoformat()
+        self.ids.date.text = date
         self.ids.amount.text = str(amount)
         self.ids.description.text = description
-        self.ids.receipt_no.text = f'Receipt No: {receipt_no}'
+        self.ids.receipt_no.text = receipt_no
