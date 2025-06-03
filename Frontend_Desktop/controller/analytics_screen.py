@@ -1,4 +1,5 @@
 from kivymd.uix.screen import MDScreen
+from kivymd.uix.boxlayout import MDBoxLayout
 from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 from kivy.app import App
@@ -24,6 +25,7 @@ class AnalyticsScreen(MDScreen):
             on_success=self.got_members_data, refresh=self.app.refresh
         )
         self.get_activity_data()
+        self.get_sales_data()
     
     def got_members_data(self, request, result):
         self.ids.pie_charts.clear_widgets()
@@ -90,12 +92,31 @@ class AnalyticsScreen(MDScreen):
         plt.title('Peak Days')
         self.ids.days_chart.add_widget(FigureCanvasKivyAgg(plt.gcf()))
         plt.figure()
-        
+    
+    def get_sales_data(self):
+        GeneralRequest(
+            self.app.base_url + f'api/analytics/sales/{str(months.index(self.month)+1)}', 
+            req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
+            on_success=self.got_sales_data, refresh=self.app.refresh
+        )
+    
+    def got_sales_data(self, request, result):
+        self.ids.sales_container.clear_widgets()
+        for sale in result:
+            sale_component = SalesComponent()
+            sale_component.set_details(
+                date=sale.get('date'),
+                amount=sale.get('amount'),
+                description=sale.get('description'),
+                receipt_no=sale.get('receipt_no')
+            )
+            self.ids.sales_container.add_widget(sale_component)
 
     def select_month(self, month):
         self.month = month
         self.reset_btns()
         self.get_activity_data()
+        self.get_sales_data()
     
     def reset_btns(self):
         for btn in self.ids.months_container.children:
@@ -103,4 +124,11 @@ class AnalyticsScreen(MDScreen):
                 btn.md_bg_color = self.app.theme['tertiary']
             else:
                 btn.md_bg_color = self.app.theme['green']
-        
+
+
+class SalesComponent(MDBoxLayout):
+    def set_details(self, date, amount, description, receipt_no):
+        self.ids.date.text = date.isoformat()
+        self.ids.amount.text = str(amount)
+        self.ids.description.text = description
+        self.ids.receipt_no.text = f'Receipt No: {receipt_no}'

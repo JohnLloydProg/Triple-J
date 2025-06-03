@@ -150,22 +150,72 @@
                         color: app.theme['accent']
                         font_size: '20dp'
                         bold: True
-                    MDGridLayout:
-                        id: sales_grid
-                        cols: 2
+                    MDBoxLayout:
+                        orientation: 'horizontal'
                         adaptive_height: True
                         spacing: '10dp'
                         MyLabel:
-                            text: 'Monthly Sales'
+                            text: 'Date'
                             halign: 'center'
-                            font_size: '18dp'
+                            font_size: '15dp'
                             color: app.theme['accent']
                             bold: True
                         MyLabel:
-                            text: 'Daily Sales'
+                            text: 'Amount'
                             halign: 'center'
-                            font_size: '18dp'
+                            font_size: '15dp'
                             color: app.theme['accent']
                             bold: True
+                        MyLabel:
+                            text: 'Description'
+                            halign: 'center'
+                            font_size: '15dp'
+                            color: app.theme['accent']
+                            bold: True
+                        MyLabel:
+                            text: 'Receipt No.'
+                            halign: 'center'
+                            font_size: '15dp'
+                            color: app.theme['accent']
+                            bold: True
+                    MDBoxLayout:
+                        size_hint_y: None
+                        height: 0.4*self.width
+                        md_bg_color: app.theme['tertiary']
+                        padding: [0, 10, 0, 10]
+                        radius: 5
+                        ScrollView:
+                            MDBoxLayout:
+                                id: sales_container
+                                orientation: 'vertical'
+                                adaptive_height: True
+                                spacing: '10dp'
 
-
+<SalesComponent>:
+    orientation: 'horizontal'
+    adaptive_height: True
+    spacing: '10dp'
+    MyLabel:
+        id: date
+        text: '2023-01-01'
+        color: 1, 1, 1, 1
+        halign: 'center'
+        font_size: '15dp'
+    MyLabel:
+        id: amount
+        text: '200.00'
+        color: 1, 1, 1, 1
+        halign: 'center'
+        font_size: '15dp'
+    MyLabel:
+        id: description
+        text: 'Hotdog'
+        color: 1, 1, 1, 1
+        halign: 'center'
+        font_size: '15dp'
+    MyLabel:
+        id: receipt_no
+        text: '012310123'
+        color: 1, 1, 1, 1
+        halign: 'center'
+        font_size: '15dp'
