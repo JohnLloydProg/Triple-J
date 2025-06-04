@@ -4,9 +4,9 @@ from typing import Callable
 import json
 
 class GeneralRequest:
-    def __init__(self, url:str, req_body:str=None, req_headers:dict=None, on_success:Callable=None, refresh:str=None):
+    def __init__(self, url:str, req_body:str=None, req_headers:dict=None, on_success:Callable=None, refresh:str=None, on_finish:Callable=None):
         self.refresh = refresh
-        UrlRequest(url, req_body=req_body, req_headers=req_headers, on_success=on_success, on_failure=self.on_failure)
+        UrlRequest(url, req_body=req_body, req_headers=req_headers, on_success=on_success, on_failure=self.on_failure, on_finish=on_finish)
     
     def on_failure(self, request, result):
         print(result)

@@ -1,6 +1,6 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFlatButton, MDRaisedButton
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.pickers import MDDatePicker
 from kivy.network.urlrequest import UrlRequest, UrlRequestUrllib
@@ -14,7 +14,8 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 
 
 class HomeScreen(MDScreen):
-    dialog = None
+    sales_dialog:MDDialog = None
+    dialog:MDDialog = None
     selected_date:date = date.today()
     year:int
     month:int
@@ -84,7 +85,67 @@ class HomeScreen(MDScreen):
     
     def display_membership_expiry(self, request, result):
         self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
-                
+    
+    def add_sales_record(self):
+        self.sales_dialog = MDDialog(
+            title="[color=EA4444]Add a Sales Record[/color]",
+            type="custom",
+            content_cls=SalesRecordContent(),
+            md_bg_color=self.app.theme['primary'],
+            auto_dismiss=False,
+            buttons=[
+                MDFlatButton(
+                    text="Cancel",
+                    theme_text_color='Custom',
+                    text_color=(1, 1, 1, 1),
+                    on_release=lambda x: self.sales_dialog.dismiss()
+                ),
+                MDRaisedButton(
+                    text="Add",
+                    on_release=lambda x: self.save_sales_record(),
+                    md_bg_color=self.app.theme['accent'],
+                )
+            ]
+        )
+        self.sales_dialog.open()
+    
+    def save_sales_record(self):
+        content = self.sales_dialog.content_cls
+        amount = content.ids.amount
+        description = content.ids.description
+        receipt = content.ids.receipt
+        if not amount.text:
+            amount.error = True
+            return
+        if '.' in amount.text:
+            if not all(num.isdigit() for num in amount.text.split('.')):
+                amount.error = True
+                return
+        elif not amount.text.isdigit():
+            amount.error = True
+            return
+        
+        self.sales_dialog.buttons[1].disabled = True
+        
+        GeneralRequest(
+            self.app.base_url + 'api/sales/add',
+            req_body=json.dumps({
+                'amount': float(amount.text),
+                'description': description.text,
+                'receipt_no': receipt.text
+            }),
+            req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'},
+            on_success=lambda request, result: self.sales_dialog.dismiss(), refresh=self.app.refresh, on_finish=self.sales_request_finish
+        )
+    
+    def sales_request_finish(self, request):
+        self.sales_dialog.buttons[1].disabled = False
+
+
+
+class SalesRecordContent(MDBoxLayout):
+    pass
+
 
 
 class AttendanceComponent(MDBoxLayout, HoverBehavior):

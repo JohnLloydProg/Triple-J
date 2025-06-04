@@ -143,6 +143,12 @@
                                 id: time_out
                                 text: ''
                                 color: app.theme['green']
+                MDFillRoundFlatButton:
+                    text: 'Add Sales Record'
+                    size_hint_x: 1
+                    color: 0, 0, 0, 1
+                    md_bg_color: app.theme['green']
+                    on_press: root.add_sales_record()
             MDBoxLayout:
                 orientation: 'vertical'
                 size_hint: 0.6, 1
@@ -214,6 +220,49 @@
                             orientation: 'vertical'
                             adaptive_height: True
                             size_hint_x: 1
+
+
+<SalesRecordContent>:
+    orientation: 'vertical'
+    adaptive_height: True
+    padding: '30dp'
+    spacing: '10dp'
+    MDTextField:
+        id: amount
+        required: True
+        hint_text_color_normal: 0.8, 0.8, 0.8, 1
+        hint_text_color_focus: app.theme['accent']
+        fill_color_normal: app.theme['tertiary']
+        line_color_normal: app.theme['tertiary']
+        line_color_focus: app.theme['accent']
+        text_color_normal: 1, 1, 1, 1
+        text_color_focus: 1, 1, 1, 1
+        size_hint_x: 1
+        hint_text: 'Enter the amount'
+    MDTextField:
+        id: receipt
+        hint_text_color_normal: 0.8, 0.8, 0.8, 1
+        hint_text_color_focus: app.theme['accent']
+        fill_color_normal: app.theme['tertiary']
+        line_color_normal: app.theme['tertiary']
+        line_color_focus: app.theme['accent']
+        text_color_normal: 1, 1, 1, 1
+        text_color_focus: 1, 1, 1, 1
+        size_hint_x: 1
+        hint_text: 'Enter the receipt number (Optional)'
+    MDTextField:
+        id: description
+        hint_text_color_normal: 0.8, 0.8, 0.8, 1
+        hint_text_color_focus: app.theme['accent']
+        fill_color_normal: app.theme['tertiary']
+        line_color_normal: app.theme['tertiary']
+        line_color_focus: app.theme['accent']
+        text_color_normal: 1, 1, 1, 1
+        text_color_focus: 1, 1, 1, 1
+        size_hint_x: 1
+        multiline: True
+        hint_text: 'Enter a description (Optional)'
+
 
 
 <AttendanceComponent>:
