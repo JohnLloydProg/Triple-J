@@ -1,6 +1,7 @@
 from rest_framework import generics
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework import status
 from dietary.models import Meal, Category
 from dietary.serializers import MealSerializer
 
@@ -16,9 +17,9 @@ class DietaryMealView(generics.GenericAPIView):
         category = None
         bmi_category = ""
         if (not (height and weight)):
-            return Response('Height and weight are required')
+            return Response('Height and weight are required', status=status.HTTP_400_BAD_REQUEST)
         if (height <= 0 or weight <= 0):
-            return Response('Height and weight must be positive')
+            return Response('Height and weight must be positive', status=status.HTTP_400_BAD_REQUEST)
 
         bmi = weight / (height**2)
         if (bmi < 18.5):
@@ -34,4 +35,4 @@ class DietaryMealView(generics.GenericAPIView):
         for category in categories:
             meal = MealSerializer(category.meal)
             meals.append(meal.data)
-        return Response(meals)
+        return Response(meals, status=status.HTTP_200_OK)

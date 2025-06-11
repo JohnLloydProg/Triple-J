@@ -6,6 +6,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework import status
 from attendance.serializers import QRCodeSerializer, AttendanceSerializer
 from datetime import date
 
@@ -18,31 +19,31 @@ class QRCodeView(generics.GenericAPIView):
         try:
             member = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         try:
             qrObject = QRCode.objects.get(member=member)
         except QRCode.DoesNotExist:
-            return Response('Account does not have any QR code')
+            return Response('Account does not have any QR code', status=status.HTTP_404_NOT_FOUND)
         
         if (qrObject.isExpired()):
             qrObject.delete()
-            return Response('QR code is expired')
-        return Response(QRCodeSerializer(qrObject).data)
+            return Response('QR code is expired', status=status.HTTP_410_GONE)
+        return Response(QRCodeSerializer(qrObject).data, status=status.HTTP_200_OK)
     
     def post(self, request:Request) -> Response:
         try:
             member = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         try:
             qrObject = QRCode.objects.get(member=member)
-            return Response('The account already has a QR Code')
+            return Response('The account already has a QR Code', status=status.HTTP_409_CONFLICT)
         except:
             qrObject = QRCode(member=Member.objects.get(pk=member))
             qrObject.generate()
             qrObject.setExpirationDate()
             qrObject.save()
-            return Response('Success')
+            return Response('Success', status=status.HTTP_201_CREATED)
 
 
 class LoggingView(generics.GenericAPIView):
@@ -53,27 +54,27 @@ class LoggingView(generics.GenericAPIView):
         ratio = {}
         for attendance in attendances:
             ratio[attendance.member.sex] = ratio.get(attendance.member.sex, 0) + 1
-        return Response({'Number' : len(attendances.all()), 'Ratio':ratio})
+        return Response({'Number' : len(attendances.all()), 'Ratio':ratio}, status=status.HTTP_200_OK)
         
     def post(self, request:Request) -> Response:
         qrCode = request.data.get('qrCode')
         if (not self.request.user.is_superuser):
-            return Response('You are not the owner!')
+            return Response('You are not the owner!', status=status.HTTP_403_FORBIDDEN)
 
         try:
             qrObject = QRCode.objects.get(content=qrCode)
         except QRCode.DoesNotExist:
-            return Response('QR code does not exist')
+            return Response('QR code does not exist', status=status.HTTP_404_NOT_FOUND)
         
         if (now().date() > qrObject.expirationDate):
             qrObject.delete()
-            return Response('QR code is expired')
+            return Response('QR code is expired', status=status.HTTP_410_GONE)
 
         try:
             attendance = Attendance.objects.get(member=qrObject.member, date=now())
             attendance.logOut()
             attendance.save()
-            return Response('Successfuly logged out')
+            return Response('Successfuly logged out', status=status.HTTP_200_OK)
         except Attendance.DoesNotExist:
             attendance = Attendance(member=qrObject.member)
             attendance.save()
@@ -89,7 +90,7 @@ class LoggingView(generics.GenericAPIView):
                 data['price'] = membership.price
                 data['expiry'] = membership.expirationDate
                 data['paid'] = False if (now().date() > membership.expirationDate) else True
-            return Response(data)
+            return Response(data, status=status.HTTP_201_CREATED)
     
 
 class AttendanceView(generics.GenericAPIView):
@@ -101,5 +102,5 @@ class AttendanceView(generics.GenericAPIView):
         for attendance in data:
             member = Member.objects.get(pk=attendance['member'])
             attendance['member'] = member.username
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
             

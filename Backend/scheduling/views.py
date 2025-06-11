@@ -20,12 +20,12 @@ class SchedulesView(generics.GenericAPIView):
         try:
             trainer = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Trainer does not exist')
+            return Response('Trainer does not exist', status=status.HTTP_404_NOT_FOUND)
         
         for schedule in Schedule.objects.all():
             if (schedule.trainee.gymTrainer == trainer):
                 schedules.append(ScheduleSerializer(schedule).data)
-        return Response(schedules)
+        return Response(schedules, status=status.HTTP_200_OK)
 
 
 class NextScheduleView(generics.GenericAPIView):
@@ -35,12 +35,12 @@ class NextScheduleView(generics.GenericAPIView):
         try:
             member = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         
         schedules = Schedule.objects.filter(trainee=member).order_by('-datetime')
         if not schedules:
             return Response('No schedules found for this member', status=status.HTTP_404_NOT_FOUND)
-        return Response(ScheduleSerializer(schedules[0]).data)
+        return Response(ScheduleSerializer(schedules[0]).data, status=status.HTTP_200_OK)
 
 
 class ScheduleCreateView(generics.CreateAPIView):

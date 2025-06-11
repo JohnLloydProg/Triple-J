@@ -72,38 +72,8 @@ class EmailValidationView(generics.GenericAPIView):
                 smtp.login("johnlloydunida0@gmail.com", "hvwm jkkz gamd nvnn")
                 smtp.sendmail("johnlloydunida0@gmail.com", [memberEmail], validationMSG.as_string())
 
-            return JsonResponse({'details':"Email sent successfully"}, status=200)
-        return JsonResponse({'details':"Email is already registered in the system"}, status=400)
-
-
-class AccountRegistration(View):
-    def get(self, request:HttpRequest, validationCode:str):
-        try:
-            validationSession = ValidationSession.objects.get(validationCode=validationCode)
-            if (date.today() > validationSession.expirationDate):
-                validationSession.delete()
-                return HttpResponse('Validation Session Expired!')
-            return render(request, 'registerStart.html', {'email':validationSession.email})
-        except ValidationSession.DoesNotExist:
-            return HttpResponse('Validation Code does not exist!')
-    
-    def post(self, request:HttpRequest, validationCode:str):
-        email = request.POST.get('email')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        member = Member(username=username, email=email, membershipType=request.POST.get('membership'))
-        member.set_password(password)
-        member.save()
-
-        if (member.membershipType == 'Monthly'):
-            membership = MonthlyMembership(member=member)
-            membership.extendExpirationDate()
-        else:
-            membership = DailyMembership(member=member)
-        membership.save()
-
-        return redirect(reverse('account registration cont', args=[validationCode]))
+            return Response({'details':"Email sent successfully"}, status=status.HTTP_200_OK)
+        return Response({'details':"Email is already registered in the system"}, status=status.HTTP_409_CONFLICT)
 
 
 class AccountRegistrationView(generics.GenericAPIView):
@@ -114,9 +84,9 @@ class AccountRegistrationView(generics.GenericAPIView):
             validationSession = ValidationSession.objects.get(validationCode=validationCode)
             if (date.today() > validationSession.expirationDate):
                 validationSession.delete()
-                return Response('Validation Session Expired!')
+                return Response('Validation Session Expired!', status=status.HTTP_401_UNAUTHORIZED)
         except ValidationSession.DoesNotExist:
-            return Response('Validation Code does not exist!')
+            return Response('Validation Code does not exist!', status=status.HTTP_401_UNAUTHORIZED)
 
         email = request.data.get('email')
         username = request.data.get('username')
@@ -124,7 +94,7 @@ class AccountRegistrationView(generics.GenericAPIView):
         membershipType = request.data.get('membership')
 
         if (not username or not email or not password or not membershipType):
-            return Response('Missing required fields')
+            return Response('Missing required fields', status=status.HTTP_400_BAD_REQUEST)
 
         member = Member(username=username, email=email, membershipType=membershipType)
         member.set_password(password)
@@ -137,29 +107,7 @@ class AccountRegistrationView(generics.GenericAPIView):
             membership = DailyMembership(member=member)
         membership.save()
 
-        return Response('Account successfully registered!')
-        
-
-class AccountRegistrationCont(View):
-    
-    def get(self, request:HttpRequest, validationCode:str):
-        try:
-            validationSession = ValidationSession.objects.get(validationCode=validationCode)
-            if (date.today() > validationSession.expirationDate):
-                validationSession.delete()
-                return HttpResponse('Validation Session Expired!')
-            return render(request, 'registerNext.html')
-        except ValidationSession.DoesNotExist:
-            return HttpResponse('Validation Code does not exist!')
-
-    def post(self, request:HttpRequest, validationCode:str):
-        validationSession = ValidationSession.objects.get(validationCode=validationCode)
-        member = Member.objects.get(email=validationSession.email)
-        for key, value in request.POST.items():
-            setattr(member, key, value)
-        member.save()
-
-        return render(request, 'accountRegistered.html')
+        return Response('Account successfully registered!', status=status.HTTP_201_CREATED)
 
 
 class AccountRegistrationContView(generics.GenericAPIView):
@@ -170,16 +118,16 @@ class AccountRegistrationContView(generics.GenericAPIView):
             validationSession = ValidationSession.objects.get(validationCode=validationCode)
             if (date.today() > validationSession.expirationDate):
                 validationSession.delete()
-                return Response('Validation Session Expired!')
+                return Response('Validation Session Expired!', status=status.HTTP_401_UNAUTHORIZED)
         except ValidationSession.DoesNotExist:
-            return Response('Validation Code does not exist!')
+            return Response('Validation Code does not exist!', status=status.HTTP_401_UNAUTHORIZED)
         
         member = Member.objects.get(email=validationSession.email)
         for key, value in request.data.items():
             setattr(member, key, value)
         member.save()
 
-        return Response('Account successfully registered!')
+        return Response('Account successfully registered!', status=status.HTTP_202_ACCEPTED)
 
 class MemberView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
@@ -202,8 +150,8 @@ class MembersView(generics.GenericAPIView):
         try:
             trainer = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Trainer does not exist')
-        return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data)
+            return Response('Trainer does not exist', status=status.HTTP_404_NOT_FOUND)
+        return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data, status=status.HTTP_200_OK)
 
 
 class MembershipView(generics.GenericAPIView):
@@ -216,12 +164,12 @@ class MembershipView(generics.GenericAPIView):
                 if (self.request.user.is_superuser):
                     user_id = int(user_id)
                 else:
-                    return Response('Do not have the authority to use query parameters!')
+                    return Response('Do not have the authority to use query parameters!', status=status.HTTP_403_FORBIDDEN)
             else:
                 user_id = self.request.user
             member = Member.objects.get(pk=user_id)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         
         if (member.membershipType == 'Daily'):
             membership = DailyMembership.objects.get(member=member)
@@ -229,7 +177,7 @@ class MembershipView(generics.GenericAPIView):
         else:
             membership = MonthlyMembership.objects.get(member=member)
             serializer = MonthlyMembershipSerializer(membership)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MembershipChangeView(generics.GenericAPIView):
@@ -239,10 +187,10 @@ class MembershipChangeView(generics.GenericAPIView):
         try:
             member = Member.objects.get(pk=user)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         
         if (request.data.get('changeTo') not in ['Daily', 'Monthly']):
-            return Response('Invalid membership type (Daily or Monthly only)')
+            return Response('Invalid membership type (Daily or Monthly only)', status=status.HTTP_400_BAD_REQUEST)
 
         if (request.data.get('changeTo') == 'Monthly'):
             oldMembership = DailyMembership.objects.get(member=member)
@@ -259,7 +207,7 @@ class MembershipChangeView(generics.GenericAPIView):
             member.membershipType = 'Daily'
             member.save()
             oldMembership.delete()
-        return Response('Membership successfully changed')
+        return Response('Membership successfully changed', status=status.HTTP_200_OK)
 
 
 class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
@@ -269,10 +217,10 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         try:
             member = Member.objects.get(pk=self.request.user)
         except Member.DoesNotExist:
-            return Response('Member does not exist')
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
 
         if (member.membershipType != 'Monthly'):
-            return Response('Member does not have a monthly subscription')
+            return Response('Member does not have a monthly subscription', status=status.HTTP_400_BAD_REQUEST)
         
         url = "https://api.paymongo.com/v1/checkout_sessions"
 
@@ -302,8 +250,8 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
             data = response.json().get('data')
             memberCheckout = MemberCheckout(checkoutId=data.get('id'), member=member)
             memberCheckout.save()
-            return JsonResponse({'details':{'link':data.get('attributes').get('checkout_url')}})
-        return JsonResponse({'details':'paymongo api request failed'})
+            return Response({'details':{'link':data.get('attributes').get('checkout_url')}}, status=status.HTTP_200_OK)
+        return Response({'details':'paymongo api request failed'}, status=status.HTTP_417_EXPECTATION_FAILED)
 
 
 class SuccessfulPaymentView(generics.GenericAPIView):
@@ -328,4 +276,4 @@ class SuccessfulPaymentView(generics.GenericAPIView):
         sales.save()
 
         memberCheckout.delete()
-        return Response("You have successfully paid the membership!")
+        return Response("You have successfully paid the membership!", status=status.HTTP_200_OK)

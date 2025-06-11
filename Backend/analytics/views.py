@@ -3,6 +3,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework import status
 from attendance.models import Attendance
 from account.models import Member, MonthlyMembership, DailyMembership, MemberCheckout
 from sales.models import Sale
@@ -31,7 +32,7 @@ class PeakActivityView(generics.GenericAPIView):
         days = [attendance.date.weekday() for attendance in objectsThisMonth(Attendance, month)]
         for day in days:
             dayRecords[day] += 1
-        return Response({'hours': hourRecords, 'days': dayRecords})
+        return Response({'hours': hourRecords, 'days': dayRecords}, status=status.HTTP_200_OK)
 
 
 class MembersReportView(generics.GenericAPIView):
@@ -49,7 +50,7 @@ class MembersReportView(generics.GenericAPIView):
         response['workouts'] = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
         for programWorkout in ProgramWorkout.objects.all():
             response['workouts'][programWorkout.workout.type] += 1
-        return Response(response)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class SalesReportView(generics.GenericAPIView):
@@ -60,5 +61,5 @@ class SalesReportView(generics.GenericAPIView):
         for sale in Sale.objects.all():
             if sale.date.month == month:
                 sales.append(sale)
-        return Response(SaleSerializer(sales, many=True).data)
+        return Response(SaleSerializer(sales, many=True).data, status=status.HTTP_200_OK)
 
