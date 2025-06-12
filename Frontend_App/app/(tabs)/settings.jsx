@@ -43,6 +43,8 @@ import { getToken,saveToken, delToken } from '@/components/storageComponent';
     await delToken("isTrainer");
     await delToken("secondaryUserID");
 
+    await delToken("offlineData")
+
     router.push('/');
     
   } catch (error) {

@@ -83,9 +83,68 @@ const forceRenderModal = () => {
 };
 
 //function to detect if a user modifies the program and workouts and stores it into a variable for offline use
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+let offlinePrograms = [];
+let offlineData = "";
+
+const updateOfflineData = async () => {
+  try {
+
+    const data = await getProgram();
+    offlinePrograms = data.map(item => ({
+      id: item.id,
+      dayIndex: item.day,
+      day: daysOfWeek[item.day] || "Unknown"
+    }));
+
+    console.log("Offline Programs:", offlinePrograms);
+
+    const workoutPromises = offlinePrograms.map(program =>
+      getWorkout(program.id).then(workoutList => ({
+        day: program.day,
+        data: workoutList
+      }))
+    );
+
+    const workoutDataArray = await Promise.all(workoutPromises);
+    console.log("Fetched workout data for all programs:", workoutDataArray);
+    const groupedWorkouts = {};
+
+    workoutDataArray.forEach(({ day, data }) => {
+      if (!groupedWorkouts[day]) {
+        groupedWorkouts[day] = [];
+      }
+
+      const workoutsWithDay = data.map(workout => ({
+        ...workout,
+        day
+      }));
+
+      groupedWorkouts[day].push(...workoutsWithDay);
+    });
+
+    offlineData = JSON.stringify(groupedWorkouts);
+
+    await saveToken("offlineData", offlineData)
+    console.log("Offline data saved to secure storage:", offlineData);
+
+    console.log("Workouts grouped by day (with day info included) and stringified:");
+    console.log(offlineData);
+
+  } catch (error) {
+    console.error("Error fetching or grouping program workouts:", error);
+    offlineData = JSON.stringify({ error: error.message });
+  }
+};
+
+
+
+
 const [OfflineInfo, setOfflineInfo] = useState(false);
 useEffect(() => {
-console.log("Updated Offline Info");
+updateOfflineData();
 },[OfflineInfo]);
 
 //re-renders workouts
