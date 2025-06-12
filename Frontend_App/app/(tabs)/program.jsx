@@ -82,6 +82,12 @@ const forceRenderModal = () => {
   setModalKey(prevKey => prevKey + 1); 
 };
 
+//function to detect if a user modifies the program and workouts and stores it into a variable for offline use
+const [OfflineInfo, setOfflineInfo] = useState(false);
+useEffect(() => {
+console.log("Updated Offline Info");
+},[OfflineInfo]);
+
 //re-renders workouts
 useEffect(()=>{
     getassignedMembers();
@@ -288,7 +294,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       data={sortedProgramData}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handlePress(item)} >
-          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} />
+          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} setOfflineInfo={setOfflineInfo} OfflineInfo={OfflineInfo} />
         </TouchableOpacity>
       )}
       keyExtractor={item => item.id.toString()}
@@ -329,6 +335,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
+                      setOfflineInfo(OfflineInfo => !OfflineInfo);
                       setSelectedItem(...updatedItem);
 
                       }} style={styles.updateButton}>
@@ -364,6 +371,8 @@ const [refreshing, setRefreshing] = React.useState(false);
                 selectedWorkoutRecord={selectedWorkoutRecord}
                 selectedWorkoutId={selectedWorkoutId}
                 forceRenderModal={forceRenderModal}
+                setOfflineInfo={setOfflineInfo} 
+                OfflineInfo={OfflineInfo}
                 />
               )) : (
                 <View style={{alignItems: 'center'}}>
@@ -403,6 +412,8 @@ const [refreshing, setRefreshing] = React.useState(false);
           selectedWorkoutItem={selectedWorkoutItem}
           setRenderer={setRenderer}
           renderer={renderer}
+          setOfflineInfo={setOfflineInfo} 
+          OfflineInfo={OfflineInfo}
         />
     </Modal>
 
@@ -412,6 +423,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       await addProgram();
       await getProgram().then(data => {setProgramData(data)});
       console.log(programData);
+      setOfflineInfo(OfflineInfo => !OfflineInfo);
       
       }} >
       <Text style={{fontSize: 40}}>
