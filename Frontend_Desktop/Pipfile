@@ -12,6 +12,7 @@ matplotlib = "*"
 "kivy-garden.matplotlib" = "*"
 setuptools = "*"
 numpy = "*"
+pyinstaller = "*"
 
 [dev-packages]
 

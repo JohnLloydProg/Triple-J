@@ -1,4 +1,6 @@
 from kivy.core.window import Window
+from kivy.config import Config
+Config.set('kivy','window_icon','logo.ico')
 Window.size = (1080, 720)
 Window.minimum_width, Window.minimum_height = 1080, 720
 from kivymd.app import MDApp, App
@@ -12,12 +14,14 @@ from controller.analytics_screen import AnalyticsScreen
 from kivy.network.urlrequest import UrlRequestUrllib
 from tools import GeneralRequest
 import json
+import sys
+import os
 
 
 def load_kv_files():
     design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv', './design/analytics.kv']
     for design_file in design_files:
-        Builder.load_file(design_file)
+        Builder.load_file(resource_find(design_file))
 
 
 class TripleJAdmin(MDApp):
@@ -48,7 +52,7 @@ class TripleJAdmin(MDApp):
 
     def on_start(self):
         try:
-            with open('./token.json', 'r') as f:
+            with open(resource_find('./token.json'), 'r') as f:
                 token = json.loads(f.read()).get('refresh')
                 self.refresh = token
                 GeneralRequest(self.base_url + 'api/account/token/refresh', json.dumps({'refresh': token}), {"Content-Type" : "application/json"}, self.log_in)
@@ -62,6 +66,8 @@ class TripleJAdmin(MDApp):
     
 
 if __name__ == "__main__":
+    if hasattr(sys, '_MEIPASS'):
+        resource_add_path(os.path.join(sys._MEIPASS))
     load_kv_files()
     TripleJAdmin().run()
 
