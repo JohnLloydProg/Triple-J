@@ -22,6 +22,7 @@ import { SelectList } from 'react-native-dropdown-select-list'
 import { Dimensions } from "react-native";
 import { getToken, saveToken } from '@/components/storageComponent';
 import { color } from '@rneui/base';
+import NetInfo from '@react-native-community/netinfo';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -84,8 +85,6 @@ const forceRenderModal = () => {
 
 //function to detect if a user modifies the program and workouts and stores it into a variable for offline use
 
-const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
 let offlinePrograms = [];
 let offlineData = "";
 
@@ -138,6 +137,53 @@ const updateOfflineData = async () => {
     offlineData = JSON.stringify({ error: error.message });
   }
 };
+
+ //function to check if the user is online or offline
+  const [isConnected, setIsConnected] = useState(null);
+  const [connectionType, setConnectionType] = useState('unknown');
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      console.log("Network state changed:", state);
+      setIsConnected(state.isConnected);
+      setConnectionType(state.type);
+
+      if (state.isConnected === false) {
+        router.push('/');
+        console.log("Device is offline!");
+
+      } else if (state.isConnected === true) {
+
+        console.log("Device is back online!");
+
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      console.log("NetInfo listener unsubscribed.");
+    };
+  }, []);
+
+  const getStatusText = () => {
+    if (isConnected === null) {
+      return "Checking connectivity...";
+    } else if (isConnected) {
+      return `Online (${connectionType})`;
+    } else {
+      return "Offline";
+    }
+  };
+
+  const getStatusColor = () => {
+    if (isConnected === null) {
+      return 'gray';
+    } else if (isConnected) {
+      return 'green';
+    } else {
+      return 'red';
+    }
+  };
 
 
 
@@ -353,7 +399,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       data={sortedProgramData}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handlePress(item)} >
-          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} setOfflineInfo={setOfflineInfo} OfflineInfo={OfflineInfo} />
+          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} setOfflineInfo={setOfflineInfo} OfflineInfo={OfflineInfo} setRenderer={setRenderer} renderer={renderer}/>
         </TouchableOpacity>
       )}
       keyExtractor={item => item.id.toString()}
