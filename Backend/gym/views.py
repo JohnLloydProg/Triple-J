@@ -13,27 +13,24 @@ import base64
 # Create your views here.
 
 
-class ProgramCreateView(generics.GenericAPIView):
+class ProgramsView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request:Request, user:int) -> Response:
+    def get(self, request:Request) -> Response:
+        id = self.request.user
+        member_id = request.query_params.get('user', -1)
+        if (member_id != -1):
+            try:
+                user = Member.objects.get(pk=self.request.user)
+            except Member.DoesNotExist:
+                return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
+            if (user.is_trainer):
+                id = int(member_id)
+            else:
+                return Response('You are not authorized to view this member\'s programs', status=status.HTTP_403_FORBIDDEN)
+
         try:
-            member = Member.objects.get(pk=user)
-        except Member.DoesNotExist:
-            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
-
-        program = Program(member=member)
-        program.save()
-        return Response('Successfully Created', status=status.HTTP_201_CREATED)
-        
-
-
-class ProgramView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request:Request, user:int) -> Response:
-        try:
-            member = Member.objects.get(pk=user)
+            member = Member.objects.get(pk=id)
         except Member.DoesNotExist:
             return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         
@@ -45,6 +42,28 @@ class ProgramView(generics.GenericAPIView):
             programData['workouts'] = [{'name':programWorkout.workout.name, 'type':programWorkout.workout.type} for programWorkout in programWorkouts]
             data.append(programData)
         return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request:Request) -> Response:
+        id = self.request.user
+        member_id = request.query_params.get('user', -1)
+        if (member_id != -1):
+            try:
+                user = Member.objects.get(pk=self.request.user)
+            except Member.DoesNotExist:
+                return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
+            if (user.is_trainer):
+                id = int(member_id)
+            else:
+                return Response('You are not authorized to create a program on this member\'s account', status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            member = Member.objects.get(pk=id)
+        except Member.DoesNotExist:
+            return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
+
+        program = Program(member=member)
+        program.save()
+        return Response('Successfully Created', status=status.HTTP_201_CREATED)
 
 
 class CurrentProgramView(generics.GenericAPIView):
@@ -67,12 +86,24 @@ class CurrentProgramView(generics.GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class ProgramUpdateView(generics.GenericAPIView):
+class ProgramView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request:Request, user:int, pk:int) -> Response:
+    def put(self, request:Request, pk:int) -> Response:
+        id = self.request.user
+        member_id = request.query_params.get('user', -1)
+        if (member_id != -1):
+            try:
+                user = Member.objects.get(pk=self.request.user)
+            except Member.DoesNotExist:
+                return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
+            if (user.is_trainer):
+                id = int(member_id)
+            else:
+                return Response('You are not authorized to create a program on this member\'s account', status=status.HTTP_403_FORBIDDEN)
+
         try:
-            member = Member.objects.get(pk=user)
+            member = Member.objects.get(pk=id)
         except Member.DoesNotExist:
             return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         try:
@@ -87,14 +118,22 @@ class ProgramUpdateView(generics.GenericAPIView):
         program.day = day
         program.save()
         return Response(ProgramSerializer(program).data, status=status.HTTP_200_OK)
-        
+    
+    def delete(self, request:Request, pk:int) -> Response:
+        id = self.request.user
+        member_id = request.query_params.get('user', -1)
+        if (member_id != -1):
+            try:
+                user = Member.objects.get(pk=self.request.user)
+            except Member.DoesNotExist:
+                return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
+            if (user.is_trainer):
+                id = int(member_id)
+            else:
+                return Response('You are not authorized to create a program on this member\'s account', status=status.HTTP_403_FORBIDDEN)
 
-class ProgramDeleteView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request:Request, user:int, pk:int) -> Response:
         try:
-            member = Member.objects.get(pk=user)
+            member = Member.objects.get(pk=id)
         except Member.DoesNotExist:
             return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         try:
@@ -104,7 +143,6 @@ class ProgramDeleteView(generics.GenericAPIView):
         
         program.delete()
         return Response('Successfully Deleted', status=status.HTTP_204_NO_CONTENT)
-
 
 
 class ProgramWorkoutCreateView(generics.GenericAPIView):
