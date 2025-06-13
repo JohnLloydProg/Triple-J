@@ -1,9 +1,10 @@
-import { Text, View, Dimensions} from 'react-native'
+import { Text, View, Dimensions, TouchableOpacity} from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CameraView } from 'expo-camera'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Dialog from "react-native-dialog";
 
 async function customFetch(url: string, body: any, method: string = 'POST') {
   const response = await fetch(url, {
@@ -43,15 +44,21 @@ async function customFetch(url: string, body: any, method: string = 'POST') {
   return response;
 }
 
-export async function scan(event:any, setName:CallableFunction, setMembership:CallableFunction, setExpiry:CallableFunction, setReminder:CallableFunction) {
+export async function scan(event:any, setName:CallableFunction, setMembership:CallableFunction, setExpiry:CallableFunction, setReminder:CallableFunction, setCooldown:CallableFunction, setDialogVisible:CallableFunction) {
   console.log(event.data);
   
   if (event.data) {
     const responseData = await customFetch("https://triple-j.onrender.com/api/attendance/logging", {"qrCode": event.data}, 'POST');
     console.log(responseData);
     if (responseData === "Successfuly logged out") {
+      setName("");
+      setMembership("");
+      setExpiry("");
       setReminder("Have a good day!");
-    }else {
+      setTimeout(() => {
+        setCooldown(false);
+      }, 2000);
+    }else if (responseData['name']) {
       setName(responseData['name']);
       setMembership(responseData['type']);
       if (responseData['paid']) {
@@ -62,7 +69,17 @@ export async function scan(event:any, setName:CallableFunction, setMembership:Ca
       if (responseData['expiry']) {
         setExpiry(responseData['expiry']);
       }
+      setDialogVisible(true);
+      setTimeout(() => {
+        setDialogVisible(false);
+        setCooldown(false);
+      }, 10000);
     }
+  }else {
+    console.log("No data found in QR Code");
+    setTimeout(() => {
+      setCooldown(false);
+    }, 2000);
   }
   
 }
@@ -73,12 +90,24 @@ export default function Profile() {
   const [membershipType, setMembershipType] = React.useState("");
   const [expiry, setExpiry] = React.useState("");
   const [cooldown, setCooldown] = React.useState(false);
-  const [counter, setCounter] = React.useState(0);
   const [reminder, setReminder] = React.useState("");
+  const [dialogVisible, setDialogVisible] = React.useState(false);
+  const [back, setBack] = React.useState(false);
 
 
   return (
     <SafeAreaView className="flex-1 bg-primary pb-16 items-center">
+        <Dialog.Container visible={dialogVisible}>
+          <Dialog.Title>Scanned QR Code</Dialog.Title>
+          <Dialog.Description>
+            Good day! Welcome to Triple J. Enjoy your time here.
+            NOTE: {reminder}
+          </Dialog.Description>
+          <Dialog.Button label="Done" onPress={() => {
+            setDialogVisible(false);
+            setCooldown(false);
+            }} />
+        </Dialog.Container>
         <View className="w-full h-16 bg-secondary flex-row justify-center items-center">
           <Text className="text-3xl text-accent font-keaniaOne_regular">Triple J</Text>
         </View>
@@ -87,15 +116,11 @@ export default function Profile() {
         </View>
         <CameraView
           style={{ width: camera_width, height: camera_width, borderRadius: 20 }}
-          facing='front'
+          facing={back ? 'back' : 'front'}
           onBarcodeScanned={(event) => {
             if (!cooldown) {
-              setCounter(counter + 1);
-              scan(event, setName, setMembershipType, setExpiry, setReminder);
               setCooldown(true);
-              setTimeout(() => {
-                setCooldown(false);
-              }, 1500);
+              scan(event, setName, setMembershipType, setExpiry, setReminder, setCooldown, setDialogVisible);
             }
           }}
         />
@@ -111,6 +136,7 @@ export default function Profile() {
             <Text className='text-xl text-accent'>{reminder}</Text>
           </View>
         </View>
+        <TouchableOpacity className="bg-violet h-[60] rounded-full w-3/4 items-center justify-center" onPress={() => setBack(!back)}><Text className="font-bold text-white">Swap Camera</Text></TouchableOpacity>
     </SafeAreaView>
   )
 }
