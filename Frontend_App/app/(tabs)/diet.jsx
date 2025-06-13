@@ -11,6 +11,7 @@ import * as SecureStore from "expo-secure-store";
 import { useFocusEffect } from "expo-router";
 import { useFonts } from "expo-font";
 import NetInfo from '@react-native-community/netinfo';
+import { router} from 'expo-router';
 
 export default function Diet() {
 

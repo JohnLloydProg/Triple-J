@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
+import { router} from 'expo-router';
 
 import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode } from '../../components/generalFetchFunction';
 

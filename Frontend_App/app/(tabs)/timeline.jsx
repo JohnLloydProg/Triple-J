@@ -9,6 +9,7 @@ import { RefreshControl } from 'react-native';
 import {refreshAccessToken} from '../../components/refreshToken';
 import * as ImagePicker from 'expo-image-picker';
 import NetInfo from '@react-native-community/netinfo';
+import { router} from 'expo-router';
 
 //{'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img}
 // might need to add dependencies for the image picker library
