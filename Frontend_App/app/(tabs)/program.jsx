@@ -82,6 +82,71 @@ const forceRenderModal = () => {
   setModalKey(prevKey => prevKey + 1); 
 };
 
+//function to detect if a user modifies the program and workouts and stores it into a variable for offline use
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+let offlinePrograms = [];
+let offlineData = "";
+
+const updateOfflineData = async () => {
+  try {
+
+    const data = await getProgram();
+    offlinePrograms = data.map(item => ({
+      id: item.id,
+      dayIndex: item.day,
+      day: daysOfWeek[item.day] || "Unknown"
+    }));
+
+    console.log("Offline Programs:", offlinePrograms);
+
+    const workoutPromises = offlinePrograms.map(program =>
+      getWorkout(program.id).then(workoutList => ({
+        day: program.day,
+        data: workoutList
+      }))
+    );
+
+    const workoutDataArray = await Promise.all(workoutPromises);
+    console.log("Fetched workout data for all programs:", workoutDataArray);
+    const groupedWorkouts = {};
+
+    workoutDataArray.forEach(({ day, data }) => {
+      if (!groupedWorkouts[day]) {
+        groupedWorkouts[day] = [];
+      }
+
+      const workoutsWithDay = data.map(workout => ({
+        ...workout,
+        day
+      }));
+
+      groupedWorkouts[day].push(...workoutsWithDay);
+    });
+
+    offlineData = JSON.stringify(groupedWorkouts);
+
+    await saveToken("offlineData", offlineData)
+    console.log("Offline data saved to secure storage:", offlineData);
+
+    console.log("Workouts grouped by day (with day info included) and stringified:");
+    console.log(offlineData);
+
+  } catch (error) {
+    console.error("Error fetching or grouping program workouts:", error);
+    offlineData = JSON.stringify({ error: error.message });
+  }
+};
+
+
+
+
+const [OfflineInfo, setOfflineInfo] = useState(false);
+useEffect(() => {
+updateOfflineData();
+},[OfflineInfo]);
+
 //re-renders workouts
 useEffect(()=>{
     getassignedMembers();
@@ -288,7 +353,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       data={sortedProgramData}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handlePress(item)} >
-          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} />
+          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} setOfflineInfo={setOfflineInfo} OfflineInfo={OfflineInfo} />
         </TouchableOpacity>
       )}
       keyExtractor={item => item.id.toString()}
@@ -329,6 +394,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
+                      setOfflineInfo(OfflineInfo => !OfflineInfo);
                       setSelectedItem(...updatedItem);
 
                       }} style={styles.updateButton}>
@@ -364,6 +430,8 @@ const [refreshing, setRefreshing] = React.useState(false);
                 selectedWorkoutRecord={selectedWorkoutRecord}
                 selectedWorkoutId={selectedWorkoutId}
                 forceRenderModal={forceRenderModal}
+                setOfflineInfo={setOfflineInfo} 
+                OfflineInfo={OfflineInfo}
                 />
               )) : (
                 <View style={{alignItems: 'center'}}>
@@ -403,6 +471,8 @@ const [refreshing, setRefreshing] = React.useState(false);
           selectedWorkoutItem={selectedWorkoutItem}
           setRenderer={setRenderer}
           renderer={renderer}
+          setOfflineInfo={setOfflineInfo} 
+          OfflineInfo={OfflineInfo}
         />
     </Modal>
 
@@ -412,6 +482,7 @@ const [refreshing, setRefreshing] = React.useState(false);
       await addProgram();
       await getProgram().then(data => {setProgramData(data)});
       console.log(programData);
+      setOfflineInfo(OfflineInfo => !OfflineInfo);
       
       }} >
       <Text style={{fontSize: 40}}>

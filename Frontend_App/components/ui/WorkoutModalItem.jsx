@@ -184,7 +184,7 @@ const processData = (data) => {
 
 
 //main component being exported
-const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal}) => {
+const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal, setOfflineInfo, OfflineInfo}) => {
 
   const [reps,setReps] = useState("");
   const [sets,setSets] = useState("");
@@ -309,6 +309,7 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
         const updatedItem = await getWorkout(selectedProgram.id);
         setSelectedItem(updatedItem);
         getProgram().then(data => {setProgramData(data)});
+        setOfflineInfo(OfflineInfo => !OfflineInfo);
         }}>
           
         <FontAwesome6 name="minus" size={20} color="black" />

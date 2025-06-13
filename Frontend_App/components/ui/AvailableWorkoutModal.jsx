@@ -7,7 +7,7 @@ import {addWorkout, getProgram, getWorkout,getAvailableWorkouts} from '@/compone
 import {useState} from 'react';
 
 
-const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible, modalChoiceVisible, selectedProgram, setSelectedItem, setAvailableWorkouts, setmodalChoiceVisible,selectedWorkoutItem, setRenderer, renderer}) => {
+const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible, modalChoiceVisible, selectedProgram, setSelectedItem, setAvailableWorkouts, setmodalChoiceVisible,selectedWorkoutItem, setRenderer, renderer, setOfflineInfo, OfflineInfo}) => {
   const [reps,setReps] = useState("");
   const [sets,setSets] = useState("");
   const [time,setTime] = useState("");
@@ -104,6 +104,8 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                           setSelectedItem(updatedItem); 
                           setRenderer(!renderer); 
                           setmodalChoiceVisible(false);
+                          setOfflineInfo(OfflineInfo => !OfflineInfo);
+
                         }}>
                           <Text style={styles.closeBtnText}>Create Workout</Text>
                         </TouchableOpacity>
