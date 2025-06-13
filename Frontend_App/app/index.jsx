@@ -9,11 +9,67 @@ import {refreshAccessToken} from '@/components/refreshToken';
 import { getToken,saveToken } from '@/components/storageComponent';
 import { validateLoginInfo, getMemberInfo, checkIfTrainer } from '@/components/generalFetchFunction';
 
+import NetInfo from '@react-native-community/netinfo';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+
+
+
+
 
 export default function HomeScreen() {
 
+ //function to check if the user is online or offline
+  const [isConnected, setIsConnected] = useState(null);
+  const [connectionType, setConnectionType] = useState('unknown');
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      console.log("Network state changed:", state);
+      setIsConnected(state.isConnected);
+      setConnectionType(state.type);
+
+      if (state.isConnected === false) {
+
+        console.log("Device is offline!");
+
+      } else if (state.isConnected === true) {
+        setrelog(relog => !relog);
+        console.log("Device is back online!");
+
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      console.log("NetInfo listener unsubscribed.");
+    };
+  }, []);
+
+  const getStatusText = () => {
+    if (isConnected === null) {
+      return "Checking connectivity...";
+    } else if (isConnected) {
+      //return `Online (${connectionType})`;
+      return "Online";
+    } else {
+      return "Offline";
+    }
+  };
+
+  const getStatusColor = () => {
+    if (isConnected === null) {
+      return 'gray';
+    } else if (isConnected) {
+      return 'green';
+    } else {
+      return 'red';
+    }
+  };
+
   const [username, setUsername] = useState('');
   const [password, setPass] = useState('');
+
+  const [relog, setrelog] = useState(false);
 
 
   const setMemberInfo = async () => {
@@ -114,11 +170,11 @@ export default function HomeScreen() {
       console.error("Error:", error);
     }
    
-  }, []);
+  }, [relog]);
 
   return (
     <View style={styles.container}>
-
+      
       <View style={{marginBottom: 20}}>
         <Text style={styles.titleText}>
           Login your Account
@@ -150,6 +206,17 @@ export default function HomeScreen() {
           Login
         </Text>
       </TouchableOpacity>
+
+      <View>
+        {getStatusText() === "Offline" ? (
+          <TouchableOpacity onPress={()=>{router.push("/offline")}}  style={styles.loginBtn}>
+            <Text style={styles.loginBtnTxt}>
+                Offline Mode
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      
     
 
     </View>
@@ -188,6 +255,13 @@ const styles = StyleSheet.create({
  },
  loginBtn:{
     backgroundColor: '#4259CA',
+    padding: 15,
+    borderRadius: 22,
+    alignItems: 'center',
+    marginBottom: 15,
+},
+OfflineBtn:{
+    backgroundColor: colors.redAccent,
     padding: 15,
     borderRadius: 22,
     alignItems: 'center',

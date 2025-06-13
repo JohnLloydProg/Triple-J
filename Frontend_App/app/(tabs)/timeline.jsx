@@ -8,6 +8,7 @@ import bodyIcon from '@/assets/images/sample-full-body.jpg';
 import { RefreshControl } from 'react-native';
 import {refreshAccessToken} from '../../components/refreshToken';
 import * as ImagePicker from 'expo-image-picker';
+import NetInfo from '@react-native-community/netinfo';
 
 //{'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img}
 // might need to add dependencies for the image picker library
@@ -81,6 +82,53 @@ function calculateBMI(height, weight) {
 }
 
 const TimelineScreen = () => {
+   //function to check if the user is online or offline
+  const [isConnected, setIsConnected] = useState(null);
+  const [connectionType, setConnectionType] = useState('unknown');
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      console.log("Network state changed:", state);
+      setIsConnected(state.isConnected);
+      setConnectionType(state.type);
+
+      if (state.isConnected === false) {
+        router.push('/');
+        console.log("Device is offline!");
+
+      } else if (state.isConnected === true) {
+
+        console.log("Device is back online!");
+
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      console.log("NetInfo listener unsubscribed.");
+    };
+  }, []);
+
+  const getStatusText = () => {
+    if (isConnected === null) {
+      return "Checking connectivity...";
+    } else if (isConnected) {
+      return `Online (${connectionType})`;
+    } else {
+      return "Offline";
+    }
+  };
+
+  const getStatusColor = () => {
+    if (isConnected === null) {
+      return 'gray';
+    } else if (isConnected) {
+      return 'green';
+    } else {
+      return 'red';
+    }
+  };
+
   const [timelineData, setTimelineData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisble, setModalVisible] = useState(false);

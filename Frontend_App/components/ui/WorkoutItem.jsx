@@ -20,7 +20,7 @@ const workoutTypes = {
   'N/A': 'Rest Day'
 };
 
-const WorkoutItem = ({ title, workouts, programId, setProgramData, setOfflineInfo, OfflineInfo}) => (
+const WorkoutItem = ({ title, workouts, programId, setProgramData, setOfflineInfo, OfflineInfo, setRenderer, renderer}) => (
   <View style={styles.mainProgramsCont}>
     
     <View style={styles.programCont}>
@@ -28,7 +28,9 @@ const WorkoutItem = ({ title, workouts, programId, setProgramData, setOfflineInf
       <TouchableOpacity onPress={ async ()=>{
         await deleteProgram(programId);
         await getProgram().then(data => {setProgramData(data)});
-        setOfflineInfo(OfflineInfo => !OfflineInfo);
+        await setOfflineInfo(OfflineInfo => !OfflineInfo);
+        setRenderer(renderer = !renderer)
+        console.log("deleted a program");
         }}>
         <View>
         <FontAwesome6 name="trash" size={20} color="red" />

@@ -11,6 +11,7 @@ import { ScrollView } from 'react-native';
 import {refreshAccessToken} from '../../components/refreshToken';
 import {setMemberHW, getMembershipInfo, getMemberInfo, startPayment} from '@/components/generalFetchFunction';
 import { getToken,saveToken, delToken } from '@/components/storageComponent';
+import NetInfo from '@react-native-community/netinfo';
 
 
 //deletes information stored based on logged in account and redirects to login page
@@ -55,6 +56,53 @@ import { getToken,saveToken, delToken } from '@/components/storageComponent';
 
 
 export default function Settings() {
+
+  //function to check if the user is online or offline
+  const [isConnected, setIsConnected] = useState(null);
+  const [connectionType, setConnectionType] = useState('unknown');
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      console.log("Network state changed:", state);
+      setIsConnected(state.isConnected);
+      setConnectionType(state.type);
+
+      if (state.isConnected === false) {
+        router.push('/');
+        console.log("Device is offline!");
+
+      } else if (state.isConnected === true) {
+
+        console.log("Device is back online!");
+
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      console.log("NetInfo listener unsubscribed.");
+    };
+  }, []);
+
+  const getStatusText = () => {
+    if (isConnected === null) {
+      return "Checking connectivity...";
+    } else if (isConnected) {
+      return `Online (${connectionType})`;
+    } else {
+      return "Offline";
+    }
+  };
+
+  const getStatusColor = () => {
+    if (isConnected === null) {
+      return 'gray';
+    } else if (isConnected) {
+      return 'green';
+    } else {
+      return 'red';
+    }
+  };
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(() => {

@@ -45,7 +45,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerTitle: 'Triple J' }} />
         <Stack.Screen name="+not-found" />
-        <Stack.Screen name="index" options={{ headerTitle: 'Triple J' }} />
+        <Stack.Screen name="index" options={{ headerTitle: 'Triple J', headerLeft: () => null}} />
+        <Stack.Screen name="offline" options={{ headerTitle: 'Triple J', headerLeft: () => null }}/>
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
