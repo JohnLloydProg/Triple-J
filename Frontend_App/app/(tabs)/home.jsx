@@ -8,7 +8,6 @@ import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
 
-// Make sure to import the new fetch function
 import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement } from '../../components/generalFetchFunction';
 
 import heartIcon from '@/assets/images/Cardio-Workout-icon.png';
@@ -88,10 +87,10 @@ const HomeScreen = () => {
     setAnnouncementLoading(true);
     try {
         const announcementData = await fetchLatestAnnouncement();
-        setAnnouncement(announcementData); // Can be null if none, which is fine
+        setAnnouncement(announcementData); 
     } catch (error) {
         console.error("HomeScreen: Failed to load announcement:", error);
-        setAnnouncement(null); // On error, just hide the announcement section
+        setAnnouncement(null); 
     } finally {
         setAnnouncementLoading(false);
     }
@@ -109,7 +108,7 @@ const HomeScreen = () => {
 
       if (programPayload && Array.isArray(programPayload.exercises)) {
         setExercises(programPayload.exercises);
-        setCoachInfo(programPayload.coach); // Set coach info from the payload
+        setCoachInfo(programPayload.coach); 
 
         if (programPayload.exercises.length === 0) {
           const today = new Date();
@@ -189,7 +188,7 @@ const HomeScreen = () => {
     } else if (fontError) {
         console.error("HomeScreen: Font loading error:", fontError);
     }
-  }, [fontsLoaded, fontError]); // Dependencies simplified to run once on load
+  }, [fontsLoaded, fontError]);
 
   const onRefresh = useCallback(async () => {
     console.log("Refreshing data...");
@@ -397,7 +396,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   announcementCard: {
-    backgroundColor: '#334D7A', // A distinct but subtle blue
+    backgroundColor: '#334D7A', 
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -413,7 +412,7 @@ const styles = StyleSheet.create({
     color: '#E0E0E0',
     fontSize: 14,
     textAlign: 'center',
-    // Using a system font can be more readable for paragraphs
+  
   },
   card: {
     backgroundColor: '#2D2D2D',
@@ -543,7 +542,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginRight: 15,
-    backgroundColor: '#555', // Placeholder background
+    backgroundColor: '#555', 
   },
   profileTextContainer: {
     flex: 1,
