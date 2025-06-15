@@ -53,9 +53,13 @@ class TripleJAdmin(MDApp):
     def on_start(self):
         try:
             with open(resource_find('./token.json'), 'r') as f:
-                token = json.loads(f.read()).get('refresh')
-                self.refresh = token
-                GeneralRequest(self.base_url + 'api/account/token/refresh', json.dumps({'refresh': token}), {"Content-Type" : "application/json"}, self.log_in)
+                content = f.read()
+                if (not content):
+                    return
+                token = json.loads(content).get('refresh')
+                if (token):
+                    self.refresh = token
+                    GeneralRequest(self.base_url + 'api/account/token/refresh', json.dumps({'refresh': token}), {"Content-Type" : "application/json"}, self.log_in)
         except FileNotFoundError:
             print('no token!')
         return super().on_start()
@@ -63,6 +67,14 @@ class TripleJAdmin(MDApp):
     def log_in(self, request:UrlRequestUrllib, result:dict):
         self.access = result.get('access')
         self.sm.current = 'home_screen'
+    
+    def log_out(self):
+        try:
+            with open(resource_find('./token.json'), 'w') as f:
+                f.write('')
+        except FileNotFoundError:
+            print('No Token')
+        self.sm.current = 'main_screen'
     
 
 if __name__ == "__main__":
