@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
 
-import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode } from '../../components/generalFetchFunction';
+import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement } from '../../components/generalFetchFunction';
 
 import heartIcon from '@/assets/images/Cardio-Workout-icon.png';
 import treadmillIcon from '@/assets/images/Lower-Workout-icon.png';
@@ -25,8 +25,7 @@ const exerciseIconMap = {
 };
 
 const HomeScreen = () => {
-
-   //function to check if the user is online or offline
+  // Network state
   const [isConnected, setIsConnected] = useState(null);
   const [connectionType, setConnectionType] = useState('unknown');
 
@@ -39,11 +38,8 @@ const HomeScreen = () => {
       if (state.isConnected === false) {
         router.push('/');
         console.log("Device is offline!");
-
       } else if (state.isConnected === true) {
-
         console.log("Device is back online!");
-
       }
     });
 
@@ -53,43 +49,32 @@ const HomeScreen = () => {
     };
   }, []);
 
-  const getStatusText = () => {
-    if (isConnected === null) {
-      return "Checking connectivity...";
-    } else if (isConnected) {
-      return `Online (${connectionType})`;
-    } else {
-      return "Offline";
-    }
-  };
-
-  const getStatusColor = () => {
-    if (isConnected === null) {
-      return 'gray';
-    } else if (isConnected) {
-      return 'green';
-    } else {
-      return 'red';
-    }
-  };
-  
   const [fontsLoaded, fontError] = useFonts({
     KeaniaOne: require('@/assets/fonts/KeaniaOne-Regular.ttf'),
   });
 
+  // State for UI data
   const [currentFormattedDate, setCurrentFormattedDate] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Announcement State
+  const [announcement, setAnnouncement] = useState(null);
+  const [announcementLoading, setAnnouncementLoading] = useState(true);
+
+  // Program and Coach State
   const [exercises, setExercises] = useState([]);
+  const [coachInfo, setCoachInfo] = useState(null);
   const [programLoading, setProgramLoading] = useState(true);
   const [programError, setProgramError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
+  
+  // Gym Population State
   const [gymPopCount, setGymPopCount] = useState({ Number: 0 });
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  // QR Code State
   const [qrData, setQrData] = useState(null);
   const [qrModalVisible, setQrModalVisible] = useState(false);
-
-  const [refreshing, setRefreshing] = useState(false);
 
   const updateDisplayedDate = useCallback(() => {
     const today = new Date();
@@ -98,52 +83,57 @@ const HomeScreen = () => {
     setCurrentFormattedDate(formattedDate);
   }, []);
 
+  const loadAnnouncement = useCallback(async () => {
+    setAnnouncementLoading(true);
+    try {
+        const announcementData = await fetchLatestAnnouncement();
+        setAnnouncement(announcementData); 
+    } catch (error) {
+        console.error("HomeScreen: Failed to load announcement:", error);
+        setAnnouncement(null); 
+    } finally {
+        setAnnouncementLoading(false);
+    }
+  }, []);
   
   const loadProgramData = useCallback(async () => {
-    console.log("DEBUG: HomeScreen loadProgramData IS DEFINITELY CALLING fetchCurrentProgram NOW!"); // Unique Log
     setProgramLoading(true);
     setProgramError(false);
     setErrorMessage('');
+    setCoachInfo(null);
 
     try {
+      const programPayload = await fetchCurrentProgram(exerciseIconMap);
+      console.log("HomeScreen: fetchCurrentProgram returned:", JSON.stringify(programPayload, null, 2));
 
-      const programDataFromFetch = await fetchCurrentProgram(exerciseIconMap);
-      
-      console.log("HomeScreen: fetchCurrentProgram (from API service) returned:", JSON.stringify(programDataFromFetch, null, 2));
+      if (programPayload && Array.isArray(programPayload.exercises)) {
+        setExercises(programPayload.exercises);
+        setCoachInfo(programPayload.coach); 
 
-      if (programDataFromFetch && Array.isArray(programDataFromFetch)) {
-
-        setExercises(programDataFromFetch); 
-        if (programDataFromFetch.length === 0) {
+        if (programPayload.exercises.length === 0) {
           const today = new Date();
           const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
           const currentDayName = dayNames[today.getDay()];
-
           setErrorMessage(`No exercises scheduled for ${currentDayName}.`);
         }
       } else {
-        console.warn("HomeScreen: fetchCurrentProgram did not return a valid array. Received:", programDataFromFetch);
+        console.warn("HomeScreen: fetchCurrentProgram did not return a valid payload. Received:", programPayload);
         setExercises([]);
         setErrorMessage('Workout data is not in the expected format or none found for today.');
       }
     } catch (error) {
-      console.error("HomeScreen: Error in loadProgramData's try-catch (using fetchCurrentProgram):", error);
+      console.error("HomeScreen: Error in loadProgramData:", error);
       setProgramError(true);
-      
       setErrorMessage(error.message || "Could not load your program. Pull down to refresh.");
       setExercises([]);
     } finally {
       setProgramLoading(false);
-      console.log("HomeScreen: loadProgramData FINISHED (using fetchCurrentProgram).");
     }
- 
   }, []);
 
   const loadGymPopulation = useCallback(async () => {
-    
     try {
-      const data = await fetchGymPopulation(); 
-      
+      const data = await fetchGymPopulation();
       setGymPopCount(data || { Number: 0 });
       setLastUpdated(new Date());
     } catch (error) {
@@ -153,13 +143,11 @@ const HomeScreen = () => {
   }, []); 
 
   const loadQrData = useCallback(async () => {
-    console.log("HomeScreen: loadQrData called to fetch QR details.");
     try {
-      const data = await fetchQrCode(); 
-      console.log("HomeScreen: fetchQrCode (GET) returned:", data);
+      const data = await fetchQrCode();
       setQrData(data);
     } catch (error) {
-      console.error("HomeScreen: Failed to load QR code via loadQrData:", error);
+      console.error("HomeScreen: Failed to load QR code:", error);
       setQrData(null); 
     }
   }, []); 
@@ -174,17 +162,11 @@ const HomeScreen = () => {
           text: "Yes, Generate",
           onPress: async () => {
             try {
-              console.log("HomeScreen: Attempting to generate new QR (POST)...");
               const generationResponse = await generateNewQrCode();
-              console.log("HomeScreen: generateNewQrCode (POST) response:", generationResponse);
-
-              console.log("HomeScreen: New QR generated, now fetching updated QR data (GET)...");
               await loadQrData(); 
-
-              Alert.alert("Success", generationResponse.details || "New QR Code Generated! Displaying updated QR.");
+              Alert.alert("Success", generationResponse.details || "New QR Code Generated!");
             } catch (error) {
-              console.error("HomeScreen: Error during new QR generation or fetch:", error);
-              Alert.alert("Error", error.message || "Could not generate or fetch new QR code.");
+              Alert.alert("Error", error.message || "Could not generate new QR code.");
             }
           },
         },
@@ -194,11 +176,10 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      // ...
+      await loadAnnouncement();
       await loadProgramData();
       await loadGymPopulation();
-      await loadQrData(); 
-      // ...
+      await loadQrData();
     };
 
     if (fontsLoaded) {
@@ -207,18 +188,21 @@ const HomeScreen = () => {
     } else if (fontError) {
         console.error("HomeScreen: Font loading error:", fontError);
     }
-  }, [fontsLoaded, fontError, updateDisplayedDate, loadProgramData, loadGymPopulation, loadQrData]);
+  }, [fontsLoaded, fontError]);
 
   const onRefresh = useCallback(async () => {
     console.log("Refreshing data...");
     setRefreshing(true);
     updateDisplayedDate();
-    await loadProgramData();
-    await loadGymPopulation();
-    await loadQrData(); // Refresh QR data
+    await Promise.all([
+        loadAnnouncement(),
+        loadProgramData(),
+        loadGymPopulation(),
+        loadQrData()
+    ]);
     setRefreshing(false);
     console.log("Refreshing data finished.");
-  }, [updateDisplayedDate, loadProgramData, loadGymPopulation, loadQrData]);
+  }, []);
 
   const toggleExercise = (index) => {
     const updatedExercises = exercises.map((exercise, i) =>
@@ -243,27 +227,16 @@ const HomeScreen = () => {
       <View style={styles.safeContainer}>
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1E1E1E'}}>
             <ActivityIndicator size="large" color="#4CAF50" />
-            <Text style={{color: 'white', marginTop: 10, fontFamily: 'KeaniaOne'}}>Loading Fonts...</Text>
-        </View>
-      </View>
-    );
-  }
-  if (fontError) {
-     return (
-      <View style={styles.safeContainer}>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1E1E1E'}}>
-            <Text style={{color: 'white', fontFamily: 'KeaniaOne'}}>Error loading fonts. Please restart.</Text>
-            <Text style={{color: 'red', marginTop: 5}}>{fontError.message || "Unknown font error"}</Text>
+            <Text style={{color: 'white', marginTop: 10, fontFamily: 'KeaniaOne'}}>Loading App...</Text>
         </View>
       </View>
     );
   }
 
-  const currentDaysRemaining = qrData?.days_remaining ?? 0;
-  const today = new Date(); // Used for rest day message conditional rendering
+  const currentDaysRemaining = qrData?.days_remaining ?? '...';
+  const today = new Date();
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const currentDayNameForMessage = dayNames[today.getDay()];
-
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -277,14 +250,24 @@ const HomeScreen = () => {
             onRefresh={onRefresh}
             colors={['#4CAF50']}
             tintColor="#4CAF50"
-            title="Pull to refresh..."
-            titleColor="#AAAAAA"
           />
         }
       >
+        {/* Announcement Section */}
+        {announcementLoading ? (
+            <View style={[styles.announcementCard, {paddingVertical: 30, alignItems: 'center'}]}>
+                <ActivityIndicator color="#FFFFFF" />
+            </View>
+        ) : announcement && (
+            <View style={styles.announcementCard}>
+                <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                <Text style={styles.announcementContent}>{announcement.content}</Text>
+            </View>
+        )}
+
+        {/* Program for Today Card */}
         <View style={styles.card}>
           <Text style={styles.heading}>{currentFormattedDate || "Loading Date..."}</Text>
-
           {programLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#4CAF50" />
@@ -293,27 +276,15 @@ const HomeScreen = () => {
           ) : programError ? (
             <View style={styles.noExercisesContainer}>
               <Text style={[styles.noExercisesText, {color: 'red'}]}>{errorMessage}</Text>
-              <TouchableOpacity onPress={loadProgramData} style={[styles.button, {marginTop: 15, backgroundColor: '#555'}]}>
+              <TouchableOpacity onPress={onRefresh} style={[styles.button, {marginTop: 15, backgroundColor: '#555'}]}>
                   <Text style={styles.buttonText}>Try Again</Text>
               </TouchableOpacity>
             </View>
-          ) : exercises && exercises.length > 0 ? (
+          ) : exercises.length > 0 ? (
             <>
-              {exercises.map((exercise, index) => {
-                if (!exercise || !exercise.id) {
-                  console.warn(`JSX: Rendering exercise [${index}] is invalid or missing id:`, JSON.stringify(exercise));
-                  return null;
-                }
-                return (
+              {exercises.map((exercise, index) => (
                   <View key={exercise.id} style={styles.exerciseItem}>
-                    {exercise.icon ? (
-                      <Image
-                        source={exercise.icon}
-                        style={styles.exerciseIcon}
-                        resizeMode="contain"
-                        onError={(e) => console.error(`Error loading image for exercise ${exercise.name || index} (ID: ${exercise.id}):`, e.nativeEvent.error, "Icon source:", exercise.icon)}
-                      />
-                    ) : <View style={[styles.exerciseIcon, {backgroundColor: '#555'}]} /> }
+                    <Image source={exercise.icon} style={styles.exerciseIcon} resizeMode="contain"/>
                     <View style={styles.exerciseTextContainer}>
                       <Text style={styles.text}>{exercise.name}</Text>
                       <Text style={styles.details}>{exercise.details}</Text>
@@ -323,16 +294,15 @@ const HomeScreen = () => {
                       onPress={() => toggleExercise(index)}
                       checkedColor="green"
                       uncheckedColor="red"
-                      containerStyle={[styles.checkbox, { transform: [{ scale: 1.5 }] }]}
+                      containerStyle={styles.checkbox}
                     />
                   </View>
-                );
-              })}
+              ))}
             </>
           ) : (
             <View style={styles.noExercisesContainer}>
               <Text style={styles.noExercisesText}>{errorMessage || "No exercises scheduled for today."}</Text>
-              {(!errorMessage || errorMessage === 'No exercises scheduled for today.' || (errorMessage && errorMessage.includes(`No exercises scheduled for ${currentDayNameForMessage}`))) &&
+              {(!errorMessage || errorMessage.includes(`No exercises scheduled for ${currentDayNameForMessage}`)) &&
                 <Text style={styles.restDayText}>Enjoy your rest day!</Text>}
             </View>
           )}
@@ -343,18 +313,14 @@ const HomeScreen = () => {
           <Text style={styles.bigText}>{gymPopCount?.Number ?? '...'}</Text>
           <Text style={styles.details}>Gym members currently making gains</Text>
           <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
-          <Text style={styles.pullToRefreshHint}>Pull down to refresh</Text>
         </View>
 
         {/* QR Code Section */}
         <View style={styles.qrContainer}>
-          <TouchableOpacity onPress={() => { if (qrData && qrData.image) setQrModalVisible(true); else Alert.alert("QR Code", "QR Code not available. Please try refreshing or generate a new one.")}}>
+          <TouchableOpacity onPress={() => { if (qrData && qrData.image) setQrModalVisible(true); else Alert.alert("QR Code", "QR Code not available. Please refresh.")}}>
             <Image
               source={qrData && qrData.image ? { uri: `https://triple-j.onrender.com${qrData.image}` } : placeholderQrIcon}
               style={styles.qrBox}
-              onError={(e) => {
-                console.log("Error loading QR image:", e.nativeEvent.error);
-              }}
             />
           </TouchableOpacity>
           <View style={styles.qrDetails}>
@@ -364,22 +330,45 @@ const HomeScreen = () => {
               <Text style={styles.buttonText}>Generate New QR</Text>
             </TouchableOpacity>
           </View>
-          <Modal
+        </View>
+
+        {/* Trainer/Profile Section */}
+        <View style={styles.profileContainer}>
+          <Image 
+            source={coachInfo && coachInfo.profile_image_url ? { uri: `https://triple-j.onrender.com${coachInfo.profile_image_url}` } : kotsIcon} 
+            style={styles.profileImage}
+            onError={() => console.log("Failed to load coach image.")}
+          />
+          <View style={styles.profileTextContainer}>
+            <Text style={styles.text}>{coachInfo?.name || 'Your Coach'}</Text>
+            <Text style={styles.details}>{coachInfo?.title || 'Fitness Coach'}</Text>
+            <TouchableOpacity 
+              style={[styles.button, !coachInfo?.contact_url && {backgroundColor: '#555'}]} 
+              disabled={!coachInfo?.contact_url}
+              onPress={() => {
+                if (coachInfo?.contact_url) {
+                  Linking.openURL(coachInfo.contact_url).catch(() => Alert.alert("Error", "Could not open contact link."));
+                }
+              }}
+            >
+              <Text style={styles.buttonText}>Contact Me</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* QR Modal */}
+        <Modal
             visible={qrModalVisible}
             transparent={true}
             animationType="fade"
             onRequestClose={() => setQrModalVisible(false)}
-          >
-            <TouchableOpacity
-                style={styles.modalBackground}
-                activeOpacity={1}
-                onPressOut={() => setQrModalVisible(false)}
-            >
-              <TouchableOpacity activeOpacity={1} style={styles.modalContent} onPress={() => {}}>
+        >
+            <TouchableOpacity style={styles.modalBackground} activeOpacity={1} onPressOut={() => setQrModalVisible(false)}>
+              <View style={styles.modalContent}>
                 {qrData && qrData.image ? (
                   <Image
                     source={{ uri: `https://triple-j.onrender.com${qrData.image}` }}
-                    style={{ width: 280, height: 280, resizeMode: 'contain',  backgroundColor: 'white', padding: 10, borderRadius: 5 }}
+                    style={{ width: 280, height: 280, resizeMode: 'contain', backgroundColor: 'white', padding: 10, borderRadius: 5 }}
                   />
                 ) : (
                   <Text style={styles.text}>QR code not available.</Text>
@@ -387,22 +376,10 @@ const HomeScreen = () => {
                 <TouchableOpacity onPress={() => setQrModalVisible(false)} style={[styles.button, styles.closeButtonModal]}>
                   <Text style={styles.buttonText}>Close</Text>
                 </TouchableOpacity>
-              </TouchableOpacity>
+              </View>
             </TouchableOpacity>
-          </Modal>
-        </View>
+        </Modal>
 
-        {/* Profile Section */}
-        <View style={styles.profileContainer}>
-          <Image source={kotsIcon} style={styles.profileImage} />
-          <View style={styles.profileTextContainer}>
-            <Text style={styles.text}>Louis Gascon</Text>
-            <Text style={styles.schedule}>12/24/2025 - 00:04:20</Text>
-            <TouchableOpacity style={styles.button} onPress={() => {Linking.openURL("https://web.facebook.com/louisanton.gascon").catch(err => console.error('An error occurred', err));}}>
-              <Text style={styles.buttonText}>Contact Me</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -417,6 +394,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1E1E1E',
     paddingHorizontal: 10,
+  },
+  announcementCard: {
+    backgroundColor: '#334D7A', 
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  announcementTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontFamily: 'KeaniaOne',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  announcementContent: {
+    color: '#E0E0E0',
+    fontSize: 14,
+    textAlign: 'center',
+  
   },
   card: {
     backgroundColor: '#2D2D2D',
@@ -443,7 +439,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'KeaniaOne',
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: 4,
+    marginBottom: 8,
   },
   bigText: {
     color: 'white',
@@ -474,6 +471,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     padding: 0,
     marginLeft: 10,
+    transform: [{ scale: 1.5 }],
   },
   membersCard: {
     backgroundColor: '#3D3D3D',
@@ -487,13 +485,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'KeaniaOne',
     marginTop: 5, 
-  },
-  pullToRefreshHint: {
-    color: '#4CAF50',
-    fontSize: 12,
-    fontFamily: 'KeaniaOne',
-    marginTop: 8,
-    opacity: 0.7,
   },
   qrContainer: {
     backgroundColor: '#2D2D2D',
@@ -516,13 +507,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginLeft: 15,
-  },
-  schedule: {
-    color: '#FF4D4D',
-    fontSize: 16,
-    fontFamily: 'KeaniaOne',
-    textAlign: 'center',
-    marginVertical: 5,
   },
   expiry: {
     color: '#FF4D4D',
@@ -558,6 +542,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginRight: 15,
+    backgroundColor: '#555', 
   },
   profileTextContainer: {
     flex: 1,
@@ -610,8 +595,6 @@ const styles = StyleSheet.create({
   closeButtonModal: {
     marginTop: 20,
     backgroundColor: '#FF4D4D',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
   },
 });
 

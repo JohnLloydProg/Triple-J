@@ -897,3 +897,72 @@ export async function generateNewQrCode() {
     throw error;
   }
 }
+
+// added by gascon
+export const fetchLatestAnnouncement = async () => {
+  const token = await SecureStore.getItemAsync('accessToken');
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  const response = await fetch(`${BASE_URL}/api/announcements/latest/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+ 
+  if (response.status === 404) {
+    console.log("No latest announcement found.");
+    return null;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch announcement. Status: ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+
+
+export const fetchCurrentProgram = async (exerciseIconMap) => {
+  const token = await SecureStore.getItemAsync('accessToken');
+  if (!token) {
+    throw new Error("Authentication token not found. Please log in again.");
+  }
+
+ 
+  const response = await fetch(`${BASE_URL}/api/programs/current/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Failed to parse error response.' }));
+    if (response.status === 404) {
+      return { exercises: [], coach: null };
+    }
+    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+
+  const exercisesWithIcons = (data.exercises || []).map(ex => ({
+    ...ex,
+    icon: exerciseIconMap[ex.type],
+    completed: false, 
+  }));
+  
+  return {
+      exercises: exercisesWithIcons,
+      coach: data.coach 
+  };
+};
