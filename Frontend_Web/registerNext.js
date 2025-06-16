@@ -1,9 +1,34 @@
+const tripleJ_URL = "https://triple-j.onrender.com";
+
+
+async function registerAccount(validationCode, email, username, password, membership) {
+
+    localStorage.setItem("validationCode", validationCode);
+
+    let response = await fetch(tripleJ_URL + `/api/account/registration/${validationCode}`, {
+        method: "POST",
+        body: JSON.stringify({
+            "email": email,
+            "username": username,
+            "password": password,
+            "membership": membership
+    }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = await response.json();
+    return data;
+}
+
 function completeForm(){
     //values from the previous form
     let username = localStorage.getItem("username");
     let email = localStorage.getItem("email");
     let password = localStorage.getItem("password");
     let membershipType = localStorage.getItem("membershipType")
+    let validationCode = localStorage.getItem("validationCode");
 
 
     //values from the current form
@@ -16,9 +41,19 @@ function completeForm(){
     let weight = document.querySelector("#weight").value;
     let address = document.querySelector("#address").value;
 
+    // const queryString = window.location.search;
+    // const urlParams = new URLSearchParams(queryString);
+    // const validationCode = urlParams.get('validationCode');
+    // console.log(validationCode);
 
-    console.log(username, email, password, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
+    registerAccount(validationCode, email, username, password, membershipType).then((data) => {
+    console.log("DATA: "+ data);
+    console.log("Sucessfully registered account:");
+    });
 
-    //window.location.href = "accountRegistered.html" 
+
+    //console.log(username, email, password, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
+
+    window.location.href = "accountRegistered.html" 
 
 }
