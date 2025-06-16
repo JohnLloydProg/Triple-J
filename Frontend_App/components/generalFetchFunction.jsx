@@ -907,7 +907,7 @@ export const fetchLatestAnnouncement = async () => {
     throw new Error("Authentication token not found.");
   }
 
-  const response = await fetch(`${BASE_URL}/api/announcements/latest/`, {
+  const response = await fetch(`${BASE_URL}/announcements/latest/`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
