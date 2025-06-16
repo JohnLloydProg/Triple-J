@@ -223,7 +223,7 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
                     "line_items": [
                         {
                             "currency": "PHP",
-                            "amount": membership.membershipType.price * 100,
+                            "amount": int(membership.membershipType.price * 100),
                             "name": "Monthly Subscription",
                             "quantity": 1
                         }
@@ -234,7 +234,6 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
             "accept": "application/json",
             "Content-Type": "application/json",
             "authorization": "Basic c2tfdGVzdF9pSkE1cmJlMVJ0Q3BjWmN3TWd6aVVkd3c6",
-            'username': os.environ.get('PAYMONGO_KEY')
         }
 
         response = requests.post(url, json=payload, headers=headers)
@@ -254,7 +253,6 @@ class SuccessfulPaymentView(generics.GenericAPIView):
         if (not data):
             return Response("Invalid data received", status=status.HTTP_400_BAD_REQUEST)
         
-        print(data)
         try:
             memberCheckout = MemberCheckout.objects.get(checkoutId=data.get('attributes').get('data').get('id'))
         except MemberCheckout.DoesNotExist:
