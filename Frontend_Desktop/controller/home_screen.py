@@ -82,7 +82,6 @@ class HomeScreen(MDScreen):
         )
     
     def display_membership_expiry(self, request, result):
-        print(result)
         self.ids.membership_type.text = result.get('membershipType')
         if (result.get('subscription')):
             self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
