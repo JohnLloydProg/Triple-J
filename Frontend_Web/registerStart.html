@@ -46,16 +46,16 @@
                 <input id="email" class="mainInputs" type="text" placeholder="johndoe@email.com">
             </div>
 
-            <div>
+            <div style="width: 100%;">
                 <div class="subContainer">
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-address-card iconStyle"></i>
                     </div>
                     <p class="inputText">Choose Membership Type</p>
                 </div>
-                <select id="frequency" name="frequency">
-                    <option class="inputText" value="daily"  style="color: black;">Daily</option>
-                    <option class="inputText" value="monthly"  style="color: black;">Monthly</option>
+
+                <select id="membershipType" name="membershipType" class="mainInputs" style="width: 100%; font-family: Keania One, serif;">
+                     <option disabled selected >Select Membership Type</option>
                 </select>
             </div>
 
@@ -79,9 +79,6 @@
                 <input id="rePassword" class="mainInputs" type="text" placeholder="Re-type your Password">
             </div>
 
-            
-            
-
 
             <a class="mainInputs nextBtn" onclick="continueRegister()" > 
                 Continue Registration
@@ -98,6 +95,11 @@
     
     <script src="https://kit.fontawesome.com/154b347a8c.js" crossorigin="anonymous"></script>
     <script src="registerStart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            await checkmem();
+            });
+    </script>
     
 </body>
 </html>

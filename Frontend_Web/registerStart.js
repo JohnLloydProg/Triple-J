@@ -1,5 +1,33 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
 
+async function checkmem() {
+  try {
+    let response = await fetch(tripleJ_URL + `/api/account/membership-types`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    const data = await response.json();
+
+    const select = document.getElementById('membershipType');
+
+    select.length = 1;
+
+    data.forEach(type => {
+      const option = document.createElement('option');
+      option.value = type.id;         
+      option.textContent = type.name; 
+      option.style.color = 'black';
+      select.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error("Error fetching membership types:", error);
+  }
+}
+
 
 async function registerAccount(validationCode, email, username, password, membership) {
 
@@ -25,7 +53,7 @@ function continueRegister(){
     let email= document.querySelector("#email").value;
     let password = document.querySelector("#password").value;
     let rePassword= document.querySelector("#rePassword").value;
-    let membershipType = document.getElementById("frequency").value;
+    let membershipType = document.getElementById("membershipType").value;
 
 
 
