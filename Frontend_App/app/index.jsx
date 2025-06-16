@@ -198,7 +198,7 @@ export default function HomeScreen() {
         <Text style={styles.inputFieldText}>
           Password
         </Text>
-        <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
+        <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} secureTextEntry = {true}/>
       </View>
 
       <TouchableOpacity onPress={()=>{loginAccount(username,password)}}  style={styles.loginBtn}>

@@ -1,17 +1,20 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
 
 
-async function registerAccount(validationCode, email, username, password, membership) {
+async function registerAccountCont(validationCode, firstName, lastName, birthDate, height, weight,mobileNumber,address,sex) {
 
-    localStorage.setItem("validationCode", validationCode);
 
-    let response = await fetch(tripleJ_URL + `/api/account/registration/${validationCode}`, {
+    let response = await fetch(tripleJ_URL + `/api/account/registration-cont/${validationCode}`, {
         method: "POST",
         body: JSON.stringify({
-            "email": email,
-            "username": username,
-            "password": password,
-            "membership": membership
+            'first_name': firstName, 
+            'last_name':lastName, 
+            'birthDate':birthDate, 
+            'height':height, 
+            'weight':weight,
+            'mobileNumber':mobileNumber, 
+            'address':address, 
+            'sex':sex
     }),
         headers: {
             "Content-Type": "application/json"
@@ -21,6 +24,7 @@ async function registerAccount(validationCode, email, username, password, member
     const data = await response.json();
     return data;
 }
+
 
 function completeForm(){
     //values from the previous form
@@ -46,14 +50,18 @@ function completeForm(){
     // const validationCode = urlParams.get('validationCode');
     // console.log(validationCode);
 
-    registerAccount(validationCode, email, username, password, membershipType).then((data) => {
-    console.log("DATA: "+ data);
-    console.log("Sucessfully registered account:");
-    });
 
 
-    //console.log(username, email, password, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
+    registerAccountCont(validationCode, firstName,lastName, dob, height, weight, contactNum, address, sex).then((data) => {
+        console.log("DATA2: "+ data);
+        console.log("Sucessfully registered account:");
+        });
 
-    window.location.href = "accountRegistered.html" 
+     
+
+
+    console.log(username, email, password, firstName, lastName, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
+
+   // window.location.href = "accountRegistered.html" 
 
 }
