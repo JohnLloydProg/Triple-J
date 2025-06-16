@@ -89,9 +89,8 @@ export default function Diet() {
 
             // Calculate BMI
             if (parsedWeight > 0 && parsedHeight > 0) {
-              const heightInMeters = parsedHeight / 100;
               const calculatedBMI =
-                parsedWeight / (heightInMeters * heightInMeters);
+                parsedWeight / (parsedHeight * parsedHeight);
               setBMI(calculatedBMI);
               setBmiCategory(getBmiClassification(calculatedBMI));
             }
@@ -111,11 +110,9 @@ export default function Diet() {
       if (!bmi || !bmiCategory) return; // Ensure BMI and category are calculated first
 
       try {
-        // Convert height from cm to meters for the API
-        const heightInMeters = height / 100;
 
         const response = await fetch(
-          `https://triple-j.onrender.com/api/dietary/meal?height=${heightInMeters.toFixed(
+          `https://triple-j.onrender.com/api/dietary/meal?height=${height.toFixed(
             2
           )}&weight=${weight}&bmi=${bmi.toFixed(
             2
@@ -184,7 +181,7 @@ export default function Diet() {
           <View style={styles.bmiInfoColumn}>
             <Text style={styles.bmiInfoLabel}>Height</Text>
             <Text style={styles.bmiInfoValue}>
-              {height ? `${height} cm` : "—"}
+              {height ? `${height} m` : "—"}
             </Text>
           </View>
           <View style={styles.bmiInfoColumn}>

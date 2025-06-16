@@ -112,6 +112,7 @@ export default function Settings() {
     }, 2000);
     handlegetMemberInfo();
     handlegetMembershipInfo();
+    console.log("Refreshsed:");
   }, []);
 
   const [memberInfo, setMemberInfo] = useState([]);
@@ -130,11 +131,13 @@ export default function Settings() {
 
   const handlegetMembershipInfo = async () => {
     const response = await getMembershipInfo();
+    setMembershipInfo(response);
     await saveToken("memberId", response.member.toString());
     await saveToken("startDate", response.startDate.toString());
     await saveToken("expirationDate", response.expirationDate.toString());
     await saveToken("price", response.price.toString());
-    setMembershipInfo(response);
+    await saveToken("membershipType", response.membershipType);
+    
   }
 
 useEffect(() => {
@@ -164,7 +167,7 @@ useEffect(() => {
             Account Holder: {memberInfo.first_name} 
             </Text>
             <Text style={styles.subText}>
-            Membership Type: {memberInfo.membershipType}
+            Membership Type: {membershipInfo.membershipType}
             </Text>
             <Text style={styles.subText}>
             Height: {memberInfo.height} cm
@@ -192,7 +195,7 @@ useEffect(() => {
 
           <View  style={{marginBottom: 20}}>
                   <Text style={styles.inputFieldText}>
-                    Height (cm)
+                    Height (m)
                   </Text>
                   <TextInput  onChangeText={newText => {setMemberHeight(newText)}} cursorColor={colors.redAccent} style={styles.inputField} />
           </View>
