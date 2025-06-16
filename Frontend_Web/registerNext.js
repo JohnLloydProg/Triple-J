@@ -23,7 +23,7 @@ async function registerAccount(validationCode, email, username, password, member
 async function registerAccountCont(validationCode, firstName, lastName, birthDate, height, weight,mobileNumber,address,sex) {
 
 
-    let response = await fetch(tripleJ_URL + `/api/account/registration/${validationCode}`, {
+    let response = await fetch(tripleJ_URL + `/api/account/registration-cont/${validationCode}`, {
         method: "POST",
         body: JSON.stringify({
             'first_name': firstName, 
