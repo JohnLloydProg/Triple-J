@@ -787,12 +787,14 @@ export async function fetchCurrentProgram(exerciseIconMap) {
     console.log("generalFetchFunction: Attempting to fetch current program...");
     const rawProgramData = await request('/gym/program/current', 'GET');
     
+    
     console.log("Program Data: Raw program data received from API:", JSON.stringify(rawProgramData, null, 2));
 
     let exercisesArrayFromApi = [];
 
     if (rawProgramData && Array.isArray(rawProgramData.workouts)) {
         exercisesArrayFromApi = rawProgramData.workouts;
+        console.log("if may lumabas, it means gumana" + exercisesArrayFromApi)
     } else {
         console.warn("generalFetchFunction: 'workouts' array not found or not an array in API response:", rawProgramData);
         return []; 
