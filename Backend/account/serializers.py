@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import Member, DailyMembership, MonthlyMembership
+from account.models import Member, Membership, MembershipType
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -8,7 +8,7 @@ class MemberSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'first_name', 'last_name', 
             'email', 'birthDate', 'height', 'weight',
-            'mobileNumber', 'address', 'gymTrainer','membershipType', 'sex', 
+            'mobileNumber', 'address', 'gymTrainer', 'sex', 
             'profilePic'
             ]
 
@@ -18,10 +18,10 @@ class MemberSerializer(serializers.ModelSerializer):
         return member
 
 
-class DailyMembershipSerializer(serializers.ModelSerializer):
+class MembershipSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DailyMembership
-        fields = ['startDate', 'member', 'price']
+        model = Membership
+        fields = ['startDate', 'member', 'membershipType', 'expirationDate']
         extra_kwargs = {
             'startDate':{'read_only':True},
             'member':{'read_only':True},
@@ -29,13 +29,7 @@ class DailyMembershipSerializer(serializers.ModelSerializer):
             }
 
 
-class MonthlyMembershipSerializer(serializers.ModelSerializer):
+class MembershipTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MonthlyMembership
-        fields = ['startDate', 'member', 'price', 'expirationDate']
-        extra_kwargs = {
-            'startDate':{'read_only':True},
-            'member':{'read_only':True},
-            'price':{'read_only':True},
-            'expirationDate':{'read_only':True}
-            }
+        model = MembershipType
+        fields = ['id', 'name', 'price']

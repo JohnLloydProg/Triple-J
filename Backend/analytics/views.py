@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from attendance.models import Attendance
-from account.models import Member, MonthlyMembership, DailyMembership, MemberCheckout
+from account.models import Member, Membership, MembershipType, MemberCheckout
 from sales.models import Sale
 from sales.serializers import SaleSerializer
 from gym.models import ProgramWorkout
@@ -45,8 +45,8 @@ class MembersReportView(generics.GenericAPIView):
         response['demographics']['M'] = len(Member.objects.filter(sex='M'))
         response['demographics']['F'] = len(Member.objects.filter(sex='F'))
         response['memberships'] = {}
-        response['memberships']['Monthly'] = len(MonthlyMembership.objects.all())
-        response['memberships']['Daily'] = len(DailyMembership.objects.all())
+        for membership in Membership.objects.all():
+            response['memberships'][membership.membershipType.name] = response['memberships'].get(membership.membershipType.name, 1) + 1
         response['workouts'] = {pType:0 for pType in ['L', 'C', 'U', 'PS', 'PL']}
         for programWorkout in ProgramWorkout.objects.all():
             response['workouts'][programWorkout.workout.type] += 1
