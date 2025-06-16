@@ -162,7 +162,11 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
 
+from google.oauth2 import service_account
 
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.environ.get('GS_CREDENTIALS_KEY')
+)
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage"

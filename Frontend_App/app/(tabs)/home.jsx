@@ -258,10 +258,14 @@ const HomeScreen = () => {
             <View style={[styles.announcementCard, {paddingVertical: 30, alignItems: 'center'}]}>
                 <ActivityIndicator color="#FFFFFF" />
             </View>
-        ) : announcement && (
+        ) : announcement ? (
             <View style={styles.announcementCard}>
                 <Text style={styles.announcementTitle}>{announcement.title}</Text>
                 <Text style={styles.announcementContent}>{announcement.content}</Text>
+            </View>
+        ) : (
+            <View style={styles.announcementCard}>
+                <Text style={styles.announcementContent}>No announcements at the moment.</Text>
             </View>
         )}
 
@@ -396,10 +400,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   announcementCard: {
-    backgroundColor: '#334D7A', 
+    backgroundColor: '#3D3D3D', 
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    justifyContent: 'center',
+    minHeight: 60,
   },
   announcementTitle: {
     color: 'white',
@@ -411,6 +417,7 @@ const styles = StyleSheet.create({
   announcementContent: {
     color: '#E0E0E0',
     fontSize: 14,
+    fontFamily: 'KeaniaOne',
     textAlign: 'center',
   
   },
@@ -531,7 +538,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   profileContainer: {
-    backgroundColor: '#2D2D2D',
+    backgroundColor: '#3D3D3D',
     borderRadius: 10,
     padding: 15,
     flexDirection: 'row',
