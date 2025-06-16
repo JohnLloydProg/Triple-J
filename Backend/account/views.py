@@ -17,6 +17,7 @@ from rest_framework import status
 import requests
 import smtplib
 import ssl
+import os
 
 html = """
 <!DOCTYPE html>
@@ -232,7 +233,8 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
-            "authorization": "Basic c2tfdGVzdF9pSkE1cmJlMVJ0Q3BjWmN3TWd6aVVkd3c6"
+            "authorization": "Basic c2tfdGVzdF9pSkE1cmJlMVJ0Q3BjWmN3TWd6aVVkd3c6",
+            'username': os.environ.get('PAYMONGO_KEY')
         }
 
         response = requests.post(url, json=payload, headers=headers)
