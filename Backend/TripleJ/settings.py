@@ -162,11 +162,7 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
 
-from google.oauth2 import service_account
 
-GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    "triplej-450613-fc3c155058a1.json"
-)
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage"
