@@ -1,25 +1,6 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
 
 
-async function registerAccount(validationCode, email, username, password, membership) {
-
-    let response = await fetch(tripleJ_URL + `/api/account/registration/${validationCode}`, {
-        method: "POST",
-        body: JSON.stringify({
-            "email": email,
-            "username": username,
-            "password": password,
-            "membership": membership
-    }),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
-
-    const data = await response.json();
-    return data;
-}
-
 async function registerAccountCont(validationCode, firstName, lastName, birthDate, height, weight,mobileNumber,address,sex) {
 
 
@@ -69,15 +50,12 @@ function completeForm(){
     // const validationCode = urlParams.get('validationCode');
     // console.log(validationCode);
 
-    registerAccount(validationCode, email, username, password, membershipType).then((data) => {
-    console.log("DATA1: "+ data);
-    console.log("Sucessfully registered account:");
 
-        registerAccountCont(validationCode, firstName,lastName, dob, height, weight, contactNum, address, sex).then((data) => {
+
+    registerAccountCont(validationCode, firstName,lastName, dob, height, weight, contactNum, address, sex).then((data) => {
         console.log("DATA2: "+ data);
         console.log("Sucessfully registered account:");
         });
-    });
 
      
 
