@@ -84,7 +84,7 @@
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-house iconStyle"></i>
                     </div>
-                    <p class="inputText">Address</p>
+                    <p class="inputText">Address(*)</p>
                 </div>
                 <input id="address" class="mainInputs" type="text" placeholder="Street Address, City, State/Province, ZIP/Postal Code">
             </div>
@@ -94,7 +94,7 @@
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-weight-scale iconStyle"></i>
                     </div>
-                    <p class="inputText">Weight</p>
+                    <p class="inputText">Weight (kg)*</p>
                 </div>
                 <input id="weight" class="mainInputs" type="text" placeholder="Enter your weight">
             </div>
@@ -104,14 +104,17 @@
                     <div style="margin-right: 1em;">
                         <i class="fa-solid fa-ruler iconStyle"></i>
                     </div>
-                    <p class="inputText">Height</p>
+                    <p class="inputText">Height (cm)*</p>
                 </div>
                 <input id="height" class="mainInputs" type="text" placeholder="Enter your height">
             </div> 
 
-            <a class="mainInputs nextBtn" onclick="completeForm()"> 
-                Create Account
-            </a>
+                <div class="subContainer">
+                    <p class="inputText">fields with asterisk (*) are optional</p>
+                </div>
+
+            <a class="mainInputs nextBtn" onclick="completeForm()"> Create Account
+</a>
 
             
         </form>   
