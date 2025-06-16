@@ -11,7 +11,7 @@ async function registerAccount(validationCode, email, username, password, member
             "email": email,
             "username": username,
             "password": password,
-            "membershipType": membership
+            "membership": membership
     }),
         headers: {
             "Content-Type": "application/json"
