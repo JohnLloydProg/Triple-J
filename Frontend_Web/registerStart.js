@@ -1,3 +1,27 @@
+const tripleJ_URL = "https://triple-j.onrender.com";
+
+
+async function registerAccount(validationCode, email, username, password, membership) {
+
+    localStorage.setItem("validationCode", validationCode);
+
+    let response = await fetch(tripleJ_URL + `/api/account/registration/${validationCode}`, {
+        method: "POST",
+        body: JSON.stringify({
+            "email": email,
+            "username": username,
+            "password": password,
+            "membershipType": membership
+    }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = await response.json();
+    return data;
+}
+
 
 function continueRegister(){
     let username = document.querySelector("#username").value;
@@ -5,10 +29,17 @@ function continueRegister(){
     let password = document.querySelector("#password").value;
     let rePassword= document.querySelector("#rePassword").value;
     let membershipType = document.getElementById("frequency").value;
-    
 
-    console.log(password);
-    console.log(rePassword);
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const validationCode = urlParams.get('validationCode');
+    console.log(validationCode);
+
+    await registerAccount(validationCode, email, username, password, membershipType).then((data) => {
+    console.log("Sucessfully registered account:");
+    }
+
+
     
    if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
 
@@ -21,6 +52,6 @@ function continueRegister(){
 
     window.location.href = "registerNext.html" 
    }else{
-    alert("mali ka");
+    alert("Incorred Credentials, please try again");
    }
 }
