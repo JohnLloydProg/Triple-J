@@ -174,7 +174,7 @@ class MembershipView(generics.GenericAPIView):
         
         
         membership = Membership.objects.get(member=member)
-        data = {'id':membership.pk, 'member':member.pk, 'membershipType':membership.membershipType.name, 'startDate':membership.startDate, 'expirationDate':membership.expirationDate}
+        data = {'id':membership.pk, 'member':member.pk, 'membershipType':membership.membershipType.name, 'startDate':membership.startDate, 'expirationDate':membership.expirationDate, 'subscription':membership.membershipType.subscription}
         return Response(data, status=status.HTTP_200_OK)
 
 

@@ -76,15 +76,16 @@ class HomeScreen(MDScreen):
         self.ids.time_out.text = str(timeOut)
         self.ids.time_in.text = str(timeIn)
         self.ids.member_name.text = f'{result.get('first_name')} {result.get('last_name')}'
-        if (result.get('membershipType') == 'Monthly'):
-            GeneralRequest(
-                self.app.base_url + f'api/account/membership?id={str(result.get('id'))}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, 
-                on_success=self.display_membership_expiry, refresh=self.app.refresh
-            )
+        GeneralRequest(
+            self.app.base_url + f'api/account/membership?id={str(result.get('id'))}', req_headers={"Content-Type" : "application/json",'Authorization': f'Bearer {self.app.access}'}, 
+            on_success=self.display_membership_expiry, refresh=self.app.refresh
+        )
     
     def display_membership_expiry(self, request, result):
-        self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
+        print(result)
         self.ids.membership_type.text = result.get('membershipType')
+        if (result.get('subscription')):
+            self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
     
     def add_sales_record(self):
         self.sales_dialog = MDDialog(

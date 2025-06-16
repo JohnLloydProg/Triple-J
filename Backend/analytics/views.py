@@ -23,7 +23,10 @@ class PeakActivityView(generics.GenericAPIView):
 
     def get(self, request:Request, month:int) -> Response:
         hourRecords = {hour:0 for hour in range(0, 24)}
-        hours = [(attendance.timeIn.hour, attendance.timeOut.hour) for attendance in objectsThisMonth(Attendance, month)]
+        hours = []
+        for attendance in objectsThisMonth(Attendance, month):
+            if (attendance.timeOut):
+                hours.append((attendance.timeIn.hour, attendance.timeOut.hour))
         for inOut in hours:
             for inHour in range(inOut[0], inOut[1]+1):
                 hourRecords[inHour] += 1
