@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from rest_framework import generics
-from account.serializers import DailyMembershipSerializer, MonthlyMembershipSerializer, MemberSerializer
+from account.serializers import MembershipSerializer, MembershipTypeSerializer, MemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from django.views import View
 from datetime import date
-from account.models import Member, ValidationSession, MonthlyMembership, DailyMembership, MemberCheckout
+from account.models import Member, ValidationSession, Membership, MembershipType, MemberCheckout
 from sales.models import Sale
 from rest_framework import status
 import requests
@@ -95,16 +95,17 @@ class AccountRegistrationView(generics.GenericAPIView):
 
         if (not username or not email or not password or not membershipType):
             return Response('Missing required fields', status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            membershipTypeObject = MembershipType(pk=membershipType)
+        except MembershipType.DoesNotExist:
+            return Response('Membership Type does not exist!', status=status.HTTP_404_NOT_FOUND)
 
-        member = Member(username=username, email=email, membershipType=membershipType)
+        member = Member(username=username, email=email)
         member.set_password(password)
         member.save()
 
-        if (member.membershipType == 'Monthly'):
-            membership = MonthlyMembership(member=member)
-            membership.extendExpirationDate()
-        else:
-            membership = DailyMembership(member=member)
+        membership = Membership(member=member, membershipType=membershipTypeObject)
         membership.save()
 
         return Response('Account successfully registered!', status=status.HTTP_201_CREATED)
@@ -171,13 +172,10 @@ class MembershipView(generics.GenericAPIView):
         except Member.DoesNotExist:
             return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
         
-        if (member.membershipType == 'Daily'):
-            membership = DailyMembership.objects.get(member=member)
-            serializer = DailyMembershipSerializer(membership)
-        else:
-            membership = MonthlyMembership.objects.get(member=member)
-            serializer = MonthlyMembershipSerializer(membership)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        membership = Membership.objects.get(member=member)
+        data = {'id':membership.pk, 'member':member.pk, 'membershipType':membership.membershipType.name, 'startDate':membership.startDate, 'expirationDate':membership.expirationDate}
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class MembershipChangeView(generics.GenericAPIView):
@@ -191,23 +189,14 @@ class MembershipChangeView(generics.GenericAPIView):
         
         if (request.data.get('changeTo') not in ['Daily', 'Monthly']):
             return Response('Invalid membership type (Daily or Monthly only)', status=status.HTTP_400_BAD_REQUEST)
-
-        if (request.data.get('changeTo') == 'Monthly'):
-            oldMembership = DailyMembership.objects.get(member=member)
-            newMembership = MonthlyMembership(startDate=oldMembership.startDate, member=member)
-            newMembership.extendExpirationDate()
-            newMembership.save()
-            member.membershipType = 'Monthly'
-            member.save()
-            oldMembership.delete()
-        else:
-            oldMembership = MonthlyMembership.objects.get(member=member)
-            newMembership = DailyMembership(startDate=oldMembership.startDate, member=member)
-            newMembership.save()
-            member.membershipType = 'Daily'
-            member.save()
-            oldMembership.delete()
         return Response('Membership successfully changed', status=status.HTTP_200_OK)
+
+
+class MembershipTypesView(generics.GenericAPIView):
+    permission_classes = []
+
+    def get(self, request:Request) -> Response:
+        return Response(MembershipTypeSerializer(MembershipType.objects.all(), many=True).data, status=status.HTTP_200_OK)
 
 
 class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
@@ -219,8 +208,9 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
         except Member.DoesNotExist:
             return Response('Member does not exist', status=status.HTTP_404_NOT_FOUND)
 
-        if (member.membershipType != 'Monthly'):
-            return Response('Member does not have a monthly subscription', status=status.HTTP_400_BAD_REQUEST)
+        membership = Membership.objects.get(member=member)
+        if (not membership.membershipType.subscription):
+            return Response('Membership does not have a subscription', status=status.HTTP_400_BAD_REQUEST)
         
         url = "https://api.paymongo.com/v1/checkout_sessions"
 
@@ -232,7 +222,7 @@ class CheckoutMonthlySubscriptionView(generics.GenericAPIView):
                     "line_items": [
                         {
                             "currency": "PHP",
-                            "amount": 100000,
+                            "amount": membership.membershipType.price * 100,
                             "name": "Monthly Subscription",
                             "quantity": 1
                         }
@@ -268,11 +258,11 @@ class SuccessfulPaymentView(generics.GenericAPIView):
         except MemberCheckout.DoesNotExist:
             return Response("Member checkout session does not exist", status=status.HTTP_404_NOT_FOUND)
 
-        membership = MonthlyMembership.objects.get(member=memberCheckout.member)
+        membership = Membership.objects.get(member=memberCheckout.member)
         membership.extendExpirationDate()
         membership.save()
 
-        sales = Sale(amount=1000.00, description='Monthly Membership', receipt_no=memberCheckout.checkoutId)
+        sales = Sale(amount=membership.membershipType.price, description=membership.membershipType.name, receipt_no=memberCheckout.checkoutId)
         sales.save()
 
         memberCheckout.delete()

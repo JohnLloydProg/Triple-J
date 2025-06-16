@@ -36,7 +36,6 @@ class Member(User):
     mobileNumber = models.CharField(max_length=15, null=True, blank=True)
     address = models.CharField(max_length=200, null=True, blank=True)
     gymTrainer = models.ForeignKey('self', null=True, on_delete=models.SET_NULL, blank=True)
-    membershipType = models.CharField(max_length=15)
     sex = models.CharField(max_length=30, default='NA')
     is_trainer = models.BooleanField(default=False)
     facebookAccount = models.URLField(null=True, blank=True)
@@ -46,6 +45,12 @@ class Member(User):
         return f'{self.username} ({str(self.pk)})'
 
 
+class MembershipType(models.Model):
+    name = models.CharField(max_length=50)
+    subscription = models.BooleanField()
+    price = models.FloatField()
+
+
 class Membership(models.Model):
     """
     Model for the membership details. Also the parent model for daily and monthly memberships
@@ -53,29 +58,12 @@ class Membership(models.Model):
 
     startDate = models.DateField(auto_now_add=True, editable=False)
     member = models.OneToOneField(Member, on_delete=models.CASCADE, editable=False)
-    price = models.FloatField()
+    membershipType = models.ForeignKey(MembershipType, on_delete=models.CASCADE)
+    expirationDate = models.DateField(default=now)
 
     class Meta:
-        abstract = True
         ordering = ['startDate']
-
-
-class DailyMembership(Membership):
-    """
-    Model for daily membership. Does not contain an expiration date
-    """
     
-    price = 50.00
-
-
-class MonthlyMembership(Membership):
-    """
-    Model for montly membership. Contains expiration date for tracking.
-    """
-
-    expirationDate = models.DateField(default=now)
-    price = 1000.00
-
     def extendExpirationDate(self) -> None:
         self.expirationDate += timedelta(days=30)
 
