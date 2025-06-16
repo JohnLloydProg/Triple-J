@@ -96,7 +96,7 @@ const HomeScreen = () => {
     }
   }, []);
   
-  const loadProgramData = useCallback(async () => {
+    const loadProgramData = useCallback(async () => {
     setProgramLoading(true);
     setProgramError(false);
     setErrorMessage('');
@@ -104,9 +104,9 @@ const HomeScreen = () => {
 
     try {
       const programPayload = await fetchCurrentProgram(exerciseIconMap);
-      console.log("HomeScreen: fetchCurrentProgram returned:", JSON.stringify(programPayload, null, 2));
-
+      
       if (programPayload && Array.isArray(programPayload.exercises)) {
+        console.log("Correct payload format received.");
         setExercises(programPayload.exercises);
         setCoachInfo(programPayload.coach); 
 
@@ -116,13 +116,29 @@ const HomeScreen = () => {
           const currentDayName = dayNames[today.getDay()];
           setErrorMessage(`No exercises scheduled for ${currentDayName}.`);
         }
-      } else {
+      } 
+      else if (programPayload && Array.isArray(programPayload)) {
+        console.log("Adapting to direct array payload.");
+        setExercises(programPayload);
+        setCoachInfo(null);
+
+        if (programPayload.length === 0) {
+          const today = new Date();
+          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          const currentDayName = dayNames[today.getDay()];
+          setErrorMessage(`No exercises scheduled for ${currentDayName}.`);
+        }
+      }
+      else {
         console.warn("HomeScreen: fetchCurrentProgram did not return a valid payload. Received:", programPayload);
         setExercises([]);
         setErrorMessage('Workout data is not in the expected format or none found for today.');
       }
+
     } catch (error) {
       console.error("HomeScreen: Error in loadProgramData:", error);
+      if (error.message.includes("log in again")) {
+      }
       setProgramError(true);
       setErrorMessage(error.message || "Could not load your program. Pull down to refresh.");
       setExercises([]);
@@ -145,6 +161,7 @@ const HomeScreen = () => {
   const loadQrData = useCallback(async () => {
     try {
       const data = await fetchQrCode();
+      console.log ("gumana yata pre: " + data)
       setQrData(data);
     } catch (error) {
       console.error("HomeScreen: Failed to load QR code:", error);
@@ -323,7 +340,7 @@ const HomeScreen = () => {
         <View style={styles.qrContainer}>
           <TouchableOpacity onPress={() => { if (qrData && qrData.image) setQrModalVisible(true); else Alert.alert("QR Code", "QR Code not available. Please refresh.")}}>
             <Image
-              source={qrData && qrData.image ? { uri: `https://triple-j.onrender.com${qrData.image}` } : placeholderQrIcon}
+              source={qrData && qrData.image ? { uri: qrData.image} : placeholderQrIcon}
               style={styles.qrBox}
             />
           </TouchableOpacity>
@@ -371,7 +388,7 @@ const HomeScreen = () => {
               <View style={styles.modalContent}>
                 {qrData && qrData.image ? (
                   <Image
-                    source={{ uri: `https://triple-j.onrender.com${qrData.image}` }}
+                    source={{ uri:qrData.image }}
                     style={{ width: 280, height: 280, resizeMode: 'contain', backgroundColor: 'white', padding: 10, borderRadius: 5 }}
                   />
                 ) : (
