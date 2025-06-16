@@ -36,22 +36,23 @@ function continueRegister(){
     console.log(validationCode);
 
     registerAccount(validationCode, email, username, password, membershipType).then((data) => {
+    console.log("DATA: "+ data);
     console.log("Sucessfully registered account:");
     });
 
 
     
-   if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
+//    if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
 
-    localStorage.setItem("username", username);
-    localStorage.setItem("email", email);
-    localStorage.setItem("password", password);
-    localStorage.setItem("membershipType", membershipType);
+//     localStorage.setItem("username", username);
+//     localStorage.setItem("email", email);
+//     localStorage.setItem("password", password);
+//     localStorage.setItem("membershipType", membershipType);
   
 
 
-    window.location.href = "registerNext.html" 
-   }else{
-    alert("Incorred Credentials, please try again");
-   }
+//     window.location.href = "registerNext.html" 
+//    }else{
+//     alert("Incorred Credentials, please try again");
+//    }
 }
