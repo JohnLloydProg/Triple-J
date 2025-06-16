@@ -62,6 +62,6 @@ function completeForm(){
 
     console.log(username, email, password, firstName, lastName, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
 
-   // window.location.href = "accountRegistered.html" 
+   window.location.href = "accountRegistered.html" 
 
 }
