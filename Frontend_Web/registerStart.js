@@ -35,9 +35,9 @@ function continueRegister(){
     const validationCode = urlParams.get('validationCode');
     console.log(validationCode);
 
-    await registerAccount(validationCode, email, username, password, membershipType).then((data) => {
+    registerAccount(validationCode, email, username, password, membershipType).then((data) => {
     console.log("Sucessfully registered account:");
-    }
+    });
 
 
     
