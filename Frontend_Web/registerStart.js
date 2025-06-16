@@ -53,7 +53,7 @@ function continueRegister(){
     let email= document.querySelector("#email").value;
     let password = document.querySelector("#password").value;
     let rePassword= document.querySelector("#rePassword").value;
-    let membershipType = document.getElementById("frequency").value;
+    let membershipType = document.getElementById("membershipType").value;
 
 
 
