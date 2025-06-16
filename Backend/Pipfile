@@ -37,6 +37,7 @@ urllib3 = "==2.3.0"
 uvicorn = "==0.34.0"
 dj-database-url = "*"
 whitenoise = "*"
+django-storages = {extras = ["google"], version = "*"}
 
 [dev-packages]
 
