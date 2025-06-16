@@ -16,6 +16,13 @@ function continueRegister(){
     localStorage.setItem("email", email);
     localStorage.setItem("password", password);
     localStorage.setItem("membershipType", membershipType);
+
+     const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const validationCode = urlParams.get('validationCode');
+    console.log(validationCode);
+
+    localStorage.setItem("validationCode", validationCode);
   
 
 
