@@ -8,7 +8,7 @@ class MemberSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'first_name', 'last_name', 
             'email', 'birthDate', 'height', 'weight',
-            'mobileNumber', 'address', 'gymTrainer','membershipType', 'sex', 
+            'mobileNumber', 'address', 'gymTrainer', 'sex', 
             'profilePic'
             ]
 
