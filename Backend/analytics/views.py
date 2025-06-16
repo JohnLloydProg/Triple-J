@@ -42,8 +42,8 @@ class MembersReportView(generics.GenericAPIView):
         response = {}
         response['number'] = len(Member.objects.all())
         response['demographics'] = {}
-        response['demographics']['M'] = len(Member.objects.filter(sex='M'))
-        response['demographics']['F'] = len(Member.objects.filter(sex='F'))
+        response['demographics']['M'] = len(Member.objects.filter(sex='Male'))
+        response['demographics']['F'] = len(Member.objects.filter(sex='Female'))
         response['memberships'] = {}
         for membership in Membership.objects.all():
             response['memberships'][membership.membershipType.name] = response['memberships'].get(membership.membershipType.name, 1) + 1
