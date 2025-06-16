@@ -72,15 +72,17 @@ function completeForm(){
     registerAccount(validationCode, email, username, password, membershipType).then((data) => {
     console.log("DATA1: "+ data);
     console.log("Sucessfully registered account:");
+
+        registerAccountCont(validationCode, firstName,lastName, dob, height, weight, contactNum, address, sex).then((data) => {
+        console.log("DATA2: "+ data);
+        console.log("Sucessfully registered account:");
+        });
     });
 
-     registerAccountCont(validationCode, firstName,lastName, dob, height, weight, contactNum, address, sex).then((data) => {
-    console.log("DATA2: "+ data);
-    console.log("Sucessfully registered account:");
-    });
+     
 
 
-    console.log(username, email, password, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
+    console.log(username, email, password, firstName, lastName, membershipType, firstName,lastName,contactNum, sex, height, weight, address, dob);
 
    // window.location.href = "accountRegistered.html" 
 
