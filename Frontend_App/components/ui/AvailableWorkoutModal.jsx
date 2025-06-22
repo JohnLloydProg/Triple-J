@@ -6,6 +6,12 @@ import colors from '../../constants/globalStyles';
 import {addWorkout, getProgram, getWorkout,getAvailableWorkouts} from '@/components/generalFetchFunction';
 import {useState} from 'react';
 
+import upper from '@/assets/images/Upper-Workout-icon.png';
+import push from '@/assets/images/push.png';
+import pull from '@/assets/images/pull.png';
+import core from '@/assets/images/core.png';
+import lower from '@/assets/images/Treadmill.png';
+
 
 const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible, modalChoiceVisible, selectedProgram, setSelectedItem, setAvailableWorkouts, setmodalChoiceVisible,selectedWorkoutItem, setRenderer, renderer, setOfflineInfo, OfflineInfo}) => {
   const [reps,setReps] = useState("");
@@ -14,34 +20,51 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
   const [weight,setWeight] = useState("");
   const [distance,setDistance] = useState("");
 
+  const [categorizedWorkoutsModal, setcategorizedWorkoutsModal] = useState(false);
+  const [selectedCategory, setselectedCategory] = useState("Push");
+
+  
+
+  const workoutCategories = ["Push", "Pull", "Lower", "Upper", "Core"]
+  const convertedworkoutCategories = {
+    "Push": push, 
+    "Pull": pull, 
+    "Lower": lower, 
+    "Upper": upper, 
+    "Core": core
+  }
+
  return (
     <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
 
             <View style={styles.modalTitleCont}>
-                <Text style={styles.modalTitle}> Available Workout/s </Text>
+                <Text style={styles.modalTitle}> Available Category/s </Text>
             </View>
 
             <View style={styles.modalWorkoutCont}>
-              {availableWorkouts.length > 0 ? availableWorkouts.map((workout, index) => (
-                <View style={styles.indivWorkoutModalViewCont} key={`${workout.name}-${index}`}>
-                  <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+              {workoutCategories ? workoutCategories.map((category) => (
+                <TouchableOpacity style={styles.indivWorkoutModalViewCont}
+                  onPress={() => {
+                    setselectedCategory(category);
+                    setcategorizedWorkoutsModal(true);
+                  }}
+                >
 
-                  <View>
-                    <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                  <Image source={convertedworkoutCategories[category] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}}/>
+
+                  <View> 
+                    <Text style={styles.workoutNameModal}>
+                      {category}
+                    </Text>
                   </View>
 
-                  <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
-                    handlePressChoice(workout);
-                    }}>
-                    <FontAwesome6 name="plus" size={20} color="black" />
-                  </TouchableOpacity>
-
-                </View>
-              )) : (
+                </TouchableOpacity>
+              )):(
                 <View>
-                  <Text style={styles.noWorkoutModal}>No workout/s available</Text>
+                  <Text style={styles.noWorkoutModal}>No category/s available</Text>
                 </View>
               )}
+
             </View>
 
             <TouchableOpacity style={styles.closeBtn} onPress={() => setavailWorkoutVisible(false)}> 
@@ -117,6 +140,44 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                       </View>
             
                   </View>
+                </Modal>
+
+
+                <Modal visible={categorizedWorkoutsModal} animationType="slide" transparent={true}>
+                    <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
+
+                      <View style={styles.modalTitleCont}>
+                          <Text style={styles.modalTitle}> Available Workout/s </Text>
+                      </View>
+
+                      <View style={styles.modalWorkoutCont}>
+                        {availableWorkouts ? availableWorkouts[selectedCategory].map((workout, index) => (
+                          <View style={styles.indivWorkoutModalViewCont} key={`${workout.name}-${index}`}>
+                            <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
+
+                            <View>
+                              <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                            </View>
+
+                            <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
+                              handlePressChoice(workout);
+                              }}>
+                              <FontAwesome6 name="plus" size={20} color="black" />
+                            </TouchableOpacity>
+
+                          </View>
+                        )) : (
+                          <View>
+                            <Text style={styles.noWorkoutModal}>No workout/s available</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <TouchableOpacity style={styles.closeBtn} onPress={() => setcategorizedWorkoutsModal(false)}> 
+                          <Text style={styles.closeBtnText} >Close </Text>
+                      </TouchableOpacity>
+
+                   </ScrollView>
                 </Modal>
 
             
