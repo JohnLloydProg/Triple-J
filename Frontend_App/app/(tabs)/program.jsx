@@ -272,7 +272,8 @@ useEffect(() => {
     getassignedMembers();
     getIfUserTrainer();
     getProgram().then(data => {setProgramData(data)});
-    getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
+    getAvailableWorkouts().then(data => {
+      setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
       setcurrentTimeLineInfo(data);
     });
