@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Triple-J Admin"
-#define MyAppVersion "1.5"
+#define MyAppVersion "1.6"
 #define MyAppPublisher "John Lloyd Unida"
 #define MyAppExeName "TripleJAdmin.exe"
 
@@ -29,7 +29,7 @@ LicenseFile=C:\Users\johnl\Documents\VSC\Software\Triple-J\Frontend_Desktop\lice
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 OutputDir=C:\Users\johnl\Documents\VSC\Software\Triple-J\Frontend_Desktop\dist
-OutputBaseFilename=TripleJAdmin_WINDOWS_1.5_INSTALLER
+OutputBaseFilename=TripleJAdmin_WINDOWS_1.6_INSTALLER
 SetupIconFile=C:\Users\johnl\Documents\VSC\Software\Triple-J\Frontend_Desktop\logo.ico
 SolidCompression=yes
 WizardStyle=modern

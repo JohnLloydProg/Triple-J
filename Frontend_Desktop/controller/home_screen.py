@@ -85,6 +85,8 @@ class HomeScreen(MDScreen):
         self.ids.membership_type.text = result.get('membershipType')
         if (result.get('subscription')):
             self.ids.membership_expiry.text = result.get('expirationDate', 'Not Found!')
+        else:
+            self.ids.membership_expiry.text = ''
     
     def add_sales_record(self):
         self.sales_dialog = MDDialog(
@@ -157,13 +159,17 @@ class AttendanceComponent(MDBoxLayout, HoverBehavior):
         self.ids.username.text = username
         self.ids.timeIn.text = str(timeIn)
         self.ids.timeOut.text = str(timeOut)
+        self.over = False
     
     def on_touch_up(self, instance):
-        self.root.call_details(self.username, self.timeIn, self.timeOut)
+        if (self.over):
+            self.root.call_details(self.username, self.timeIn, self.timeOut)
     
     def on_enter(self, *args):
         self.md_bg_color = (80/255, 80/255, 80/255, 1)
+        self.over = True
     
     def on_leave(self, *args):
         self.md_bg_color = (94/255, 92/255, 92/255, 1)
+        self.over = False
 

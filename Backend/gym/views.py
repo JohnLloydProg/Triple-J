@@ -219,7 +219,13 @@ class WorkoutsView(generics.GenericAPIView):
     permission_classes = []
 
     def get(self, request:Request) -> Response:
-        return Response(WorkoutSerializer(Workout.objects.all(), many=True).data, status=status.HTTP_200_OK)
+        response = {}
+        response['Push'] = WorkoutSerializer(Workout.objects.filter(type='PS').order_by('name'), many=True).data
+        response['Pull'] = WorkoutSerializer(Workout.objects.filter(type='PL').order_by('name'), many=True).data
+        response['Lower'] = WorkoutSerializer(Workout.objects.filter(type='L').order_by('name'), many=True).data
+        response['Upper'] = WorkoutSerializer(Workout.objects.filter(type='U').order_by('name'), many=True).data
+        response['Core'] = WorkoutSerializer(Workout.objects.filter(type='C').order_by('name'), many=True).data
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class ProgramWorkoutRecordsView(generics.GenericAPIView):
