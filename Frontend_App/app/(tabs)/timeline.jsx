@@ -174,7 +174,7 @@ const TimelineScreen = () => {
     }else {
       const result = await ImagePicker.launchImageLibraryAsync({
         base64 : true,
-        quality : 0
+        quality : 0.2
       });
       if (!result.canceled) {
         const asset = result.assets.pop()
@@ -204,7 +204,7 @@ const TimelineScreen = () => {
             <View key={index} style={styles.itemContainer}>
               <Text style={styles.dateText}>{timeline.date}</Text>
               <View style={styles.card}>
-                <Image source={{uri:`https://triple-j.onrender.com${timeline.img}`}} style={styles.image}/>
+                <Image source={{uri:timeline.img}} style={styles.image}/>
                 <View style={styles.details}>
                   <Text style={styles.status}>{BMICategory(timeline.height, timeline.weight)}</Text>
                   <Text style={styles.info}>BMI: {calculateBMI(timeline.height, timeline.weight)}</Text>
