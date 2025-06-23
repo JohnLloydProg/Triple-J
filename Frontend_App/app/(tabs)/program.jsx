@@ -88,6 +88,8 @@ const forceRenderModal = () => {
 let offlinePrograms = [];
 let offlineData = "";
 
+
+
 const updateOfflineData = async () => {
   try {
 
@@ -314,6 +316,13 @@ const [refreshing, setRefreshing] = React.useState(false);
     });
   }, []);
   
+  const setSelectedDay = async () => {
+    await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
+    await getProgram().then(data => {setProgramData(data)});
+    const updatedItem = programData.find(item => item.id === selectedProgram.id);
+    setOfflineInfo(OfflineInfo => !OfflineInfo);
+    setSelectedItem(...updatedItem);
+  }
 
   return(
     <View style={{flex: 1}}>
@@ -429,28 +438,16 @@ const [refreshing, setRefreshing] = React.useState(false);
                         data={dataDropdown} 
                         save="value"
                         dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
-                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
+                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}, {textAlign: 'center'}, 
+                        {alignSelf: 'center'}]}
                         dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
-                        boxStyles={[{ width: "80%" },{borderWidth:null},]}
-                        placeholder='Select Program Day'
+                        boxStyles={[{ width: "85%" },{borderWidth:null}, { alignItems: 'center' },
+                        { alignSelf: 'center' },{ justifyContent: 'center' },]}
+                        placeholder='Select Program Day   '
                         search={false}
+                        onSelect={() => {setSelectedDay()}}
+                        arrowicon={<FontAwesome6 name="chevron-down" size={12} color="red" />}
                     />
-
-                    <TouchableOpacity onPress={ async ()=>{
-                      //console.log("Selected Program Date:", selected);
-                      await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
-                      await getProgram().then(data => {setProgramData(data)});
-                      const updatedItem = programData.find(item => item.id === selectedProgram.id);
-                      setOfflineInfo(OfflineInfo => !OfflineInfo);
-                      setSelectedItem(...updatedItem);
-
-                      }} style={styles.updateButton}>
-                        
-                        <View style={[{alignItems: 'center'}]}>
-                        <FontAwesome6 name="check" size={20} color="green" />
-                        </View>
-
-                    </TouchableOpacity>
 
                   </View>
               
@@ -601,7 +598,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width:"90%",
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 10
   },
   directionalBtnCont:{
     flexDirection: 'row',
@@ -639,6 +636,7 @@ const styles = StyleSheet.create({
   updateDaySelection:{
     flexDirection: 'row',
     alignItems: 'center',
+ 
   },
   updateButton:{
     marginLeft: 20,
