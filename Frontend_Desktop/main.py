@@ -11,6 +11,7 @@ from controller.main_screen import MainScreen
 from controller.home_screen import HomeScreen
 from controller.annoucement_screen import AnnouncementScreen
 from controller.analytics_screen import AnalyticsScreen
+from controller.member_screen import MemberScreen
 from kivy.network.urlrequest import UrlRequestUrllib
 from tools import GeneralRequest
 import json
@@ -19,7 +20,7 @@ import os
 
 
 def load_kv_files():
-    design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv', './design/analytics.kv']
+    design_files = ['./components.kv','./design/main.kv', './design/home.kv', './design/announcement.kv', './design/analytics.kv', './design/member.kv']
     for design_file in design_files:
         Builder.load_file(resource_find(design_file))
 
@@ -47,6 +48,8 @@ class TripleJAdmin(MDApp):
         self.sm.add_widget(announcementScreen)
         analyticsScreen = AnalyticsScreen(name='analytics_screen')
         self.sm.add_widget(analyticsScreen)
+        memberScreen = MemberScreen(name='member_screen')
+        self.sm.add_widget(memberScreen)
         self.sm.current = 'main_screen'
         return self.sm
 

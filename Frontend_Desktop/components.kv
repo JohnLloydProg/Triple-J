@@ -24,7 +24,11 @@
         MDFillRoundFlatButton:
             md_bg_color: app.theme['green'] if app.sm.current != 'home_screen' else app.theme['violet'] 
             text: 'Home'
-            on_press: app.sm.current = 'home_screen' 
+            on_press: app.sm.current = 'home_screen'
+        MDFillRoundFlatButton:
+            md_bg_color: app.theme['green'] if app.sm.current != 'member_screen' else app.theme['violet'] 
+            text: 'Members'
+            on_press: app.sm.current = 'member_screen' 
         MDFillRoundFlatButton:
             md_bg_color: app.theme['green'] if app.sm.current != 'analytics_screen' else app.theme['violet'] 
             text: 'Analytics'
@@ -37,3 +41,14 @@
             md_bg_color: app.theme['accent']
             text: 'Logout'
             on_press: app.log_out()
+
+
+<SpinnerContent>:
+    size_hint: None, None
+    size: '60dp', '60dp'
+    anchor_x: 'center'
+    anchor_y: 'center'
+    MDSpinner:
+        active: True
+        size_hint: None, None
+        size: '46dp', '46dp'
