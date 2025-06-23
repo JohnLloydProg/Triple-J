@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from gym.models import Program, ProgramWorkout, Workout, ProgramWorkoutRecord, TimelineRecord
-from account.serializers import TrainerProfileSerializer
+
 
 class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,16 +32,3 @@ class TimelineRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineRecord
         fields = ['id', 'date', 'height', 'weight', 'img']
-
-class ProgramSerializer(serializers.ModelSerializer):
-    # This line tells Django to use your detailed TrainerProfileSerializer
-    # when serializing the 'coach' object.
-    coach = TrainerProfileSerializer(read_only=True)
-    
-    # You might have other fields here, like a nested workout serializer
-    workouts = YourWorkoutSummarySerializer(many=True, read_only=True) # Example
-
-    class Meta:
-        model = Program
-        # Ensure 'coach' is in the fields list.
-        fields = ['id', 'day', 'workouts', 'coach']

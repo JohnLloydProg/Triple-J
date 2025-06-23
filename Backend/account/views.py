@@ -18,9 +18,6 @@ import requests
 import smtplib
 import ssl
 import os
-from .models import TrainerProfile  # Make sure this model is imported
-from .serializers import TrainerProfileSerializer # Make sure this serializer is imported
-from .permissions import IsTrainer # Make sure your trainer permission is imported
 
 html = """
 <!DOCTYPE html>
@@ -159,45 +156,6 @@ class MembersView(generics.GenericAPIView):
         return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data, status=status.HTTP_200_OK)
 
 
-class MembersAdminView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = MemberSerializer
-    queryset = Member.objects.all()
-
-    """
-    birthDate = models.DateField(null=True, blank=True)
-    height = models.FloatField(null=True, blank=True)
-    weight = models.FloatField(null=True, blank=True)
-    mobileNumber = models.CharField(max_length=15, null=True, blank=True)
-    address = models.CharField(max_length=200, null=True, blank=True)
-    gymTrainer = models.ForeignKey('self', null=True, on_delete=models.SET_NULL, blank=True)
-    sex = models.CharField(max_length=30, default='NA')
-    is_trainer = models.BooleanField(default=False)
-    facebookAccount = models.URLField(null=True, blank=True)
-    profilePic = models.ImageField(upload_to=userProfilePath, null=True, blank=True)
-    """
-    
-    def get(self, request:Request) -> Response:
-        data = []
-        for member in Member.objects.all():
-            membership = Membership.objects.get(member=member)
-            json = {
-                    'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
-                    'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
-                    'address': member.address, 'sex': member.sex,
-                    'membership': {'startDate': membership.startDate, 'membershipType':membership.membershipType.name, 'expirationDate': membership.expirationDate}, 'subscription': membership.membershipType.subscription
-                }
-            if (member.gymTrainer):
-                gymTrainer = Member.objects.get(pk=member.gymTrainer)
-                json['gymTrainer'] = gymTrainer.username
-            if (member.profilePic):
-                json['profilePic'] = member.profilePic
-            data.append(json)
-
-        return Response(data, status=status.HTTP_200_OK)
-
-
-
 class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
@@ -309,51 +267,3 @@ class SuccessfulPaymentView(generics.GenericAPIView):
 
         memberCheckout.delete()
         return Response("You have successfully paid the membership!", status=status.HTTP_200_OK)
-
-# ADD THIS ENTIRE CLASS TO THE FILE
-class TrainerProfileView(generics.RetrieveUpdateAPIView):
-    """
-    Allows a logged-in trainer to view and update their own profile,
-    including their availability schedule.
-    
-    Handles GET requests to fetch the profile.
-    Handles PUT/PATCH requests to update the profile.
-    """
-    serializer_class = TrainerProfileSerializer
-    permission_classes = [IsAuthenticated, IsTrainer]  # Only authenticated trainers can access this
-
-    def get_object(self):
-        """
-        This method ensures that the view always operates on the
-        TrainerProfile associated with the currently logged-in user.
-        It prevents a trainer from accidentally viewing or editing
-        another trainer's profile.
-        """
-        try:
-            # Assumes your User model has a related_name 'trainerprofile'
-            # to the TrainerProfile model (e.g., via a OneToOneField).
-            return self.request.user.trainerprofile
-        except TrainerProfile.DoesNotExist:
-            # This is a fallback in case a user is marked as a trainer
-            # but doesn't have a profile object yet. You might want to
-            # create one automatically on user registration.
-            return None
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance is None:
-            return Response({"detail": "Trainer profile not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        if instance is None:
-            return Response({"detail": "Trainer profile not found."}, status=status.HTTP_404_NOT_FOUND)
-            
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
