@@ -178,12 +178,18 @@ class MembersAdminView(generics.GenericAPIView):
         data = []
         for member in Member.objects.all():
             membership = Membership.objects.get(member=member)
-            data.append({
+            json = {
                     'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
                     'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
-                    'address': member.address, 'gymTrainer': Member.objects.get(pk=member.gymTrainer).username, 'sex': member.sex, 'profilePic': member.profilePic,
-                    'membership': MembershipSerializer(membership).data, 'subscription': membership.membershipType.subscription
-                })
+                    'address': member.address, 'sex': member.sex,
+                    'membership': {'startDate': membership.startDate, 'membershipType':membership.membershipType.name, 'expirationDate': membership.expirationDate}, 'subscription': membership.membershipType.subscription
+                }
+            if (member.gymTrainer):
+                gymTrainer = Member.objects.get(pk=member.gymTrainer)
+                json['gymTrainer'] = gymTrainer.username
+            if (member.profilePic):
+                json['profilePic'] = member.profilePic
+            data.append(json)
 
         return Response(data, status=status.HTTP_200_OK)
 
