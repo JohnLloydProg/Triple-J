@@ -81,33 +81,33 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                         {selectedWorkoutItem.reps && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Reps:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
                           </View>
                           
                         )}
                         {selectedWorkoutItem.sets && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Sets:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
                           </View>
                         )}
                         {selectedWorkoutItem.time && (
                            <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Time:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
                            </View>
                         )}
                         {selectedWorkoutItem.weight && (
                             <View style={styles.workoutChoiceCont}>
                               <Text style={styles.workoutdetailsModal}>Weight:  </Text>
-                              <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
+                              <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
                             </View>
             
                         )}
                         {selectedWorkoutItem.distance && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Distance: </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
                           </View>
                           
                         )}
