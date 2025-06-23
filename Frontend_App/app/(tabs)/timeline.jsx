@@ -10,6 +10,7 @@ import {refreshAccessToken} from '../../components/refreshToken';
 import * as ImagePicker from 'expo-image-picker';
 import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
+import LoadingModal from '@/components/ui/LoadingModal';
 
 //{'id':record.pk, 'date':record.date, 'height':record.height, 'weight':record.weight, 'img':record.img}
 // might need to add dependencies for the image picker library
@@ -151,11 +152,17 @@ const TimelineScreen = () => {
   }, []);
 
   const save = async () => {
+    try{
+      setisLoading(true);
     console.log('pressed');
     const response = await timelineSaveRequest(height, weight, imageFile);
     if (response.ok){
       setModalVisible(false);
-    }
+    }}catch(e){
+    console.log("Select  Error: "+ e)
+  }finally{
+              setisLoading(false);
+            }
   }
 
   const add = () => {
@@ -186,7 +193,7 @@ const TimelineScreen = () => {
     }
     
   }
-
+  const [isLoading, setisLoading] = useState(false);
   const getImage = async () => {
 
   }
@@ -196,6 +203,7 @@ const TimelineScreen = () => {
       <ScrollView style={styles.container} refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
       }>
+        <LoadingModal modalVisible={isLoading} />
         <View style={styles.timeline}>
           <View id='timeline-holder' style={styles.line}/>
           {timelineData.map((timeline, index) => {
@@ -221,8 +229,13 @@ const TimelineScreen = () => {
       }}>
         <View style={modalStyles.background}>
           <View style={modalStyles.textView}>
-            <TouchableOpacity onPress={() => {selectImage()}}>
+            <TouchableOpacity style={styles.addImageCont} onPress={() => {selectImage()}}>
               <Image source={{uri : image}} style={modalStyles.image}/>
+              <View>
+                <Text style={styles.addImageText}>
+                  CLICK TO ADD IMAGE
+                </Text>
+              </View>
             </TouchableOpacity>
             <View style={modalStyles.flex}>
                 <Text style={modalStyles.textInputLabel}>Height (M): </Text>
@@ -408,6 +421,18 @@ const styles = StyleSheet.create({
     paddingLeft: 40,
     PaddingTop: 10,
   },
+  addImageCont:{
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: colors.redAccent,
+    borderWidth: 2,
+    borderRadius: 20
+  },
+  addImageText:{
+    fontSize: 20,
+    color: 'white',
+    marginBottom: 20,
+  }
 });
 
 export default TimelineScreen;
