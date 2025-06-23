@@ -900,31 +900,31 @@ export async function generateNewQrCode() {
   }
 }
 
-// added by gascon
-export const fetchLatestAnnouncement = async () => {
-  const token = await SecureStore.getItemAsync('accessToken');
-  if (!token) {
-    throw new Error("Authentication token not found.");
+export const fetchAllAnnouncements = async () => {
+  try {
+    const token = await SecureStore.getItemAsync('accessToken');
+    if (!token) {
+      throw new Error("Authentication token not found.");
+    }
+
+    const response = await fetch(`${BASE_URL}/announcement/announcements/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Failed to fetch announcements. Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+
+  } catch (error) {
+    console.error("Error in fetchAllAnnouncements:", error.message);
+    throw error;
   }
-
-  const response = await fetch(`${BASE_URL}/announcements/latest/`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
- 
-  if (response.status === 404) {
-    console.log("No latest announcement found.");
-    return null;
-  }
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Failed to fetch announcement. Status: ${response.status}`);
-  }
-
-  return await response.json();
 };

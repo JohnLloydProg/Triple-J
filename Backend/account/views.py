@@ -18,6 +18,9 @@ import requests
 import smtplib
 import ssl
 import os
+from .models import TrainerProfile  # Make sure this model is imported
+from .serializers import TrainerProfileSerializer # Make sure this serializer is imported
+from .permissions import IsTrainer # Make sure your trainer permission is imported
 
 html = """
 <!DOCTYPE html>
@@ -267,3 +270,51 @@ class SuccessfulPaymentView(generics.GenericAPIView):
 
         memberCheckout.delete()
         return Response("You have successfully paid the membership!", status=status.HTTP_200_OK)
+
+# ADD THIS ENTIRE CLASS TO THE FILE
+class TrainerProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Allows a logged-in trainer to view and update their own profile,
+    including their availability schedule.
+    
+    Handles GET requests to fetch the profile.
+    Handles PUT/PATCH requests to update the profile.
+    """
+    serializer_class = TrainerProfileSerializer
+    permission_classes = [IsAuthenticated, IsTrainer]  # Only authenticated trainers can access this
+
+    def get_object(self):
+        """
+        This method ensures that the view always operates on the
+        TrainerProfile associated with the currently logged-in user.
+        It prevents a trainer from accidentally viewing or editing
+        another trainer's profile.
+        """
+        try:
+            # Assumes your User model has a related_name 'trainerprofile'
+            # to the TrainerProfile model (e.g., via a OneToOneField).
+            return self.request.user.trainerprofile
+        except TrainerProfile.DoesNotExist:
+            # This is a fallback in case a user is marked as a trainer
+            # but doesn't have a profile object yet. You might want to
+            # create one automatically on user registration.
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({"detail": "Trainer profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if instance is None:
+            return Response({"detail": "Trainer profile not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
