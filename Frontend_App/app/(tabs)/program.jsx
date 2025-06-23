@@ -1,4 +1,4 @@
-import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView} from 'react-native';
+import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView, Alert} from 'react-native';
 import { router} from 'expo-router';
 import { FlatList } from 'react-native';
 import { useEffect, useState, useContext } from 'react';
@@ -316,12 +316,35 @@ const [refreshing, setRefreshing] = React.useState(false);
     });
   }, []);
   
+
   const setSelectedDay = async () => {
+  try {
+   await getProgram().then(data => {
+    console.log("All programs: " + JSON.stringify(data));
+
+    const dayList = data
+    .map(item => item.day)
+    .filter(day => day !== null);
+
+    console.log("daylist: "+ dayList);
+    console.log("selected day: "+daysOfWeekOrder[selected]);
+
+      if (dayList.includes(daysOfWeekOrder[selected])) {
+      Alert.alert("Day already exists", `Day ${selected} is already assigned.`);
+      throw new Error(`Day ${selected} is already assigned.`);
+    }
+
+   })
+
     await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
     await getProgram().then(data => {setProgramData(data)});
     const updatedItem = programData.find(item => item.id === selectedProgram.id);
     setOfflineInfo(OfflineInfo => !OfflineInfo);
     setSelectedItem(...updatedItem);
+
+  }catch(e){
+    console.log("Error in selecting date: "+ e)
+  }
   }
 
   return(
