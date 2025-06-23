@@ -159,6 +159,45 @@ class MembersView(generics.GenericAPIView):
         return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data, status=status.HTTP_200_OK)
 
 
+class MembersAdminView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
+
+    """
+    birthDate = models.DateField(null=True, blank=True)
+    height = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    mobileNumber = models.CharField(max_length=15, null=True, blank=True)
+    address = models.CharField(max_length=200, null=True, blank=True)
+    gymTrainer = models.ForeignKey('self', null=True, on_delete=models.SET_NULL, blank=True)
+    sex = models.CharField(max_length=30, default='NA')
+    is_trainer = models.BooleanField(default=False)
+    facebookAccount = models.URLField(null=True, blank=True)
+    profilePic = models.ImageField(upload_to=userProfilePath, null=True, blank=True)
+    """
+    
+    def get(self, request:Request) -> Response:
+        data = []
+        for member in Member.objects.all():
+            membership = Membership.objects.get(member=member)
+            json = {
+                    'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
+                    'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
+                    'address': member.address, 'sex': member.sex,
+                    'membership': {'startDate': membership.startDate, 'membershipType':membership.membershipType.name, 'expirationDate': membership.expirationDate}, 'subscription': membership.membershipType.subscription
+                }
+            if (member.gymTrainer):
+                gymTrainer = Member.objects.get(pk=member.gymTrainer)
+                json['gymTrainer'] = gymTrainer.username
+            if (member.profilePic):
+                json['profilePic'] = member.profilePic
+            data.append(json)
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
 class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     

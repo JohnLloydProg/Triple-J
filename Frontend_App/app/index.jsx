@@ -11,12 +11,14 @@ import { validateLoginInfo, getMemberInfo, checkIfTrainer } from '@/components/g
 
 import NetInfo from '@react-native-community/netinfo';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import LoadingModal from '@/components/ui/LoadingModal';
 
 
 
 
 
 export default function HomeScreen() {
+   const [isLoading, setisLoading] = useState(false);
 
  //function to check if the user is online or offline
   const [isConnected, setIsConnected] = useState(null);
@@ -115,9 +117,9 @@ export default function HomeScreen() {
   const loginAccount = async (mainUsername,mainPassword) => {
     try {
       console.log("Clicked login button");
-
+      setisLoading(true);
       const response = await validateLoginInfo(mainUsername,mainPassword);
-
+      
       if (!response.ok) {
         Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.');
         console.log(response.status);
@@ -144,13 +146,16 @@ export default function HomeScreen() {
   
     } catch (error) {
       console.error("Error:", error);
-    }
+    }finally{
+              setisLoading(false);
+            }
   };
 
 
   useEffect(() => {
     const autoLogin = async () => {
       try{
+        setisLoading(true);
         //tests if there is already a token, saved if not proceed to manual login
         const response_Test = await refreshAccessToken();
         console.log("Auto-login username:", response_Test);
@@ -161,7 +166,10 @@ export default function HomeScreen() {
       }catch(error) {
         console.error("Error during auto-login:", error);
         Alert.alert('Notification', 'Auto-login failed. Please log in manually.');
-      }
+      }finally{
+              setisLoading(false);
+            }
+
     };
 
     try{
@@ -174,6 +182,8 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+
+      <LoadingModal modalVisible={isLoading} />
       
       <View style={{marginBottom: 20}}>
         <Text style={styles.titleText}>

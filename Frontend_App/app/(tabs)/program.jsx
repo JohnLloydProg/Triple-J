@@ -1,4 +1,4 @@
-import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView} from 'react-native';
+import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView, Alert} from 'react-native';
 import { router} from 'expo-router';
 import { FlatList } from 'react-native';
 import { useEffect, useState, useContext } from 'react';
@@ -25,6 +25,7 @@ import { color } from '@rneui/base';
 import NetInfo from '@react-native-community/netinfo';
 
 const screenWidth = Dimensions.get("window").width;
+import LoadingModal from '@/components/ui/LoadingModal';
 
 const dataDropdown = [
   { key: '0', value: 'Monday' },
@@ -54,6 +55,8 @@ const workoutTypes = {
 };
 
 export default function program() {
+
+const [isLoading, setisLoading] = useState(false);
 
 const [selected, setSelected] = useState("");
 const [selectedWorkoutId, setselectedWorkoutId ] = useState("")
@@ -87,6 +90,8 @@ const forceRenderModal = () => {
 
 let offlinePrograms = [];
 let offlineData = "";
+
+
 
 const updateOfflineData = async () => {
   try {
@@ -206,10 +211,19 @@ useEffect(()=>{
 
 //funnctions to handle the modal of selected program
 const handlePress =  async (item) => {
+  try{
+  setisLoading(true);
   setSelectedProgram(item);
   setSelectedItem(await getWorkout(item.id));
   console.log("Selected item: ", item.id);
   setModalVisible(true);
+
+  }catch(e){
+    console.log("Select Program Error: "+ e)
+  }finally{
+              setisLoading(false);
+            }
+
 };
 
 const handlePressChoice =  async (item) => {
@@ -241,7 +255,7 @@ const getassignedMembers = async () => {
 
     const predefinedEntry = {
       key: await getToken("userId"),
-      value: `${await getToken("firstName")} ${await getToken("lastName")}`,
+      value: `${await getToken("firstName")} ${await getToken("lastName")} (Self)`,
     };
 
     const updatedMembers = [predefinedEntry, ...dynamicMembers];
@@ -315,8 +329,42 @@ const [refreshing, setRefreshing] = React.useState(false);
   }, []);
   
 
+  const setSelectedDay = async () => {
+  try {
+    setisLoading(true);
+    await getProgram().then(data => {
+    console.log("All programs: " + JSON.stringify(data));
+
+    const dayList = data
+    .map(item => item.day)
+    .filter(day => day !== null);
+
+    console.log("daylist: "+ dayList);
+    console.log("selected day: "+daysOfWeekOrder[selected]);
+
+      if (dayList.includes(daysOfWeekOrder[selected])) {
+      Alert.alert("Day already exists", `Day ${selected} is already assigned.`);
+      throw new Error(`Day ${selected} is already assigned.`);
+    }
+
+   })
+
+    await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
+    await getProgram().then(data => {setProgramData(data)});
+    const updatedItem = programData.find(item => item.id === selectedProgram.id);
+    setOfflineInfo(OfflineInfo => !OfflineInfo);
+    setSelectedItem(...updatedItem);
+
+  }catch(e){
+    console.log("Error in selecting date: "+ e)
+  }finally{
+              setisLoading(false);
+            }
+  }
+
   return(
     <View style={{flex: 1}}>
+    <LoadingModal modalVisible={isLoading} />
     <ScrollView  refreshControl={
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
     } style={styles.container}>
@@ -384,9 +432,17 @@ const [refreshing, setRefreshing] = React.useState(false);
                         placeholder='Select Account'
                         search={false}
                         onSelect={async () =>{
+                          try{
+
+                          setisLoading(true);
                           await changeSelectedAccount(selectedAccount)
                           //console.log("Selected Account:", selectedAccount);
                           setRenderer(renderer => !renderer); 
+                          }catch(e){
+                            console.log("Select Change View Error: "+ e)
+                          }finally{
+                                      setisLoading(false);
+                                    }
                         }}
                         arrowicon={<FontAwesome6 name="chevron-down" size={20} color="red" />}
                     />
@@ -395,17 +451,32 @@ const [refreshing, setRefreshing] = React.useState(false);
       </View>
       
       {/*Component to render all the programs and their associated workouts */}
-      <FlatList
-      style={{marginBottom:25}}
-      data={sortedProgramData}
-      renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => handlePress(item)} >
-          <WorkoutItem title={daysOfWeek[item.day]} workouts={item.workouts} programId={item.id} setProgramData={setProgramData} setOfflineInfo={setOfflineInfo} OfflineInfo={OfflineInfo} setRenderer={setRenderer} renderer={renderer}/>
-        </TouchableOpacity>
+      {sortedProgramData.length > 0 ? (
+        <FlatList
+          style={{ marginBottom: 25 }}
+          data={sortedProgramData}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handlePress(item)}>
+              <WorkoutItem
+                title={daysOfWeek[item.day]}
+                workouts={item.workouts}
+                programId={item.id}
+                setProgramData={setProgramData}
+                setOfflineInfo={setOfflineInfo}
+                OfflineInfo={OfflineInfo}
+                setRenderer={setRenderer}
+                renderer={renderer}
+              />
+            </TouchableOpacity>
+          )}
+          keyExtractor={item => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={{ alignItems: 'center', marginTop: 50 }}>
+          <Text style={{ fontSize: 30, color: '#666',fontFamily: 'KeaniaOne', }}>No program/s</Text>
+        </View>
       )}
-      keyExtractor={item => item.id.toString()}
-      showsVerticalScrollIndicator={false}
-      />
 
     
     <Modal key={modalKey} visible={modalVisible} animationType="slide" transparent={true}>
@@ -429,28 +500,16 @@ const [refreshing, setRefreshing] = React.useState(false);
                         data={dataDropdown} 
                         save="value"
                         dropdownTextStyles={[{color: 'white'},{fontFamily: 'KeaniaOne'}]}
-                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}]}
+                        inputStyles={[{ color: 'red' },{fontFamily: 'KeaniaOne'},{fontSize: 18}, {textAlign: 'center'}, 
+                        {alignSelf: 'center'}]}
                         dropdownStyles={[{ color: 'white' },{fontFamily: 'KeaniaOne'}]}
-                        boxStyles={[{ width: "80%" },{borderWidth:null},]}
-                        placeholder='Select Program Day'
+                        boxStyles={[{ width: "85%" },{borderWidth:null}, { alignItems: 'center' },
+                        { alignSelf: 'center' },{ justifyContent: 'center' },]}
+                        placeholder='Select Program Day   '
                         search={false}
+                        onSelect={() => {setSelectedDay()}}
+                        arrowicon={<FontAwesome6 name="chevron-down" size={12} color="red" />}
                     />
-
-                    <TouchableOpacity onPress={ async ()=>{
-                      //console.log("Selected Program Date:", selected);
-                      await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
-                      await getProgram().then(data => {setProgramData(data)});
-                      const updatedItem = programData.find(item => item.id === selectedProgram.id);
-                      setOfflineInfo(OfflineInfo => !OfflineInfo);
-                      setSelectedItem(...updatedItem);
-
-                      }} style={styles.updateButton}>
-                        
-                        <View style={[{alignItems: 'center'}]}>
-                        <FontAwesome6 name="check" size={20} color="green" />
-                        </View>
-
-                    </TouchableOpacity>
 
                   </View>
               
@@ -526,10 +585,18 @@ const [refreshing, setRefreshing] = React.useState(false);
     </ScrollView>
  
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
+      try{
+      setisLoading(true);
       await addProgram();
       await getProgram().then(data => {setProgramData(data)});
       //console.log(programData);
       setOfflineInfo(OfflineInfo => !OfflineInfo);
+
+      }catch(e){
+        console.log("Add program button: "+ e)
+      }finally{
+              setisLoading(false);
+            }
       
       }} >
       <Text style={{fontSize: 40}}>
@@ -601,7 +668,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width:"90%",
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 10
   },
   directionalBtnCont:{
     flexDirection: 'row',
@@ -639,6 +706,7 @@ const styles = StyleSheet.create({
   updateDaySelection:{
     flexDirection: 'row',
     alignItems: 'center',
+ 
   },
   updateButton:{
     marginLeft: 20,

@@ -9,6 +9,7 @@ urlpatterns = [
     path('registration-cont/<str:validationCode>', views.AccountRegistrationContView.as_view(), name='account registration cont'),
     path('member/<str:username>', views.MemberView.as_view(), name='member'),
     path('members', views.MembersView.as_view(), name='members'),
+    path('members-admin', views.MembersAdminView.as_view(), name='members admin'),
     path('trainer/<str:username>', views.TrainerView.as_view(), name='trainer'),
     path('token', TokenObtainPairView.as_view(), name='get_token'),
     path('token/refresh', TokenRefreshView.as_view(), name='refresh'),

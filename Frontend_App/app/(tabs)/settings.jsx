@@ -6,12 +6,14 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import { router, useRouter } from 'expo-router';
-import { ScrollView } from 'react-native';
+import { ScrollView, Alert } from 'react-native';
 
 import {refreshAccessToken} from '../../components/refreshToken';
 import {setMemberHW, getMembershipInfo, getMemberInfo, startPayment} from '@/components/generalFetchFunction';
 import { getToken,saveToken, delToken } from '@/components/storageComponent';
 import NetInfo from '@react-native-community/netinfo';
+
+import LoadingModal from '@/components/ui/LoadingModal';
 
 
 //deletes information stored based on logged in account and redirects to login page
@@ -145,22 +147,7 @@ export default function Settings() {
     handlegetMembershipInfo();
   }, []);
 
-  const handleHeightChange = (text) => {
-  const cleaned = text
-    .replace(/[^0-9.]/g, '')         
-    .replace(/^(\.)/, '0.')         
-    .replace(/(\..*?)\..*/g, '$1');  
-  setMemberHeight(cleaned);
-};
-
-const handleWeightChange = (text) => {
-  const cleaned = text
-    .replace(/[^0-9.]/g, '')
-    .replace(/^(\.)/, '0.')
-    .replace(/(\..*?)\..*/g, '$1');
-  setMemberWeight(cleaned);
-};
-
+  const [isLoading, setisLoading] = useState(false);
 
  return(
 
@@ -213,21 +200,40 @@ const handleWeightChange = (text) => {
                   <Text style={styles.inputFieldText}>
                     Height (m)
                   </Text>
-                  <TextInput keyboardType="decimal-pad" onChangeText={handleHeightChange} cursorColor={colors.redAccent} style={styles.inputField} />
+                  <TextInput keyboardType="decimal-pad" onChangeText={newText => {setMemberHeight(newText)}} cursorColor={colors.redAccent} style={styles.inputField} />
           </View>
           <View  style={{marginBottom: 20}}>
                   <Text style={styles.inputFieldText}>
                     Weight (kg)
                   </Text>
-                  <TextInput keyboardType="decimal-pad" onChangeText={handleWeightChange} cursorColor={colors.redAccent} style={styles.inputField} />
+                  <TextInput keyboardType="decimal-pad" onChangeText={newText => {setMemberWeight(newText)}} cursorColor={colors.redAccent} style={styles.inputField} />
           </View>
 
           <TouchableOpacity onPress={async ()=>{
-            const response = await setMemberHW(memberHeight,memberWeight);
 
-            await saveToken("weight", response.weight.toString());
-            await saveToken("height", response.height.toString());
-            await handlegetMemberInfo();
+            const isValidNumber = (value) => {
+              const regex = /^\d+(\.\d{1,})?$/;
+              return regex.test(value) && value.trim() !== '';
+            };
+
+             if (!isValidNumber(memberHeight) || !isValidNumber(memberWeight)) {
+              Alert.alert("Invalid Input", "Please enter numeric values with at most one decimal point.");
+              return;
+            }
+
+             try {
+              setisLoading(true);
+              const response = await setMemberHW(memberHeight, memberWeight);
+
+              await saveToken("weight", response.weight.toString());
+              await saveToken("height", response.height.toString());
+              await handlegetMemberInfo();
+            } catch (error) {
+              Alert.alert("Update Failed", "There was an error updating your data.");
+              console.log("Error in setMemberHW:", error);
+            } finally{
+              setisLoading(false);
+            }
 
 
           }}  style={styles.loginBtn}>
@@ -292,6 +298,8 @@ const handleWeightChange = (text) => {
       </TouchableOpacity>
 
     </View>
+
+    <LoadingModal modalVisible={isLoading} />
   </ScrollView>
 
 
