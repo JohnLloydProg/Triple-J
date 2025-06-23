@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'gym', 'account', 'attendance',
     'scheduling', 'dietary',
     'analytics', 'announcement', 'sales',
-    'corsheaders', 'rest_framework'
+    'corsheaders', 'rest_framework', 'dbbackup'
 ]
 
 REST_FRAMEWORK = {
@@ -163,6 +163,8 @@ MEDIA_URL = '/media/'
 
 
 from google.oauth2 import service_account
+if (DEBUG):
+    os.environ['GS_CREDENTIALS_KEY'] = './triplej-450613-49f414bccb0c.json'
 
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
     os.environ.get('GS_CREDENTIALS_KEY')
@@ -176,6 +178,9 @@ STORAGES = {
     }
 }
 GS_BUCKET_NAME = 'triple-j-files'
+
+DBBACKUP_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': 'backup/'}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
