@@ -66,6 +66,9 @@ function continueRegister(){
     try{
 
     console.log("Email Format Check: " + regexEmail.test(email));
+     if (!regexEmail.test(email)) {
+    throw new Error("Invalid email format.");
+    }
     
     localStorage.setItem("username", username);
     localStorage.setItem("email", email);
@@ -90,6 +93,7 @@ function continueRegister(){
 
     window.location.href = "registerNext.html" 
   }catch(err){
+    console.log(err)
     alert("Incorred Credentials, please try again");
   }
    }else{
