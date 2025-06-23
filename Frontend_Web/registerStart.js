@@ -1,4 +1,7 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
+const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+
 
 async function checkmem() {
   try {
@@ -60,6 +63,10 @@ function continueRegister(){
     
    if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
 
+    try{
+
+    console.log("Email Format Check: " + regexEmail.test(email));
+    
     localStorage.setItem("username", username);
     localStorage.setItem("email", email);
     localStorage.setItem("password", password);
@@ -78,10 +85,13 @@ function continueRegister(){
 
         
     });
+
   
 
-
     window.location.href = "registerNext.html" 
+  }catch(err){
+    alert("Incorred Credentials, please try again");
+  }
    }else{
     alert("Incorred Credentials, please try again");
    }

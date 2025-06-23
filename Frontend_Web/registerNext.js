@@ -1,6 +1,26 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
 
 
+document.getElementById('contactNum').addEventListener('input', function (e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+document.getElementById('height').addEventListener('input', function () {
+
+  this.value = this.value
+    .replace(/[^0-9.]/g, '')      
+    .replace(/^(\.)/, '0.')       
+    .replace(/(\..*?)\..*/g, '$1'); 
+});
+
+document.getElementById('weight').addEventListener('input', function () {
+
+  this.value = this.value
+    .replace(/[^0-9.]/g, '')     
+    .replace(/^(\.)/, '0.')     
+    .replace(/(\..*?)\..*/g, '$1');
+});
+
 async function registerAccountCont(validationCode, firstName, lastName, birthDate, height, weight,mobileNumber,address,sex) {
 
 
