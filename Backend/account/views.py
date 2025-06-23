@@ -156,6 +156,31 @@ class MembersView(generics.GenericAPIView):
         return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data, status=status.HTTP_200_OK)
 
 
+class MembersAdminView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
+    
+    def get(self, request:Request) -> Response:
+        data = []
+        for member in Member.objects.all():
+            membership = Membership.objects.get(member=member)
+            json = {
+                    'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
+                    'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
+                    'address': member.address, 'sex': member.sex,
+                    'membership': {'startDate': membership.startDate, 'membershipType':membership.membershipType.name, 'expirationDate': membership.expirationDate}, 'subscription': membership.membershipType.subscription
+                }
+            if (member.gymTrainer):
+                gymTrainer = Member.objects.get(pk=member.gymTrainer)
+                json['gymTrainer'] = gymTrainer.username
+            if (member.profilePic):
+                json['profilePic'] = member.profilePic
+            data.append(json)
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
