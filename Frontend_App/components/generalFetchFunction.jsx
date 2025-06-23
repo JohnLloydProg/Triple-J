@@ -497,8 +497,8 @@ export async function deleteWorkout(programId, workoutId) {
       });
     }
 
-    const data = await response.json();
-    return data;
+    // const data = await response.json();
+    // return data;
 
     } catch (error) {
       console.error("Error:", error);
