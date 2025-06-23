@@ -102,7 +102,6 @@
         let loginModalInstance, editProgramDayModal, addWorkoutModal, viewEditWorkoutsModal;
         let selectedMemberId = null, selectedMemberUsername = null;
         
-        // --- API Request Functions (unchanged) ---
         async function request(endpoint, method = 'GET', body = null) {
             let accessToken = getToken('accessToken');
             const url = `${BASE_URL}${endpoint}`;
@@ -189,11 +188,11 @@
         function populateTimeSelects() {
             const timeSelects = [document.getElementById('new-schedule-start'), document.getElementById('new-schedule-end')];
             timeSelects.forEach(select => {
-                if (select.options.length > 1) return; // Already populated
+                if (select.options.length > 1) return;
                 select.innerHTML = '<option value="">Select</option>';
-                for (let i = 6; i <= 22; i++) { // 6 AM to 10 PM
+                for (let i = 6; i <= 22; i++) { 
                     ['00', '30'].forEach(min => {
-                        if (i === 22 && min === '30') return; // Don't go past 10:00 PM
+                        if (i === 22 && min === '30') return;
                         const hour24 = i;
                         const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
                         const ampm = hour24 < 12 ? 'AM' : 'PM';
@@ -214,7 +213,6 @@
             populateTimeSelects();
             await loadMembersForTrainer();
 
-            // Event Listeners
             document.getElementById('logout-btn').addEventListener('click', () => handleLogout("You have been logged out."));
             document.getElementById('member-select').addEventListener('change', handleMemberSelection);
             document.getElementById('add-program-btn').addEventListener('click', onAddProgramClick);
@@ -232,11 +230,11 @@
         }
 
         const mapDayValueToString = (dayValue) => {
-            const dayMap = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "7": "Sunday" };
+            const dayMap = { "0": "Monday", "1": "Tuesday", "2": "Wednesday", "3": "Thursday", "4": "Friday", "5": "Saturday", "6": "Sunday" };
             return dayMap[String(dayValue)] || dayValue || "Unassigned";
         };
         const mapDayStringToValue = (dayString) => {
-            const dayMap = { "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6, "Sunday": 7 };
+            const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
             return dayMap[dayString] === undefined ? null : dayMap[dayString];
         };
         
@@ -283,7 +281,6 @@
             listContainer.innerHTML = '';
             let schedules = [];
             try {
-                // Ensure we have a valid array, even if the saved data is null or not JSON
                 schedules = JSON.parse(scheduleJSON || '[]');
                 if (!Array.isArray(schedules)) schedules = [];
             } catch (e) {
@@ -317,11 +314,11 @@
                 programsSection.style.display = 'block';
                 try {
                     const memberInfo = await getMemberInfo(selectedMemberUsername);
-                    document.getElementById('selected-member-name').textContent = memberInfo.name || 'N/A';
+                    document.getElementById('selected-member-name').textContent = memberInfo.first_name +' '+ memberInfo.last_name || 'N/A';
                     document.getElementById('selected-member-username').textContent = memberInfo.username || 'N/A';
                     document.getElementById('selected-member-height').textContent = memberInfo.height || 'N/A';
                     document.getElementById('selected-member-weight').textContent = memberInfo.weight || 'N/A';
-                    document.getElementById('member-programs-header').textContent = `Workout Schedule for ${memberInfo.name || memberInfo.username}`;
+                    document.getElementById('member-programs-header').textContent = `Workout Schedule for ${memberInfo.first_name +' '+ memberInfo.last_name || memberInfo.username}`;
                     
                     renderScheduleList(memberInfo.schedule);
 
@@ -346,7 +343,6 @@
                 return;
             }
 
-            // Optional: More advanced time validation can be added here
             
             const listContainer = document.getElementById('client-schedule-list');
             if (listContainer.querySelector('p')) { // remove "No schedule set" message
@@ -403,7 +399,6 @@
             }
         }
         
-        // --- All other functions (loadMemberPrograms, handleDeleteProgram, etc.) remain unchanged ---
         async function loadMemberPrograms(memberId, memberUsername) {
             const container = document.getElementById('program-list-container');
             container.innerHTML = `<p class="text-center text-muted">Loading programs...</p>`;

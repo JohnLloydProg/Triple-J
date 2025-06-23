@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+     "owner": "triple-j-member-app",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
