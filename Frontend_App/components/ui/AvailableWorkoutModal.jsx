@@ -1,5 +1,5 @@
 
-import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView} from 'react-native';
+import {RefreshControl, Image, StyleSheet, View, Text, TextInput,TouchableOpacity,Modal, ScrollView, Alert} from 'react-native';
 import React from 'react';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from '../../constants/globalStyles';
@@ -44,6 +44,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
             <View style={styles.modalWorkoutCont}>
               {workoutCategories ? workoutCategories.map((category) => (
                 <TouchableOpacity style={styles.indivWorkoutModalViewCont}
+                  key={category}
                   onPress={() => {
                     setselectedCategory(category);
                     setcategorizedWorkoutsModal(true);
@@ -80,33 +81,33 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                         {selectedWorkoutItem.reps && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Reps:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
                           </View>
                           
                         )}
                         {selectedWorkoutItem.sets && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Sets:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
                           </View>
                         )}
                         {selectedWorkoutItem.time && (
                            <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Time:  </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
                            </View>
                         )}
                         {selectedWorkoutItem.weight && (
                             <View style={styles.workoutChoiceCont}>
                               <Text style={styles.workoutdetailsModal}>Weight:  </Text>
-                              <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
+                              <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
                             </View>
             
                         )}
                         {selectedWorkoutItem.distance && (
                           <View style={styles.workoutChoiceCont}>
                             <Text style={styles.workoutdetailsModal}>Distance: </Text>
-                            <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
+                            <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
                           </View>
                           
                         )}
@@ -114,22 +115,37 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                       <View style={styles.mainButtonCont}>
             
                         <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
-                          const choiceData = {
-                            ...(reps && { reps }),
-                            ...(sets && { sets }),
-                            ...(time && { time }),
-                            ...(weight && { weight }),
-                            ...(distance && { distance })
-                          };
-                          console.log(choiceData);
-                          addWorkout(selectedProgram.id,selectedWorkoutItem.id, choiceData);
-                          const updatedItem = await getWorkout(selectedProgram.id);
-                          setSelectedItem(updatedItem); 
-                          setRenderer(!renderer); 
-                          setmodalChoiceVisible(false);
-                          setOfflineInfo(OfflineInfo => !OfflineInfo);
+                              const numberRegex = /^\d+(\.\d{1})?$/;
 
-                        }}>
+                              const errors = [];
+
+                              if (selectedWorkoutItem.reps && (!numberRegex.test(reps))) errors.push('Reps');
+                              if (selectedWorkoutItem.sets && (!numberRegex.test(sets))) errors.push('Sets');
+                              if (selectedWorkoutItem.time && (!numberRegex.test(time))) errors.push('Time');
+                              if (selectedWorkoutItem.weight && (!numberRegex.test(weight))) errors.push('Weight');
+                              if (selectedWorkoutItem.distance && (!numberRegex.test(distance))) errors.push('Distance');
+
+                              if (errors.length > 0) {
+                                Alert.alert(`Please enter valid numeric input (up to one decimal) for: ${errors.join(', ')}`);
+                                return;
+                              }
+
+                              const choiceData = {
+                                ...(reps && { reps }),
+                                ...(sets && { sets }),
+                                ...(time && { time }),
+                                ...(weight && { weight }),
+                                ...(distance && { distance })
+                              };
+
+                              console.log(choiceData);
+                              await addWorkout(selectedProgram.id, selectedWorkoutItem.id, choiceData);
+                              const updatedItem = await getWorkout(selectedProgram.id);
+                              setSelectedItem(updatedItem); 
+                              setRenderer(!renderer); 
+                              setmodalChoiceVisible(false);
+                              setOfflineInfo(OfflineInfo => !OfflineInfo);
+                            }}>
                           <Text style={styles.closeBtnText}>Create Workout</Text>
                         </TouchableOpacity>
             
