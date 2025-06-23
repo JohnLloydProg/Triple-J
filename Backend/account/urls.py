@@ -17,5 +17,6 @@ urlpatterns = [
     path('membership/change/<int:user>', views.MembershipChangeView.as_view(), name='membership change'),
     path('membership/subscription', views.CheckoutMonthlySubscriptionView.as_view(), name='subscription checkout'),
     path('membership/successful', views.SuccessfulPaymentView.as_view(), name='successful payment'),
-    path('membership-types', views.MembershipTypesView.as_view(), name='Membership Types')
+    path('membership-types', views.MembershipTypesView.as_view(), name='Membership Types'),
+    path('trainer/profile', views.TrainerProfileView.as_view(), name='trainer-profile')
 ]
