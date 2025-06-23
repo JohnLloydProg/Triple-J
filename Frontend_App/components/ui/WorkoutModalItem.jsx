@@ -16,6 +16,7 @@ import { getProgram, getWorkout, deleteWorkout, getRecord, setRecord} from '@/co
 
 
 const screenWidth = Dimensions.get("window").width;
+import LoadingModal from '@/components/ui/LoadingModal';
 
 //constants for icons associated with workout types
 const workoutTypes = {
@@ -246,10 +247,10 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
       datasets: filteredDatasets
     };
   };
-
+  const [isLoading, setisLoading] = useState(false);
   return (
     <View style={styles.mainModalCont}>
-
+      <LoadingModal modalVisible={isLoading} />
     <View style={styles.indivWorkoutModalCont}>
       <Image source={workoutTypes[workout.workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
       <View>
@@ -276,12 +277,22 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
         
       </View>
       <TouchableOpacity style={styles.deleteProgramBtn} onPress={ async ()=>{
+
+        try{
+        setisLoading(true);
         await deleteWorkout(selectedProgram.id,workout.id);
         const updatedItem = await getWorkout(selectedProgram.id);
         setSelectedItem(updatedItem);
         getProgram().then(data => {setProgramData(data)});
         setOfflineInfo(OfflineInfo => !OfflineInfo);
+
+        }catch(e){
+          console.log("Select  Error: "+ e)
+        }finally{
+                    setisLoading(false);
+                  }
         }}>
+        
           
         <FontAwesome6 name="minus" size={20} color="black" />
       </TouchableOpacity>

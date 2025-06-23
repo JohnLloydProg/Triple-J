@@ -12,6 +12,8 @@ import pull from '@/assets/images/pull.png';
 import core from '@/assets/images/core.png';
 import lower from '@/assets/images/Treadmill.png';
 
+import LoadingModal from '@/components/ui/LoadingModal';
+
 
 const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressChoice,setavailWorkoutVisible, modalChoiceVisible, selectedProgram, setSelectedItem, setAvailableWorkouts, setmodalChoiceVisible,selectedWorkoutItem, setRenderer, renderer, setOfflineInfo, OfflineInfo}) => {
   const [reps,setReps] = useState("");
@@ -23,7 +25,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
   const [categorizedWorkoutsModal, setcategorizedWorkoutsModal] = useState(false);
   const [selectedCategory, setselectedCategory] = useState("Push");
 
-  
+  const [isLoading, setisLoading] = useState(false);
 
   const workoutCategories = ["Push", "Pull", "Lower", "Upper", "Core"]
   const convertedworkoutCategories = {
@@ -36,6 +38,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
 
  return (
     <ScrollView contentContainerStyle={[{justifyContent: 'center'},{alignItems: 'center'}]} style={styles.modalContainer}>
+            <LoadingModal modalVisible={isLoading} />
 
             <View style={styles.modalTitleCont}>
                 <Text style={styles.modalTitle}> Available Category/s </Text>
@@ -115,6 +118,9 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                       <View style={styles.mainButtonCont}>
             
                         <TouchableOpacity style={styles.createWorkoutBtn} onPress={ async ()=>{
+
+                          try{
+                            setisLoading(true);
                               const numberRegex = /^\d+(\.\d{1})?$/;
 
                               const errors = [];
@@ -126,6 +132,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                               if (selectedWorkoutItem.distance && (!numberRegex.test(distance))) errors.push('Distance');
 
                               if (errors.length > 0) {
+                                setisLoading(false);
                                 Alert.alert(`Please enter valid numeric input (up to one decimal) for: ${errors.join(', ')}`);
                                 return;
                               }
@@ -145,6 +152,11 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                               setRenderer(!renderer); 
                               setmodalChoiceVisible(false);
                               setOfflineInfo(OfflineInfo => !OfflineInfo);
+                            }catch(e){
+                              console.log("Select  Error: "+ e)
+                            }finally{
+                                        setisLoading(false);
+                                      }
                             }}>
                           <Text style={styles.closeBtnText}>Create Workout</Text>
                         </TouchableOpacity>
@@ -176,7 +188,14 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                             </View>
 
                             <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{
+                              try{
+                              setisLoading(true);
                               handlePressChoice(workout);
+                              }catch(e){
+                                console.log("Select  Error: "+ e)
+                              }finally{
+                                          setisLoading(false);
+                              }
                               }}>
                               <FontAwesome6 name="plus" size={20} color="black" />
                             </TouchableOpacity>
