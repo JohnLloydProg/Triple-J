@@ -26,6 +26,7 @@ class QRCodeView(generics.GenericAPIView):
             return Response('Account does not have any QR code', status=status.HTTP_404_NOT_FOUND)
         
         if (qrObject.isExpired()):
+            qrObject.image.delete()
             qrObject.delete()
             return Response('QR code is expired', status=status.HTTP_410_GONE)
         return Response(QRCodeSerializer(qrObject).data, status=status.HTTP_200_OK)
