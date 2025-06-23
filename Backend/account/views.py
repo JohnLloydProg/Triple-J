@@ -182,7 +182,7 @@ class MembersAdminView(generics.GenericAPIView):
                     'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
                     'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
                     'address': member.address, 'sex': member.sex,
-                    'membership': MembershipSerializer(membership).data, 'subscription': membership.membershipType.subscription
+                    'membership': {'startDate': membership.startDate, 'membershipType':membership.membershipType.name, 'expirationDate': membership.expirationDate}, 'subscription': membership.membershipType.subscription
                 }
             if (member.gymTrainer):
                 gymTrainer = Member.objects.get(pk=member.gymTrainer)
