@@ -140,10 +140,26 @@ export default function Settings() {
     
   }
 
-useEffect(() => {
-  handlegetMemberInfo();
-  handlegetMembershipInfo();
-}, []);
+  useEffect(() => {
+    handlegetMemberInfo();
+    handlegetMembershipInfo();
+  }, []);
+
+  const handleHeightChange = (text) => {
+  const cleaned = text
+    .replace(/[^0-9.]/g, '')         
+    .replace(/^(\.)/, '0.')         
+    .replace(/(\..*?)\..*/g, '$1');  
+  setMemberHeight(cleaned);
+};
+
+const handleWeightChange = (text) => {
+  const cleaned = text
+    .replace(/[^0-9.]/g, '')
+    .replace(/^(\.)/, '0.')
+    .replace(/(\..*?)\..*/g, '$1');
+  setMemberWeight(cleaned);
+};
 
 
  return(
@@ -170,7 +186,7 @@ useEffect(() => {
             Membership Type: {membershipInfo.membershipType}
             </Text>
             <Text style={styles.subText}>
-            Height: {memberInfo.height} cm
+            Height: {memberInfo.height} m
             </Text>
             <Text style={styles.subText}>
             Weight: {memberInfo.weight} kg
@@ -197,13 +213,13 @@ useEffect(() => {
                   <Text style={styles.inputFieldText}>
                     Height (m)
                   </Text>
-                  <TextInput  onChangeText={newText => {setMemberHeight(newText)}} cursorColor={colors.redAccent} style={styles.inputField} />
+                  <TextInput keyboardType="decimal-pad" onChangeText={handleHeightChange} cursorColor={colors.redAccent} style={styles.inputField} />
           </View>
           <View  style={{marginBottom: 20}}>
                   <Text style={styles.inputFieldText}>
                     Weight (kg)
                   </Text>
-                  <TextInput  onChangeText={newText => setMemberWeight(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
+                  <TextInput keyboardType="decimal-pad" onChangeText={handleWeightChange} cursorColor={colors.redAccent} style={styles.inputField} />
           </View>
 
           <TouchableOpacity onPress={async ()=>{
