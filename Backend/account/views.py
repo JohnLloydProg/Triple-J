@@ -156,6 +156,12 @@ class MembersView(generics.GenericAPIView):
         return Response(MemberSerializer(Member.objects.filter(gymTrainer=trainer), many=True).data, status=status.HTTP_200_OK)
 
 
+class MembersAdminView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
+
+
 class MembershipView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     
