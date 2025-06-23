@@ -175,16 +175,17 @@ class MembersAdminView(generics.GenericAPIView):
     """
     
     def get(self, request:Request) -> Response:
-        return Response(
-            [
-                {
+        data = []
+        for member in Member.objects.all():
+            membership = Membership.objects.get(member=member)
+            data.append({
                     'username': member.username, 'first_name': member.first_name, 'last_name': member.last_name, 'email': member.email,
                     'birthDate': member.birthDate, 'height': member.height, 'weight': member.weight, 'mobileNumber': member.mobileNumber,
                     'address': member.address, 'gymTrainer': Member.objects.get(pk=member.gymTrainer).username, 'sex': member.sex, 'profilePic': member.profilePic,
-                    'membership': MembershipSerializer(Membership.object.get(member=member)).data
-                } for member in Member.objects.all()
-            ], 
-            status=status.HTTP_200_OK)
+                    'membership': MembershipSerializer(membership).data, 'subscription': membership.membershipType.subscription
+                })
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 
