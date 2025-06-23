@@ -83,10 +83,12 @@ const HomeScreen = () => {
     setCurrentFormattedDate(formattedDate);
   }, []);
 
-  const loadAnnouncement = useCallback(async () => {
+  useEffect ( async () => {
+    console.log("chawdioajwdjoaw");
     setAnnouncementLoading(true);
     try {
-        const announcementData = await fetchLatestAnnouncement();
+        let announcementData = await fetchLatestAnnouncement();
+        console.log("ANNOUNCEMENTANDHOIAHIODHAWH: "+ announcementData)
         setAnnouncement(announcementData); 
     } catch (error) {
         console.error("HomeScreen: Failed to load announcement:", error);

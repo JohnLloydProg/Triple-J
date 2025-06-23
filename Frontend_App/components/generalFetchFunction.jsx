@@ -928,3 +928,40 @@ export const fetchAllAnnouncements = async () => {
     throw error;
   }
 };
+
+export async function fetchLatestAnnouncement()  {
+  try {
+    let accessToken = await getToken("accessToken");
+    let userId = await getToken("userId");
+    parseInt(userId);
+
+    const response = await fetch(tripleJ_URL + "/api/announcement/latest", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(tripleJ_URL + "/api/announcement/latest", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
