@@ -186,41 +186,12 @@ const processData = (data) => {
 //main component being exported
 const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelectedItem,setProgramData,setselectedWorkoutId,setselectedWorkoutRecord,setmodalRecordVisible, modalRecordVisible, selectedWorkoutRecord, selectedWorkoutId, forceRenderModal, setOfflineInfo, OfflineInfo}) => {
 
-  const [reps,setReps] = useState("");
-  const [sets,setSets] = useState("");
-  const [time,setTime] = useState("");
-  const [weight,setWeight] = useState("");
-  const [distance,setDistance] = useState("");
 
-  const handlePressRecord =  async (item, workoutid) => {
-        setselectedWorkoutId(workoutid);
-        setselectedWorkoutRecord(item);
-        setmodalRecordVisible(true);
-      };
   const [recordData, setRecordData] = useState(null);
   // Start with all metrics enabled, but they'll only show if data exists
   const [selectedMetrics, setSelectedMetrics] = useState(['sets', 'reps', 'time', 'weight', 'distance']);
 
-  const chartConfig = {
-    backgroundGradientFrom: "#1E2923",
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#08130D",
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: true, // Use dataset colors
-    decimalPlaces: 1, // Allow one decimal place for weight/distance
-    formatYLabel: (value) => value.toString(),
-    formatXLabel: (value) => value.toString(),
-    propsForDots: {
-      r: "5", // Dot radius
-    }, 
-    propsForLabels: {
-      xLabelsOffset: 15, 
-      fontSize: 10,
-    },
-  };
+  
 
   useEffect(() => {
     const fetchRecord = async () => {
@@ -317,109 +288,6 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
 
     </View>
 
-    <View style={styles.workoutAnalyticsCont}>
-        <View style={[{flex: 1}, {alignItems:'center'}, {position:'relative'}, {left:-13}]}>
-          {recordData && recordData.length > 0 && chartData.datasets && chartData.datasets.length > 0 ? (
-            <LineChart
-              data={filterDatasets(chartData)}
-              width={360}
-              height={310}
-              verticalLabelRotation={45}
-              chartConfig={chartConfig}
-              withDots={true}
-              withInnerLines={true}
-              withOuterLines={true}
-              withShadow={false}
-              fromZero={true}
-              legend={chartData.legend}
-            />
-          ) : (
-            <View style={{justifyContent:'center'}}>
-              <Text style={{ marginTop: 20, color: 'white',fontFamily: 'KeaniaOne'}}>No workout data available</Text>
-            </View>
-          )}
-                    
-            
-          </View>
-
-      
-      
-      <TouchableOpacity style={styles.addRecordBtn} onPress={() => {
-        handlePressRecord(getWorkoutDetails(workout.workout.name,availableWorkouts),workout.id);
-      }}> 
-        <Text style={styles.addRecordText} >Add Record</Text>
-      </TouchableOpacity>
-      
-    </View>
-
-    {/* renders the modal for adding records to a workout */}
-        <Modal visible={modalRecordVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalChoiceCont}>
-    
-              <View style={styles.mainInputCont}>
-                {selectedWorkoutRecord.reps && (
-                  <View style={styles.workoutChoiceCont}>
-                    <Text style={styles.workoutdetailsModal}>Reps:  </Text>
-                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setReps(newText)} style={styles.choiceInputCont}/>
-                  </View>
-                  
-                )}
-                {selectedWorkoutRecord.sets && (
-                  <View style={styles.workoutChoiceCont}>
-                    <Text style={styles.workoutdetailsModal}>Sets:  </Text>
-                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setSets(newText)} style={styles.choiceInputCont}/>
-                  </View>
-                )}
-                {selectedWorkoutRecord.time && (
-                   <View style={styles.workoutChoiceCont}>
-                    <Text style={styles.workoutdetailsModal}>Time:  </Text>
-                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
-                   </View>
-                )}
-                {selectedWorkoutRecord.weight && (
-                    <View style={styles.workoutChoiceCont}>
-                      <Text style={styles.workoutdetailsModal}>Weight:  </Text>
-                      <TextInput cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
-                    </View>
-    
-                )}
-                {selectedWorkoutRecord.distance && (
-                  <View style={styles.workoutChoiceCont}>
-                    <Text style={styles.workoutdetailsModal}>Distance: </Text>
-                    <TextInput cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
-                  </View>
-                  
-                )}
-              </View>
-              <View style={styles.mainButtonCont}>
-    
-                <TouchableOpacity style={styles.createRecordBtn} onPress={ async ()=>{
-                  const choiceData = {
-                    ...(reps && { reps }),
-                    ...(sets && { sets }),
-                    ...(time && { time }),
-                    ...(weight && { weight }),
-                    ...(distance && { distance })
-                  };
-                  console.log(choiceData);
-                  await setRecord(selectedWorkoutId, choiceData);
-                  forceRenderModal();
-                  setmodalRecordVisible(false);
-    
-                }}>
-                  <Text style={styles.closeBtnText}>Add Record</Text>
-                </TouchableOpacity>
-    
-                <TouchableOpacity style={styles.closeBtn} onPress={() => setmodalRecordVisible(false)}> 
-                  <Text style={styles.closeBtnText} >Cancel </Text>
-                </TouchableOpacity>
-    
-              </View>
-    
-          </View>
-        </Modal>
-
-
     </View>
   )
 };
@@ -437,9 +305,7 @@ const styles = StyleSheet.create({
     indivWorkoutModalCont:{
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
-        borderBottomColor: 'white',
-        borderBottomWidth: 1,
+        padding: 15
     },
     workoutNameModal:{
         fontSize: 20,
