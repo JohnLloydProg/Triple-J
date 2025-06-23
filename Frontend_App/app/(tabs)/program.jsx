@@ -98,7 +98,7 @@ const updateOfflineData = async () => {
       day: daysOfWeek[item.day] || "Unknown"
     }));
 
-    console.log("Offline Programs:", offlinePrograms);
+    //console.log("Offline Programs:", offlinePrograms);
 
     const workoutPromises = offlinePrograms.map(program =>
       getWorkout(program.id).then(workoutList => ({
@@ -108,7 +108,7 @@ const updateOfflineData = async () => {
     );
 
     const workoutDataArray = await Promise.all(workoutPromises);
-    console.log("Fetched workout data for all programs:", workoutDataArray);
+    //console.log("Fetched workout data for all programs:", workoutDataArray);
     const groupedWorkouts = {};
 
     workoutDataArray.forEach(({ day, data }) => {
@@ -127,10 +127,10 @@ const updateOfflineData = async () => {
     offlineData = JSON.stringify(groupedWorkouts);
 
     await saveToken("offlineData", offlineData)
-    console.log("Offline data saved to secure storage:", offlineData);
+    //console.log("Offline data saved to secure storage:", offlineData);
 
-    console.log("Workouts grouped by day (with day info included) and stringified:");
-    console.log(offlineData);
+    //console.log("Workouts grouped by day (with day info included) and stringified:");
+    //console.log(offlineData);
 
   } catch (error) {
     console.error("Error fetching or grouping program workouts:", error);
@@ -264,7 +264,7 @@ useEffect(() => {
 }, [selectedProgram]);
 
 useEffect(() => {
-  console.log("Assigned members of trainer: " + JSON.stringify(assignedMembers));
+  //console.log("Assigned members of trainer: " + JSON.stringify(assignedMembers));
 }, [assignedMembers]);
 
   //loads the information for programs and workouts during the first loading of the programs page
@@ -309,7 +309,7 @@ const [refreshing, setRefreshing] = React.useState(false);
     getProgram().then(data => {setProgramData(data)});
     getAvailableWorkouts().then(data => {setAvailableWorkouts(data)});
     getCurrentTimeline().then(data => {
-      console.log(data);
+      console.log("Timeline data: " + JSON.stringify(data));
       setcurrentTimeLineInfo(data);
     });
   }, []);
@@ -329,7 +329,7 @@ const [refreshing, setRefreshing] = React.useState(false);
         {currentTimeLineInfo.img ? (
           <View style={{marginRight: 15}}>
             <Image 
-              source={{uri: `https://triple-j.onrender.com${currentTimeLineInfo.img}`}} 
+              source={{uri: currentTimeLineInfo.img}} 
               style={styles.profileImage} 
             />
           </View>
@@ -385,7 +385,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                         search={false}
                         onSelect={async () =>{
                           await changeSelectedAccount(selectedAccount)
-                          console.log("Selected Account:", selectedAccount);
+                          //console.log("Selected Account:", selectedAccount);
                           setRenderer(renderer => !renderer); 
                         }}
                         arrowicon={<FontAwesome6 name="chevron-down" size={20} color="red" />}
@@ -437,7 +437,7 @@ const [refreshing, setRefreshing] = React.useState(false);
                     />
 
                     <TouchableOpacity onPress={ async ()=>{
-                      console.log("Selected Program Date:", selected);
+                      //console.log("Selected Program Date:", selected);
                       await updateProgram(selectedProgram.id,daysOfWeekOrder[selected]);
                       await getProgram().then(data => {setProgramData(data)});
                       const updatedItem = programData.find(item => item.id === selectedProgram.id);
@@ -528,7 +528,7 @@ const [refreshing, setRefreshing] = React.useState(false);
     <TouchableOpacity style={styles.addBtn} onPress={ async ()=>{
       await addProgram();
       await getProgram().then(data => {setProgramData(data)});
-      console.log(programData);
+      //console.log(programData);
       setOfflineInfo(OfflineInfo => !OfflineInfo);
       
       }} >
