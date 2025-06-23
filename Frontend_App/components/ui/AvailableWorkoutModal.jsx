@@ -99,7 +99,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                         )}
                         {selectedWorkoutItem.weight && (
                             <View style={styles.workoutChoiceCont}>
-                              <Text style={styles.workoutdetailsModal}>Weight:  </Text>
+                              <Text style={styles.workoutdetailsModal}>Weight "kg":  </Text>
                               <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setWeight(newText)} style={styles.choiceInputCont}/>
                             </View>
             

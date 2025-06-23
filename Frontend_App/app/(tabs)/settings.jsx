@@ -13,6 +13,8 @@ import {setMemberHW, getMembershipInfo, getMemberInfo, startPayment} from '@/com
 import { getToken,saveToken, delToken } from '@/components/storageComponent';
 import NetInfo from '@react-native-community/netinfo';
 
+import LoadingModal from '@/components/ui/LoadingModal';
+
 
 //deletes information stored based on logged in account and redirects to login page
  async function logoutDetails() {
@@ -145,6 +147,7 @@ export default function Settings() {
     handlegetMembershipInfo();
   }, []);
 
+  const [isLoading, setisLoading] = useState(false);
 
  return(
 
@@ -219,6 +222,7 @@ export default function Settings() {
             }
 
              try {
+              setisLoading(true);
               const response = await setMemberHW(memberHeight, memberWeight);
 
               await saveToken("weight", response.weight.toString());
@@ -227,6 +231,8 @@ export default function Settings() {
             } catch (error) {
               Alert.alert("Update Failed", "There was an error updating your data.");
               console.log("Error in setMemberHW:", error);
+            } finally{
+              setisLoading(false);
             }
 
 
@@ -292,6 +298,8 @@ export default function Settings() {
       </TouchableOpacity>
 
     </View>
+
+    <LoadingModal modalVisible={isLoading} />
   </ScrollView>
 
 
