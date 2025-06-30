@@ -183,8 +183,12 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                           <View style={styles.indivWorkoutModalViewCont} key={`${workout.name}-${index}`}>
                             <Image source={workoutTypes[workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
 
-                            <View>
-                              <Text style={styles.workoutNameModal}>{workout.name}</Text>
+                            <View style={{ flex: 1, paddingRight:40 }}>
+                              <Text   numberOfLines={2}
+                                      adjustsFontSizeToFit
+                                      minimumFontScale={0.9}
+                                      ellipsizeMode="tail"
+                               style={styles.workoutNameModal}>{workout.name}</Text>
                             </View>
 
                             <TouchableOpacity style={styles.addProgramBtn} onPress={async ()=>{

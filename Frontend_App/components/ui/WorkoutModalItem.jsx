@@ -254,9 +254,15 @@ const WorkoutModalItem = ({workout, availableWorkouts, selectedProgram, setSelec
     <View style={styles.indivWorkoutModalCont}>
       <Image source={workoutTypes[workout.workout.type] || 'Unknown'} style={{width: 40, height: 40, marginRight:10}} />
       <View>
-        <View>
-        <Text style={styles.workoutNameModal}>{workout.workout.name}</Text>
+        <View style={{ flex: 1, paddingRight:80 }}>
+          <Text 
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.9}
+            ellipsizeMode="tail"
+          style={styles.workoutNameModal}>{workout.workout.name}</Text>
         </View>
+
         <View style={{flexDirection: "row"}}>
         {workout.details.reps && (
           <Text style={styles.workoutdetailsModal}>Reps: {workout.details.reps} </Text>
