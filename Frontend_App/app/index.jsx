@@ -27,24 +27,24 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      console.log("Network state changed:", state);
+     // console.log("Network state changed:", state);
       setIsConnected(state.isConnected);
       setConnectionType(state.type);
 
       if (state.isConnected === false) {
 
-        console.log("Device is offline!");
+      //  console.log("Device is offline!");
 
       } else if (state.isConnected === true) {
         setrelog(relog => !relog);
-        console.log("Device is back online!");
+      //  console.log("Device is back online!");
 
       }
     });
 
     return () => {
       unsubscribe();
-      console.log("NetInfo listener unsubscribed.");
+    //  console.log("NetInfo listener unsubscribed.");
     };
   }, []);
 
@@ -79,7 +79,7 @@ export default function HomeScreen() {
     try{
       const member_data = await getMemberInfo();
 
-      console.log("Member Information: ",member_data);
+    //  console.log("Member Information: ",member_data);
 
       await saveToken("address", member_data.address ? member_data.address.toString() : "");
       await saveToken("birthDate", member_data.birthDate ? member_data.birthDate.toString() : "");
@@ -95,11 +95,11 @@ export default function HomeScreen() {
       await saveToken("weight", member_data.weight ? member_data.weight.toString() : "");
       await saveToken("profilePic", member_data.profilePic ? member_data.profilePic.toString() : "");
 
-      console.log("Member information saved to secure storage.");
+    //  console.log("Member information saved to secure storage.");
 
       //code below is used to determine whether the user is a member or a trainer
       const isTrainer = await checkIfTrainer().then(data => {
-        console.log("Trainer check response:", data);
+      //  console.log("Trainer check response:", data);
         return data.detail ? false : true;
       }
       );
@@ -117,13 +117,13 @@ export default function HomeScreen() {
 
   const loginAccount = async (mainUsername,mainPassword) => {
     try {
-      console.log("Clicked login button");
+    //  console.log("Clicked login button");
       setisLoading(true);
       const response = await validateLoginInfo(mainUsername,mainPassword);
       
       if (!response.ok) {
         Alert.alert('Notification', 'The Email or password that you have entered is incorrect, please try again.');
-        console.log(response.status);
+      //  console.log(response.status);
         return;
       }
   
@@ -139,7 +139,7 @@ export default function HomeScreen() {
       await saveToken("refreshToken", refreshToken);
       
   
-      console.log("User data tokens:", data);
+    //  console.log("User data tokens:", data);
   
       await setMemberInfo();
       
@@ -159,13 +159,13 @@ export default function HomeScreen() {
         setisLoading(true);
         //tests if there is already a token, saved if not proceed to manual login
         const response_Test = await refreshAccessToken();
-        console.log("Auto-login username:", response_Test);
+        //console.log("Auto-login username:", response_Test);
         if (response_Test){
         await setMemberInfo();
         router.push('/(tabs)/home');
         }
       }catch(error) {
-        console.error("Error during auto-login:", error);
+        //console.error("Error during auto-login:", error);
         Alert.alert('Notification', 'Auto-login failed. Please log in manually.');
       }finally{
               setisLoading(false);

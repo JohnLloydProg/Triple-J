@@ -17,12 +17,15 @@ import situpIcon from '@/assets/images/Core-Workout-icon.png';
 import bicepIcon from '@/assets/images/Upper-Workout-icon.png';
 import kotsIcon from '@/assets/images/Coach-icon.png';
 import placeholderQrIcon from '@/assets/images/placeholder-qr.png';
+import push from '@/assets/images/push.png';
+import pull from '@/assets/images/pull.png';
 
 const exerciseIconMap = {
-  'cardio': heartIcon,
   'lower': treadmillIcon,
   'core': situpIcon,
   'upper': bicepIcon,
+  'PS': push,  
+  'PL': pull,  
 };
 
 const HomeScreen = () => {
@@ -32,21 +35,21 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      console.log("Network state changed:", state);
+    //  console.log("Network state changed:", state);
       setIsConnected(state.isConnected);
       setConnectionType(state.type);
 
       if (state.isConnected === false) {
         router.push('/');
-        console.log("Device is offline!");
+      //  console.log("Device is offline!");
       } else if (state.isConnected === true) {
-        console.log("Device is back online!");
+      //  console.log("Device is back online!");
       }
     });
 
     return () => {
       unsubscribe();
-      console.log("NetInfo listener unsubscribed.");
+    //  console.log("NetInfo listener unsubscribed.");
     };
   }, []);
 
@@ -61,6 +64,7 @@ const HomeScreen = () => {
   // Announcement State
   const [announcement, setAnnouncement] = useState(null);
   const [announcementLoading, setAnnouncementLoading] = useState(true);
+  
 
   // Program and Coach State
   const [exercises, setExercises] = useState([]);
@@ -85,11 +89,11 @@ const HomeScreen = () => {
   }, []);
 
   useEffect ( async () => {
-    console.log("chawdioajwdjoaw");
+  //  console.log("chawdioajwdjoaw");
     setAnnouncementLoading(true);
     try {
         let announcementData = await fetchLatestAnnouncement();
-        console.log("ANNOUNCEMENTANDHOIAHIODHAWH: "+ announcementData)
+      //  console.log("ANNOUNCEMENTANDHOIAHIODHAWH: "+ announcementData)
         setAnnouncement(announcementData); 
     } catch (error) {
         console.error("HomeScreen: Failed to load announcement:", error);
@@ -196,7 +200,6 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      await loadAnnouncement();
       await loadProgramData();
       await loadGymPopulation();
       await loadQrData();
@@ -215,7 +218,6 @@ const HomeScreen = () => {
     setRefreshing(true);
     updateDisplayedDate();
     await Promise.all([
-        loadAnnouncement(),
         loadProgramData(),
         loadGymPopulation(),
         loadQrData()
@@ -265,7 +267,7 @@ const HomeScreen = () => {
               <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
                 Triple J
               </Text>
-        </View>
+            </View>
       <SafeAreaView style={styles.safeContainer}>
         <ScrollView
           style={styles.container}

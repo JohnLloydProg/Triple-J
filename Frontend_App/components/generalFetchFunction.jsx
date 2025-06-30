@@ -806,10 +806,12 @@ export async function fetchCurrentProgram(exerciseIconMap) {
     }
     
     const apiTypeToIconKey = {
-        'U': 'upper',  // Example: Lateral Raise
-        'C': 'core',   // Example: Sit-ups
-        'L': 'lower',  // Example: Squats
-        'PS': 'upper', // Example: Push-ups 
+
+        'C': 'core',
+        'L': 'lower',
+        'U': 'upper',
+        'PS': 'PS',  
+        'PL': 'PL', 
         
     };
 
@@ -834,11 +836,11 @@ export async function fetchCurrentProgram(exerciseIconMap) {
       const apiType = exerciseApiObj.type;
       const iconMapKey = apiTypeToIconKey[apiType]; 
       
-      let detailsString = `Sets: ${exerciseData.sets || 'N/A'}, Reps: ${exerciseData.reps || 'N/A'}`;
-
-      if (exerciseData.weight && String(exerciseData.weight).trim() !== "" && String(exerciseData.weight).toLowerCase() !== "null") {
-          detailsString += `, Weight: ${exerciseData.weight}`;
-      }
+      let detailsString = `${exerciseData.sets ? `Sets: ${exerciseData.sets} ` : ''}` +
+                          `${exerciseData.reps ? `Reps: ${exerciseData.reps} ` : ''}` +
+                          `${exerciseData.time ? `Time: ${exerciseData.time} ` : ''}` +
+                          `${exerciseData.weight ? `Weight: ${exerciseData.weight} ` : ''}` +
+                          `${exerciseData.distance ? `Distance: ${exerciseData.distance} ` : ''}`
 
       const generatedId = `${exerciseName.replace(/\s+/g, '_').toLowerCase()}-${index}`;
 
