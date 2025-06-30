@@ -905,11 +905,12 @@ export async function generateNewQrCode() {
 export const fetchAllAnnouncements = async () => {
   try {
     const token = await SecureStore.getItemAsync('accessToken');
+    
     if (!token) {
       throw new Error("Authentication token not found.");
     }
 
-    const response = await fetch(`${BASE_URL}/announcement/announcements/`, {
+    const response = await fetch(`${BASE_URL}/announcement/announcements`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

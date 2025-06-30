@@ -9,7 +9,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
 import colors from '../../constants/globalStyles';
 
-import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement } from '../../components/generalFetchFunction';
+import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement, fetchAllAnnouncements } from '../../components/generalFetchFunction';
 
 import heartIcon from '@/assets/images/Cardio-Workout-icon.png';
 import treadmillIcon from '@/assets/images/Lower-Workout-icon.png';
@@ -64,6 +64,8 @@ const HomeScreen = () => {
   // Announcement State
   const [announcement, setAnnouncement] = useState(null);
   const [announcementLoading, setAnnouncementLoading] = useState(true);
+  const [announcementModal, setannouncementModal] = useState(false);
+  const [announcementAll, setAnnouncementAll] = useState([]);
   
 
   // Program and Coach State
@@ -87,6 +89,23 @@ const HomeScreen = () => {
     const formattedDate = today.toLocaleDateString(undefined, options);
     setCurrentFormattedDate(formattedDate);
   }, []);
+
+
+  useEffect ( () => {
+    
+   async function getLatestAnn(){
+    const response = await fetchAllAnnouncements()
+    return response;
+   }
+
+   getLatestAnn().then(data => {console.log("NEWW ANNOUNCMENETS: " + JSON.stringify(data));
+    
+      setAnnouncementAll(data);
+
+   });
+
+  }, []);
+
 
   useEffect ( async () => {
   //  console.log("chawdioajwdjoaw");
@@ -215,12 +234,14 @@ const HomeScreen = () => {
 
   const onRefresh = useCallback(async () => {
     console.log("Refreshing data...");
+    await fetchLatestAnnouncement().then(data => {setAnnouncement(data)}), 
     setRefreshing(true);
     updateDisplayedDate();
     await Promise.all([
         loadProgramData(),
         loadGymPopulation(),
-        loadQrData()
+        loadQrData(),
+
     ]);
     setRefreshing(false);
     console.log("Refreshing data finished.");
@@ -288,10 +309,15 @@ const HomeScreen = () => {
                   <ActivityIndicator color="#FFFFFF" />
               </View>
           ) : announcement ? (
+            <TouchableOpacity onPress = {() => {
+              console.log("openn sesdami");
+                setannouncementModal(true);
+            }}>
               <View style={styles.announcementCard}>
                   <Text style={styles.announcementTitle}>{announcement.title}</Text>
                   <Text style={styles.announcementContent}>{announcement.content}</Text>
               </View>
+            </TouchableOpacity>
           ) : (
               <View style={styles.announcementCard}>
                   <Text style={styles.announcementContent}>No announcements at the moment.</Text>
@@ -413,6 +439,68 @@ const HomeScreen = () => {
               </TouchableOpacity>
           </Modal>
 
+              <Modal visible={announcementModal} transparent={true} animationType="fade">
+   <View style={styles.modalOverlay}>
+    
+{/* Close Button at Upper Left */}
+      <TouchableOpacity 
+        style={styles.closeButton}
+        onPress={() => setannouncementModal(false)}
+      >
+        <Text style={styles.closeButtonText}>✕</Text>
+      </TouchableOpacity>
+
+    <View>
+      <Text style = {styles.announcementHeader}>
+                  Announcements
+      </Text>
+    </View> 
+    <View style={styles.modalContainer}>
+      
+      
+
+      {/* Announcements Scroll List */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+  {announcementAll && announcementAll.length > 0 ? (
+    announcementAll.map((announcement, index) => {
+      // Format date and time
+      const dateObj = new Date(announcement.updated_at);
+      const formattedDate = dateObj.toISOString().split('T')[0];
+
+      let hours = dateObj.getHours();
+      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+
+      const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+      return (
+        <View key={index} style={styles.announcementCard}>
+          <Text style={styles.announcementTitle}>{announcement.title}</Text>
+
+          <Text style={styles.announcementDate}>
+            {formattedDate} | {formattedTime}
+          </Text>
+          
+          <View style={styles.announcementDivider} />
+          
+          <Text style={styles.announcementContent}>{announcement.content}</Text>
+        </View>
+      );
+    })
+  ) : (
+    <View style={styles.noAnnouncements}>
+      <Text style={styles.noAnnouncementsText}>No announcements available.</Text>
+    </View>
+  )}
+</ScrollView>
+
+
+    </View>
+  </View>
+</Modal>
+
+
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -423,6 +511,7 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     backgroundColor: '#1E1E1E',
+    //////////////////////////
   },
   container: {
     flex: 1,
@@ -631,8 +720,159 @@ const styles = StyleSheet.create({
   },
   closeButtonModal: {
     marginTop: 20,
-    backgroundColor: '#FF4D4D',
+    backgroundColor: 'red',
   },
+  announcementModal: {
+    width: '100%',
+    minHeight: '100%',
+    flexDirection: 'column',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+
+  },
+  announcementBtn: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'blue'
+  },
+  announcementText: {
+    fontSize: 10,
+    color: 'black'
+  },
+  buttonBorder: {
+    width: '100%'
+  },
+  textBorder: {
+    width: '100%',
+    backgroundColor: 'red'
+  },
+  announcementInfo: {
+    width: '100%',
+    backgroundColor: 'red'
+  },
+  announcementModal: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)', // semi-transparent dark overlay
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingTop: 50,
+},
+
+closeButton: {
+  position: 'absolute',
+  top: 40,
+  left: 20,
+  padding: 10,
+  backgroundColor: '#fff',
+  borderRadius: 5,
+},
+announcementContainer: {
+  width: '90%',
+  backgroundColor: 'white',
+  borderRadius: 10,
+  padding: 20,
+  alignItems: 'center',
+},
+announcementContent: {
+  width: '100%',
+  // further styling for the innermost view
+},
+announcementText: {
+  fontSize: 16,
+  color: 'black',
+},
+///////////////////////////////
+
+modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.8)', // dimmed background
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+modalContainer: {
+  width: '90%',
+  maxHeight: '80%',
+  backgroundColor: '1E1E1E',
+  borderRadius: 12,
+  paddingTop: 50,
+  paddingHorizontal: 20,
+  paddingBottom: 20,
+},
+
+closeButton: {
+  position: 'absolute',
+  top: 15,
+  right: 15,
+  backgroundColor: '#eee',
+  borderRadius: 20,
+  width: 35,
+  height: 35,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+closeButtonText: {
+  fontSize: 18,
+  color: '#333',
+},
+
+scrollContent: {
+  paddingVertical: 10,
+},
+
+announcementCard: {
+  backgroundColor: '#3D3D3D',
+  borderRadius: 8,
+  padding: 15,
+  marginBottom: 15,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 2,
+  elevation: 2,
+},
+
+announcementTitle: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: 'white',
+  marginBottom: 5,
+},
+
+announcementDate: {
+  fontSize: 12,
+  color: 'white',
+  marginBottom: 10,
+},
+
+announcementDivider: {
+  borderBottomWidth: 1,
+  borderBottomColor: '#e0e0e0',
+  marginBottom: 10,
+},
+
+announcementContent: {
+  fontSize: 14,
+  color: 'white',
+},
+
+noAnnouncements: {
+  alignItems: 'center',
+  marginTop: 20,
+},
+
+noAnnouncementsText: {
+  fontSize: 14,
+  color: 'white',
+},
+//////////
+announcementHeader: {
+  fontSize: 35,
+  fontFamily: 'KeaniaOne',
+  color: colors.redAccent
+}
+
+
 });
 
 export default HomeScreen;
