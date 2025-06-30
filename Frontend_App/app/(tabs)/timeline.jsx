@@ -63,7 +63,7 @@ async function timelineSaveRequest(height, weight, image=null) {
 }
 
 function BMICategory(height, weight) {
-  bmi_category = ""
+  let bmi_category = ""
   if (height != null && weight != null) {
       bmi = calculateBMI(height, weight)
       if (bmi < 18.5) {
@@ -199,6 +199,14 @@ const TimelineScreen = () => {
   }
 
   return (
+  <View style={{flex:1}}>
+        <View style={[{backgroundColor:"rgba(35, 31, 31, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
+                {paddingTop:30}]}>
+                <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
+                  Triple J
+                </Text>
+        </View>
+
     <SafeAreaView style={styles.safeContainer}>
       <ScrollView style={styles.container} refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
@@ -260,6 +268,7 @@ const TimelineScreen = () => {
           <AntDesign name="plus" size={24} color="white" />
         </TouchableOpacity>
     </SafeAreaView>
+  </View>
   );
 };
 

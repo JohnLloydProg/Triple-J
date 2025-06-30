@@ -96,7 +96,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                         )}
                         {selectedWorkoutItem.time && (
                            <View style={styles.workoutChoiceCont}>
-                            <Text style={styles.workoutdetailsModal}>Time:  </Text>
+                            <Text style={styles.workoutdetailsModal}>Time "s":  </Text>
                             <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setTime(newText)} style={styles.choiceInputCont}/>
                            </View>
                         )}
@@ -109,7 +109,7 @@ const AvailableWorkoutModal = ({ availableWorkouts, workoutTypes, handlePressCho
                         )}
                         {selectedWorkoutItem.distance && (
                           <View style={styles.workoutChoiceCont}>
-                            <Text style={styles.workoutdetailsModal}>Distance: </Text>
+                            <Text style={styles.workoutdetailsModal}>Distance "km": </Text>
                             <TextInput keyboardType="decimal-pad" cursorColor={colors.redAccent} onChangeText={newText => setDistance(newText)} style={styles.choiceInputCont}/>
                           </View>
                           

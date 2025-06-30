@@ -150,6 +150,13 @@ export default function Settings() {
   const [isLoading, setisLoading] = useState(false);
 
  return(
+  <View style={{flex:1}}>
+      <View style={[{backgroundColor:"rgba(35, 31, 31, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
+              {paddingTop:30}]}>
+              <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
+                Triple J
+              </Text>
+       </View>
 
   <ScrollView refreshControl={
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -304,7 +311,7 @@ export default function Settings() {
 
 
 
-
+</View>
  )
 }
 

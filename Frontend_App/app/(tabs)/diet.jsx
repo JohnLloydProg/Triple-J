@@ -12,6 +12,7 @@ import { useFocusEffect } from "expo-router";
 import { useFonts } from "expo-font";
 import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
+import colors from '../../constants/globalStyles';
 
 export default function Diet() {
 
@@ -162,6 +163,14 @@ export default function Diet() {
   };
 
   return (
+    <View style={{flex:1}}>
+          <View style={[{backgroundColor:"rgba(35, 31, 31, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
+                  {paddingTop:30}]}>
+                  <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
+                    Triple J
+                  </Text>
+          </View>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* BMI Status Card */}
       <View style={styles.bmiCard}>
@@ -263,6 +272,7 @@ export default function Diet() {
         </View>
       )}
     </ScrollView>
+  </View>
   );
 }
 

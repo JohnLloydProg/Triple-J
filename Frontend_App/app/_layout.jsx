@@ -43,10 +43,10 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: colors.headerColor },
         }}
       >
-        <Stack.Screen name="(tabs)" options={{ headerTitle: 'Triple J' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
-        <Stack.Screen name="index" options={{ headerTitle: 'Triple J', headerLeft: () => null}} />
-        <Stack.Screen name="offline" options={{ headerTitle: 'Triple J', headerLeft: () => null }}/>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="offline" options={{ headerShown: false }}/>
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

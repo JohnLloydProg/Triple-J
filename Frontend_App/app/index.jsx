@@ -12,6 +12,7 @@ import { validateLoginInfo, getMemberInfo, checkIfTrainer } from '@/components/g
 import NetInfo from '@react-native-community/netinfo';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import LoadingModal from '@/components/ui/LoadingModal';
+import { color } from '@rneui/base';
 
 
 
@@ -181,54 +182,63 @@ export default function HomeScreen() {
   }, [relog]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container2}>
+      <View style={[{backgroundColor:"rgba(57, 55, 55, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
+        {paddingTop:30}]}>
+        <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
+          Triple J
+        </Text>
+      </View>
 
-      <LoadingModal modalVisible={isLoading} />
+      <View style={styles.container}>
+
+        <LoadingModal modalVisible={isLoading} />
+        
+        <View style={{marginBottom: 20}}>
+          <Text style={styles.titleText}>
+            Login your Account
+          </Text>
+        </View>
+
+        <View  style={{marginBottom: 40}}>
+          <Text style={styles.titleSubText}>
+            Get started and try latest features of our gym's dedicated fitness app.
+          </Text>
+        </View>
+
+        <View  style={{marginBottom: 20}}>
+          <Text style={styles.inputFieldText}>
+            Username
+          </Text>
+          <TextInput  onChangeText={newText => setUsername(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
+        </View>
+
+        <View style={{marginBottom: 20}}>
+          <Text style={styles.inputFieldText}>
+            Password
+          </Text>
+          <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} secureTextEntry = {true}/>
+        </View>
+
+        <TouchableOpacity onPress={()=>{loginAccount(username,password)}}  style={styles.loginBtn}>
+          <Text style={styles.loginBtnTxt}>
+            Login
+          </Text>
+        </TouchableOpacity>
+
+        <View>
+          {getStatusText() === "Offline" ? (
+            <TouchableOpacity onPress={()=>{router.push("/offline")}}  style={styles.loginBtn}>
+              <Text style={styles.loginBtnTxt}>
+                  Offline Mode
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        
       
-      <View style={{marginBottom: 20}}>
-        <Text style={styles.titleText}>
-          Login your Account
-        </Text>
+
       </View>
-
-      <View  style={{marginBottom: 40}}>
-        <Text style={styles.titleSubText}>
-          Get started and try latest features of our gym's dedicated fitness app.
-        </Text>
-      </View>
-
-      <View  style={{marginBottom: 20}}>
-        <Text style={styles.inputFieldText}>
-          Username
-        </Text>
-        <TextInput  onChangeText={newText => setUsername(newText)} cursorColor={colors.redAccent} style={styles.inputField} />
-      </View>
-
-      <View style={{marginBottom: 20}}>
-        <Text style={styles.inputFieldText}>
-          Password
-        </Text>
-        <TextInput onChangeText={newText => setPass(newText)} cursorColor={colors.redAccent} style={styles.inputField} secureTextEntry = {true}/>
-      </View>
-
-      <TouchableOpacity onPress={()=>{loginAccount(username,password)}}  style={styles.loginBtn}>
-        <Text style={styles.loginBtnTxt}>
-          Login
-        </Text>
-      </TouchableOpacity>
-
-      <View>
-        {getStatusText() === "Offline" ? (
-          <TouchableOpacity onPress={()=>{router.push("/offline")}}  style={styles.loginBtn}>
-            <Text style={styles.loginBtnTxt}>
-                Offline Mode
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-      
-    
-
     </View>
   );
 }
@@ -254,6 +264,9 @@ const styles = StyleSheet.create({
   backgroundColor: colors.primaryBackground,
   flex: 1,
   padding: 30,
+ },
+ container2:{
+  flex: 1
  },
  inputField:{
   backgroundColor: '#5E5C5C',

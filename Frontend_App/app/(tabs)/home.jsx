@@ -7,6 +7,7 @@ import { ScrollView } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
 import { router} from 'expo-router';
+import colors from '../../constants/globalStyles';
 
 import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement } from '../../components/generalFetchFunction';
 
@@ -258,153 +259,161 @@ const HomeScreen = () => {
   const currentDayNameForMessage = dayNames[today.getDay()];
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 30 }}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#4CAF50']}
-            tintColor="#4CAF50"
-          />
-        }
-      >
-        {/* Announcement Section */}
-        {announcementLoading ? (
-            <View style={[styles.announcementCard, {paddingVertical: 30, alignItems: 'center'}]}>
-                <ActivityIndicator color="#FFFFFF" />
-            </View>
-        ) : announcement ? (
-            <View style={styles.announcementCard}>
-                <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                <Text style={styles.announcementContent}>{announcement.content}</Text>
-            </View>
-        ) : (
-            <View style={styles.announcementCard}>
-                <Text style={styles.announcementContent}>No announcements at the moment.</Text>
-            </View>
-        )}
-
-        {/* Program for Today Card */}
-        <View style={styles.card}>
-          <Text style={styles.heading}>{currentFormattedDate || "Loading Date..."}</Text>
-          {programLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4CAF50" />
-              <Text style={styles.loadingText}>Loading your workout...</Text>
-            </View>
-          ) : programError ? (
-            <View style={styles.noExercisesContainer}>
-              <Text style={[styles.noExercisesText, {color: 'red'}]}>{errorMessage}</Text>
-              <TouchableOpacity onPress={onRefresh} style={[styles.button, {marginTop: 15, backgroundColor: '#555'}]}>
-                  <Text style={styles.buttonText}>Try Again</Text>
-              </TouchableOpacity>
-            </View>
-          ) : exercises.length > 0 ? (
-            <>
-              {exercises.map((exercise, index) => (
-                  <View key={exercise.id} style={styles.exerciseItem}>
-                    <Image source={exercise.icon} style={styles.exerciseIcon} resizeMode="contain"/>
-                    <View style={styles.exerciseTextContainer}>
-                      <Text style={styles.text}>{exercise.name}</Text>
-                      <Text style={styles.details}>{exercise.details}</Text>
-                    </View>
-                    <CheckBox
-                      checked={!!exercise.completed}
-                      onPress={() => toggleExercise(index)}
-                      checkedColor="green"
-                      uncheckedColor="red"
-                      containerStyle={styles.checkbox}
-                    />
-                  </View>
-              ))}
-            </>
-          ) : (
-            <View style={styles.noExercisesContainer}>
-              <Text style={styles.noExercisesText}>{errorMessage || "No exercises scheduled for today."}</Text>
-              {(!errorMessage || errorMessage.includes(`No exercises scheduled for ${currentDayNameForMessage}`)) &&
-                <Text style={styles.restDayText}>Enjoy your rest day!</Text>}
-            </View>
-          )}
+    <View style={{flex:1}}>
+      <View style={[{backgroundColor:"rgba(35, 31, 31, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
+              {paddingTop:30}]}>
+              <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
+                Triple J
+              </Text>
         </View>
-
-        {/* Gym Members Count */}
-        <View style={styles.membersCard}>
-          <Text style={styles.bigText}>{gymPopCount?.Number ?? '...'}</Text>
-          <Text style={styles.details}>Gym members currently making gains</Text>
-          <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
-        </View>
-
-        {/* QR Code Section */}
-        <View style={styles.qrContainer}>
-          <TouchableOpacity onPress={() => { if (qrData && qrData.image) setQrModalVisible(true); else Alert.alert("QR Code", "QR Code not available. Please refresh.")}}>
-            <Image
-              source={qrData && qrData.image ? { uri: qrData.image} : placeholderQrIcon}
-              style={styles.qrBox}
+      <SafeAreaView style={styles.safeContainer}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={{ paddingBottom: 30 }}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#4CAF50']}
+              tintColor="#4CAF50"
             />
-          </TouchableOpacity>
-          <View style={styles.qrDetails}>
-            <Text style={styles.text}>Days until QR expires:</Text>
-            <Text style={styles.expiry}>{currentDaysRemaining}</Text>
-            <TouchableOpacity style={styles.button} onPress={handleGenerateNewQr}>
-              <Text style={styles.buttonText}>Generate New QR</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Trainer/Profile Section */}
-        <View style={styles.profileContainer}>
-          <Image 
-            source={coachInfo && coachInfo.profile_image_url ? { uri: `https://triple-j.onrender.com${coachInfo.profile_image_url}` } : kotsIcon} 
-            style={styles.profileImage}
-            onError={() => console.log("Failed to load coach image.")}
-          />
-          <View style={styles.profileTextContainer}>
-            <Text style={styles.text}>{coachInfo?.name || 'Your Coach'}</Text>
-            <Text style={styles.details}>{coachInfo?.title || 'Fitness Coach'}</Text>
-            <TouchableOpacity 
-              style={[styles.button, !coachInfo?.contact_url && {backgroundColor: '#555'}]} 
-              disabled={!coachInfo?.contact_url}
-              onPress={() => {
-                if (coachInfo?.contact_url) {
-                  Linking.openURL(coachInfo.contact_url).catch(() => Alert.alert("Error", "Could not open contact link."));
-                }
-              }}
-            >
-              <Text style={styles.buttonText}>Contact Me</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* QR Modal */}
-        <Modal
-            visible={qrModalVisible}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setQrModalVisible(false)}
+          }
         >
-            <TouchableOpacity style={styles.modalBackground} activeOpacity={1} onPressOut={() => setQrModalVisible(false)}>
-              <View style={styles.modalContent}>
-                {qrData && qrData.image ? (
-                  <Image
-                    source={{ uri:qrData.image }}
-                    style={{ width: 280, height: 280, resizeMode: 'contain', backgroundColor: 'white', padding: 10, borderRadius: 5 }}
-                  />
-                ) : (
-                  <Text style={styles.text}>QR code not available.</Text>
-                )}
-                <TouchableOpacity onPress={() => setQrModalVisible(false)} style={[styles.button, styles.closeButtonModal]}>
-                  <Text style={styles.buttonText}>Close</Text>
+          {/* Announcement Section */}
+          {announcementLoading ? (
+              <View style={[styles.announcementCard, {paddingVertical: 30, alignItems: 'center'}]}>
+                  <ActivityIndicator color="#FFFFFF" />
+              </View>
+          ) : announcement ? (
+              <View style={styles.announcementCard}>
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementContent}>{announcement.content}</Text>
+              </View>
+          ) : (
+              <View style={styles.announcementCard}>
+                  <Text style={styles.announcementContent}>No announcements at the moment.</Text>
+              </View>
+          )}
+
+          {/* Program for Today Card */}
+          <View style={styles.card}>
+            <Text style={styles.heading}>{currentFormattedDate || "Loading Date..."}</Text>
+            {programLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4CAF50" />
+                <Text style={styles.loadingText}>Loading your workout...</Text>
+              </View>
+            ) : programError ? (
+              <View style={styles.noExercisesContainer}>
+                <Text style={[styles.noExercisesText, {color: 'red'}]}>{errorMessage}</Text>
+                <TouchableOpacity onPress={onRefresh} style={[styles.button, {marginTop: 15, backgroundColor: '#555'}]}>
+                    <Text style={styles.buttonText}>Try Again</Text>
                 </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-        </Modal>
+            ) : exercises.length > 0 ? (
+              <>
+                {exercises.map((exercise, index) => (
+                    <View key={exercise.id} style={styles.exerciseItem}>
+                      <Image source={exercise.icon} style={styles.exerciseIcon} resizeMode="contain"/>
+                      <View style={styles.exerciseTextContainer}>
+                        <Text style={styles.text}>{exercise.name}</Text>
+                        <Text style={styles.details}>{exercise.details}</Text>
+                      </View>
+                      <CheckBox
+                        checked={!!exercise.completed}
+                        onPress={() => toggleExercise(index)}
+                        checkedColor="green"
+                        uncheckedColor="red"
+                        containerStyle={styles.checkbox}
+                      />
+                    </View>
+                ))}
+              </>
+            ) : (
+              <View style={styles.noExercisesContainer}>
+                <Text style={styles.noExercisesText}>{errorMessage || "No exercises scheduled for today."}</Text>
+                {(!errorMessage || errorMessage.includes(`No exercises scheduled for ${currentDayNameForMessage}`)) &&
+                  <Text style={styles.restDayText}>Enjoy your rest day!</Text>}
+              </View>
+            )}
+          </View>
 
-      </ScrollView>
-    </SafeAreaView>
+          {/* Gym Members Count */}
+          <View style={styles.membersCard}>
+            <Text style={styles.bigText}>{gymPopCount?.Number ?? '...'}</Text>
+            <Text style={styles.details}>Gym members currently making gains</Text>
+            <Text style={styles.updateTimeText}>{formatLastUpdated()}</Text>
+          </View>
+
+          {/* QR Code Section */}
+          <View style={styles.qrContainer}>
+            <TouchableOpacity onPress={() => { if (qrData && qrData.image) setQrModalVisible(true); else Alert.alert("QR Code", "QR Code not available. Please refresh.")}}>
+              <Image
+                source={qrData && qrData.image ? { uri: qrData.image} : placeholderQrIcon}
+                style={styles.qrBox}
+              />
+            </TouchableOpacity>
+            <View style={styles.qrDetails}>
+              <Text style={styles.text}>Days until QR expires:</Text>
+              <Text style={styles.expiry}>{currentDaysRemaining}</Text>
+              <TouchableOpacity style={styles.button} onPress={handleGenerateNewQr}>
+                <Text style={styles.buttonText}>Generate New QR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Trainer/Profile Section */}
+          <View style={styles.profileContainer}>
+            <Image 
+              source={coachInfo && coachInfo.profile_image_url ? { uri: `https://triple-j.onrender.com${coachInfo.profile_image_url}` } : kotsIcon} 
+              style={styles.profileImage}
+              onError={() => console.log("Failed to load coach image.")}
+            />
+            <View style={styles.profileTextContainer}>
+              <Text style={styles.text}>{coachInfo?.name || 'Your Coach'}</Text>
+              <Text style={styles.details}>{coachInfo?.title || 'Fitness Coach'}</Text>
+              <TouchableOpacity 
+                style={[styles.button, !coachInfo?.contact_url && {backgroundColor: '#555'}]} 
+                disabled={!coachInfo?.contact_url}
+                onPress={() => {
+                  if (coachInfo?.contact_url) {
+                    Linking.openURL(coachInfo.contact_url).catch(() => Alert.alert("Error", "Could not open contact link."));
+                  }
+                }}
+              >
+                <Text style={styles.buttonText}>Contact Me</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* QR Modal */}
+          <Modal
+              visible={qrModalVisible}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setQrModalVisible(false)}
+          >
+              <TouchableOpacity style={styles.modalBackground} activeOpacity={1} onPressOut={() => setQrModalVisible(false)}>
+                <View style={styles.modalContent}>
+                  {qrData && qrData.image ? (
+                    <Image
+                      source={{ uri:qrData.image }}
+                      style={{ width: 280, height: 280, resizeMode: 'contain', backgroundColor: 'white', padding: 10, borderRadius: 5 }}
+                    />
+                  ) : (
+                    <Text style={styles.text}>QR code not available.</Text>
+                  )}
+                  <TouchableOpacity onPress={() => setQrModalVisible(false)} style={[styles.button, styles.closeButtonModal]}>
+                    <Text style={styles.buttonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+          </Modal>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 };
 
