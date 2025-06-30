@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput,KeyboardAvoidingView, Platform } from 'react-native';
 import colors from '../../constants/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,10 +34,11 @@ async function timelineRequest() {
     return timelineRequest()
   }
   const body = await response.json();
+  console.log(body);
   return body;
 }
 
-async function timelineSaveRequest(height, weight, image=null) {
+async function timelineSaveRequest(note, height, weight, image=null) {
   let accessToken = await SecureStore.getItemAsync("accessToken");
   const response = await fetch("https://triple-j.onrender.com/api/gym/progress", {
     method : "POST",
@@ -48,7 +49,8 @@ async function timelineSaveRequest(height, weight, image=null) {
     body : JSON.stringify({
       'height' : parseFloat(height),
       'weight' : parseFloat(weight),
-      'img' : image
+      'notes': String(note),
+      'img' : image,
     }),
     credentials : "same-origin"
   })
@@ -134,10 +136,11 @@ const TimelineScreen = () => {
   const [timelineData, setTimelineData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisble, setModalVisible] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
+  const [note, setNote] = useState('');
   const [image, setImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -155,7 +158,7 @@ const TimelineScreen = () => {
     try{
       setisLoading(true);
     console.log('pressed');
-    const response = await timelineSaveRequest(height, weight, imageFile);
+    const response = await timelineSaveRequest(note, height, weight, imageFile);
     if (response.ok){
       setModalVisible(false);
     }}catch(e){
@@ -199,7 +202,8 @@ const TimelineScreen = () => {
   }
 
   return (
-  <View style={{flex:1}}>
+  <View 
+  style={{flex:1}}>
         <View style={[{backgroundColor:"rgba(35, 31, 31, 0.54)"},{width: "100%"}, {height: "16%"}, {justifyContent: "center"}, {alignItems:"center"},
                 {paddingTop:30}]}>
                 <Text style={[{fontSize: 40},{color: colors.redAccent},{fontFamily: 'KeaniaOne'}]}>
@@ -225,6 +229,8 @@ const TimelineScreen = () => {
                   <Text style={styles.status}>{BMICategory(timeline.height, timeline.weight)}</Text>
                   <Text style={styles.info}>BMI: {calculateBMI(timeline.height, timeline.weight)}</Text>
                   <Text style={styles.info}>Weight: {timeline.weight}</Text>
+                  <Text style={styles.info}>Height: {timeline.height}</Text>
+                  <Text style={styles.info}>Notes: {timeline.notes}</Text>
                 </View>
               </View>
             </View>
@@ -245,6 +251,10 @@ const TimelineScreen = () => {
                 </Text>
               </View>
             </TouchableOpacity>
+            <View>
+               <Text style={modalStyles.noteInputLabel}>Notes: </Text>
+                <TextInput cursorColor={colors.redAccent} style={modalStyles.noteInputCont} onChangeText={newText => setNote(newText)} value={note}></TextInput>
+            </View>
             <View style={modalStyles.flex}>
                 <Text style={modalStyles.textInputLabel}>Height (M): </Text>
                 <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setHeight(newText)} value={height}></TextInput>
@@ -253,6 +263,7 @@ const TimelineScreen = () => {
                 <Text style={modalStyles.textInputLabel}>Weight (Kg): </Text>
                 <TextInput cursorColor={colors.redAccent} style={modalStyles.choiceInputCont} onChangeText={newText => setWeight(newText)} value={weight}></TextInput>
             </View>
+            
           </View>
           <View style={modalStyles.footer}>
             <TouchableOpacity style={modalStyles.closeBtn} onPress={() => setModalVisible(false)}> 
@@ -299,6 +310,23 @@ const modalStyles = StyleSheet.create({
     fontFamily: 'KeaniaOne',
     textAlign: 'left',
     textAlignVertical: 'center'
+  },
+  noteInputLabel: {
+    width: "100%",
+    fontSize: 18,
+    color: colors.redAccent,
+    fontFamily: 'KeaniaOne',
+    textAlign: 'left',
+    textAlignVertical: 'center'
+  },
+   noteInputCont:{
+    backgroundColor: '#5E5C5C',
+    borderRadius: 22,
+    height: 50,
+    width: 300,
+    color: 'white',
+    paddingLeft: 20,
+    paddingRight: 20,
   },
   choiceInputCont:{
     backgroundColor: '#5E5C5C',
