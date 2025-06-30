@@ -127,6 +127,24 @@
     <script src="https://kit.fontawesome.com/154b347a8c.js" crossorigin="anonymous"></script>
 
     <script src="registerNext.js"></script>
+
+    <script>
+        const today = new Date();
+        const todayFormatted = today.toISOString().substring(0, 10);
+
+        const year16YearsAgo = today.getFullYear() - 16;
+        const monthToday = (today.getMonth() + 1).toString().padStart(2, '0');
+        const dayToday = today.getDate().toString().padStart(2, '0');
+        const sixteenYearsAgoFormatted = `${year16YearsAgo}-${monthToday}-${dayToday}`;
+
+        const dobInput = document.getElementById('dob');
+
+        dobInput.max = sixteenYearsAgoFormatted;
+        dobInput.value = sixteenYearsAgoFormatted;
+
+        console.log(todayFormatted);
+        console.log(sixteenYearsAgoFormatted);
+    </script>
     
 </body>
 </html>

@@ -58,10 +58,13 @@ function continueRegister(){
     let rePassword= document.querySelector("#rePassword").value;
     let membershipType = document.getElementById("membershipType").value;
 
+    const isChecked = document.getElementById('agreeCheckbox').checked;
+
+    console.log(membershipType);
 
 
     
-   if( membershipType && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword){
+   if( (membershipType== 1 || membershipType== 2)  && username != "" && password != "" && email != "" && rePassword != "" && password === rePassword && isChecked){
 
     try{
 
@@ -94,9 +97,9 @@ function continueRegister(){
     window.location.href = "registerNext.html" 
   }catch(err){
     console.log(err)
-    alert("Incorred Credentials, please try again");
+    alert("Incorrect Credentials, please try again");
   }
    }else{
-    alert("Incorred Credentials, please try again");
+    alert("Incorrect Credentials, please try again");
    }
 }

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="forms.css">
 
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Keania+One&family=Poppins&display=swap" rel="stylesheet">
@@ -79,6 +78,51 @@
                 <input id="rePassword" class="mainInputs" type="text" placeholder="Re-type your Password">
             </div>
 
+            <div>
+                <div id="termsCont">
+                    <p >
+                    <a href="#" id="termsLink">Terms and Conditions</a>
+                    </p>
+
+                </div>
+        
+                <div class="checkbox-container">
+                    <label >
+                        <input type="checkbox" id="agreeCheckbox"> 
+                        <span id="agreeCheckboxText">
+                            I agree to the Terms
+                        </span>
+                    </label>
+                </div>
+        
+                <!-- Popup Modal -->
+                <div id="termsModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" id="closeModal">&times;</span>
+                        <h2>Terms and Conditions</h2>
+
+                        <h3>1. Data Privacy Notice</h3>
+                        <p>
+                        In compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>, we are committed to protecting your personal information. All data collected will be used solely for gym membership management, health and safety tracking, and communication regarding your use of Triple J Systems. Your information will not be shared with third parties without your consent, unless required by law.
+                        </p>
+
+                        <h3>2. Gym Injury Liability Waiver</h3>
+                        <p>
+                        By registering, you acknowledge that the use of gym equipment and facilities involves physical activity that carries inherent risks. Triple J Gym and its staff will not be held liable for any injury, accident, or health condition that may occur during your participation. You agree to use the facilities responsibly and to consult a physician before beginning any fitness program.
+                        </p>
+
+                        <h3>3. Payment and Membership Disclosure</h3>
+                        <p>
+                        All membership fees must be paid in full according to the selected membership plan. Payments are non-refundable except in cases of billing errors or service disruptions initiated by the gym. Triple J Gym reserves the right to change pricing, membership terms, and benefits with prior notice to members.
+                        </p>
+
+                        <p style="margin-top: 20px;">
+                        By continuing with registration, you agree that you have read, understood, and accepted the Terms and Conditions listed above.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
 
             <a class="mainInputs nextBtn" onclick="continueRegister()" > 
                 Continue Registration
@@ -87,6 +131,7 @@
 
             
         </form>   
+        
         
         
             
@@ -99,6 +144,32 @@
         document.addEventListener("DOMContentLoaded", async () => {
             await checkmem();
             });
+    </script>
+
+    <script>
+        const modal = document.getElementById('termsModal');
+        const termsLink = document.getElementById('termsLink');
+        const closeModal = document.getElementById('closeModal');
+
+        termsLink.onclick = function(event) {
+            event.preventDefault();
+            modal.style.display = 'block';
+        };
+
+        closeModal.onclick = function() {
+            modal.style.display = 'none';
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+            modal.style.display = 'none';
+            }
+        };
+
+        function checkAgreement() {
+            const isChecked = document.getElementById('agreeCheckbox').checked;
+            alert('Checkbox is ' + (isChecked ? 'checked' : 'not checked'));
+        }
     </script>
     
 </body>
