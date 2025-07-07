@@ -51,46 +51,48 @@
   }
 
 
-    uri = "/api/scheduling/schedules";
+    // uri = "/api/scheduling/schedules";
     
-    async function test() {
-    try {
-        let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
-        console.log("Access token payload:", accessToken.access);
+    // async function test() {
+    // try {
+    //     let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
+    //     console.log("Access token payload:", accessToken.access);
 
-        let response = await fetch(tripleJ_URL + uri, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${accessToken.access}`,
-            "Content-Type": "application/json"
-        }});
+    //     let response = await fetch(tripleJ_URL + uri, {
+    //     method: "GET",
+    //     headers: {
+    //         "Authorization": `Bearer ${accessToken.access}`,
+    //         "Content-Type": "application/json"
+    //     }});
 
-        if (response.status === 401) {
-        console.log("Access token expired");
-        accessToken = await refreshAccessToken(accessToken.access);
-        console.log("New access token: " + accessToken);
-        if (!accessToken) {
-            throw new Error("Failed to refresh access token");
-        }
+    //     if (response.status === 401) {
+    //     console.log("Access token expired");
+    //     accessToken = await refreshAccessToken(accessToken.access);
+    //     console.log("New access token: " + accessToken);
+    //     if (!accessToken) {
+    //         throw new Error("Failed to refresh access token");
+    //     }
         
-        response = await fetch(tripleJ_URL + uri, {
-            method: "GET",
-            headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-            }
-        });
-        }
-        const data = await response.json();
-        console.log("Data is successfully laoded view:", data);
-        return data;
-        } catch (error) {
-        console.error("Error:", error);
-        }
+    //     response = await fetch(tripleJ_URL + uri, {
+    //         method: "GET",
+    //         headers: {
+    //         "Authorization": `Bearer ${accessToken}`,
+    //         "Content-Type": "application/json"
+    //         }
+    //     });
+    //     }
+    //     const data = await response.json();
+    //     console.log("Data is successfully laoded view:", data);
+    //     return data;
+    //     } catch (error) {
+    //     console.error("Error:", error);
+    //     }
 
-    }
+    // }
     
-    console.log(test());
+    // console.log(test());
+
+  //--------------------------------------------------
 
     // uri = "/api/scheduling/schedule/create";
     
@@ -137,6 +139,7 @@
     
     // console.log(test2("3", "2025-07-10T00:00:00"));
 
+    // -----------------------------------------------
 
     // uri = "/api/scheduling/schedule/update/2";
     
@@ -178,6 +181,96 @@
     // }
     
     // console.log(test3());
+
+    // ------------------------------------------------------------
+
+
+    // uri = "/api/scheduling/schedule/next";
+    
+    // async function test4() {
+    // try {
+    //     let accessToken = await  validateLoginInfo("its_lloyd","Unida12345").then(response => response.json());
+    //     console.log("Access token payload:", accessToken.access);
+
+    //     let response = await fetch(tripleJ_URL + uri, {
+    //     method: "GET",
+    //     headers: {
+    //         "Authorization": `Bearer ${accessToken.access}`,
+    //         "Content-Type": "application/json"
+    //     }});
+
+    //     if (response.status === 401) {
+    //     console.log("Access token expired");
+    //     accessToken = await refreshAccessToken(accessToken.access);
+    //     console.log("New access token: " + accessToken);
+    //     if (!accessToken) {
+    //         throw new Error("Failed to refresh access token");
+    //     }
+        
+    //     response = await fetch(tripleJ_URL + uri, {
+    //         method: "GET",
+    //         headers: {
+    //         "Authorization": `Bearer ${accessToken}`,
+    //         "Content-Type": "application/json"
+    //         }
+    //     });
+    //     }
+    //     const data = await response.json();
+    //     console.log("Data is successfully next stuff:", data);
+    //     return data;
+    //     } catch (error) {
+    //     console.error("Error:", error);
+    //     }
+
+    // }
+    
+    // console.log(test4());
+
+    // ------------------------------------------
+    
+    uri = "/api/scheduling/schedule/update/";
+    
+    async function test5(schedId,dateTime) {
+    try {
+        let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
+        console.log("Access token payload:", accessToken.access);
+
+        let response = await fetch(tripleJ_URL + uri + schedId, {
+        method: "PATCH",
+        body: JSON.stringify({
+        "datetime": dateTime,
+        }),
+        headers: {
+            "Authorization": `Bearer ${accessToken.access}`,
+            "Content-Type": "application/json"
+        }});
+
+        if (response.status === 401) {
+        console.log("Access token expired");
+        accessToken = await refreshAccessToken(accessToken.access);
+        console.log("New access token: " + accessToken);
+        if (!accessToken) {
+            throw new Error("Failed to refresh access token");
+        }
+        
+        response = await fetch(tripleJ_URL + uri + schedId, {
+            method: "PATCH",
+            headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+            }
+        });
+        }
+        const data = await response.json();
+        console.log("Data is successfully loaded patch:", data);
+        return data;
+        } catch (error) {
+        console.error("Error:", error);
+        }
+
+    }
+    
+    console.log(test5("4", "2025-07-10T01:00:00"));
 
   </script>
 </body>
