@@ -48,7 +48,7 @@ async function registerAccount(validationCode, email, username, password, member
     });
 
     const data = await response.json();
-    return data;
+    return { status: response.status, data }; 
 }
 
 function continueRegister(){
@@ -85,16 +85,19 @@ function continueRegister(){
 
     localStorage.setItem("validationCode", validationCode);
 
-     registerAccount(validationCode, email, username, password, membershipType).then((data) => {
-    console.log("DATA1: "+ data);
-    console.log("Sucessfully registered account:");
+     registerAccount(validationCode, email, username, password, membershipType).then((result) => {
+      if (result.status === 409) {
+        console.error('Conflict error: Username already exists or there is a conflict.');
+        alert('Username or email already exists. Please try a different one.');
+        return; 
+      }
 
-        
+      console.log("DATA1: ", result.data);
+      console.log("Successfully registered account:");
+
+      window.location.href = "registerNext.html";
     });
 
-  
-
-    window.location.href = "registerNext.html" 
   }catch(err){
     console.log(err)
     alert("Incorrect Credentials, please try again");
