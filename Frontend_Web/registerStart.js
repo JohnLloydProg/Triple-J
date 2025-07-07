@@ -86,6 +86,11 @@ function continueRegister(){
     localStorage.setItem("validationCode", validationCode);
 
      registerAccount(validationCode, email, username, password, membershipType).then((data) => {
+
+     if (response.status === 409) {
+      console.error('Conflict error: Username already exists or there is a conflict.');
+      throw 409;
+    }
     console.log("DATA1: "+ data);
     console.log("Sucessfully registered account:");
 
