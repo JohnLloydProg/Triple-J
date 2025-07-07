@@ -98,9 +98,6 @@ function continueRegister(){
       window.location.href = "registerNext.html";
     });
 
-  
-
-    window.location.href = "registerNext.html" 
   }catch(err){
     console.log(err)
     alert("Incorrect Credentials, please try again");
