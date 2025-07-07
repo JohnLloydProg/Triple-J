@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Function Testing</title>
+</head>
+<body>
+
+  <script>
+    const API_URL = 'https://triple-j.onrender.com/api/account/token/refresh';
+
+    async function refreshAccessToken(refreshToken ) {
+    try {
+        
+        const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
+        });
+
+        if (!response.ok) {
+        throw new Error('Failed to refresh token');
+        }
+
+        const data = await response.json();
+        return updatedAccessToken;
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+    }
+    }
+
+    const tripleJ_URL = "https://triple-j.onrender.com";    
+
+    async function validateLoginInfo(username, password) {
+    let response = fetch(tripleJ_URL + "/api/account/token", {
+      method: "POST",
+      body: JSON.stringify({
+        "username": username,
+        "password": password,
+      }),
+      credentials: 'same-origin',
+      headers: {
+       "Content-Type": "application/json;",
+      }
+    });
+     const data = await response;
+    return data;
+  }
+
+
+    uri = "/api/scheduling/schedules";
+    
+    async function test() {
+    try {
+        let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
+        console.log("Access token payload:", accessToken.access);
+
+        let response = await fetch(tripleJ_URL + uri, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${accessToken.access}`,
+            "Content-Type": "application/json"
+        }});
+
+        if (response.status === 401) {
+        console.log("Access token expired");
+        accessToken = await refreshAccessToken(accessToken.access);
+        console.log("New access token: " + accessToken);
+        if (!accessToken) {
+            throw new Error("Failed to refresh access token");
+        }
+        
+        response = await fetch(tripleJ_URL + uri, {
+            method: "GET",
+            headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+            }
+        });
+        }
+        const data = await response.json();
+        console.log("Data is successfully laoded view:", data);
+        return data;
+        } catch (error) {
+        console.error("Error:", error);
+        }
+
+    }
+    
+    console.log(test());
+
+    // uri = "/api/scheduling/schedule/create";
+    
+    // async function test2(memberId, datetTime) {
+    // try {
+    //     let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
+    //     console.log("Access token payload:", accessToken.access);
+
+    //     let response = await fetch(tripleJ_URL + uri, {
+    //     method: "POST",
+    //     body: JSON.stringify({
+    //     "trainee": memberId,
+    //     "datetime": datetTime,
+    //   }),
+    //     headers: {
+    //         "Authorization": `Bearer ${accessToken.access}`,
+    //         "Content-Type": "application/json"
+    //     }});
+
+    //     if (response.status === 401) {
+    //     console.log("Access token expired");
+    //     accessToken = await refreshAccessToken(accessToken.access);
+    //     console.log("New access token: " + accessToken);
+    //     if (!accessToken) {
+    //         throw new Error("Failed to refresh access token");
+    //     }
+        
+    //     response = await fetch(tripleJ_URL + uri, {
+    //         method: "POST",
+    //         headers: {
+    //         "Authorization": `Bearer ${accessToken}`,
+    //         "Content-Type": "application/json"
+    //         }
+    //     });
+    //     }
+    //     const data = await response.json();
+    //     console.log("Data is successfully laoded create:", data);
+    //     return data;
+    //     } catch (error) {
+    //     console.error("Error:", error);
+    //     }
+
+    // }
+    
+    // console.log(test2("3", "2025-07-10T00:00:00"));
+
+
+    // uri = "/api/scheduling/schedule/update/2";
+    
+    // async function test3() {
+    // try {
+    //     let accessToken = await  validateLoginInfo("its_mateo","Mateo12345").then(response => response.json());
+    //     console.log("Access token payload:", accessToken.access);
+
+    //     let response = await fetch(tripleJ_URL + uri, {
+    //     method: "DELETE",
+    //     headers: {
+    //         "Authorization": `Bearer ${accessToken.access}`,
+    //         "Content-Type": "application/json"
+    //     }});
+
+    //     if (response.status === 401) {
+    //     console.log("Access token expired");
+    //     accessToken = await refreshAccessToken(accessToken.access);
+    //     console.log("New access token: " + accessToken);
+    //     if (!accessToken) {
+    //         throw new Error("Failed to refresh access token");
+    //     }
+        
+    //     response = await fetch(tripleJ_URL + uri, {
+    //         method: "DELETE",
+    //         headers: {
+    //         "Authorization": `Bearer ${accessToken}`,
+    //         "Content-Type": "application/json"
+    //         }
+    //     });
+    //     }
+    //     const data = await response;
+    //     console.log("Data is successfully deleted:", data);
+    //     return data;
+    //     } catch (error) {
+    //     console.error("Error:", error);
+    //     }
+
+    // }
+    
+    // console.log(test3());
+
+  </script>
+</body>
+</html>

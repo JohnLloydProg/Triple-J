@@ -26,11 +26,17 @@
         .form-control, .form-select { background-color: var(--input-bg); color: var(--text-light); border: 2px solid transparent; border-radius: 50px; padding: 0.75rem 1.25rem; font-size: 1rem; transition: border-color 0.2s ease-in-out; }
         .btn { border: none; border-radius: 50px; padding: 0.7rem 1.5rem; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease-in-out; }
         .modal-content { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 16px; }
-        .program-day-card { background-color: var(--input-bg); border-radius: 12px; padding: 1rem; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-        .program-day-card h5 { color: var(--accent-green); font-weight: 600; margin-bottom: 10px; }
-        .program-workout-item { background-color: var(--panel-bg); border-radius: 8px; padding: 10px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .schedule-item { background-color: var(--bg-dark); border-radius: 8px; padding: 10px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .schedule-item-delete-btn { background-color: var(--accent-red-danger) !important; color: white !important; padding: 0.2rem 0.6rem; font-size: 0.8rem; line-height: 1; }
+        
+        /* Timetable styles */
+        .timetable { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .timetable th, .timetable td { border: 1px solid var(--border-color); padding: 0.5rem; text-align: center; }
+        .timetable th { background-color: var(--input-bg); color: var(--accent-green); font-weight: 600; }
+        .timetable td { background-color: var(--panel-bg); height: 60px; vertical-align: top; }
+        .time-slot { background-color: var(--accent-blue); color: white; border-radius: 4px; padding: 2px 5px; margin: 2px 0; font-size: 0.8rem; }
+        .time-header { background-color: var(--input-bg); font-weight: 500; }
+        .empty-slot { color: var(--text-muted); font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -80,15 +86,37 @@
                     </div>
                 </div>
             </div>
-            <div class="main-content-column"><div class="panel" id="member-programs-section" style="display: none;"><h4 class="panel-header" id="member-programs-header">Workout Schedule</h4><div class="panel-body pt-3"><div class="d-flex justify-content-end mb-3"><button class="btn btn-secondary me-2" id="add-program-btn">Add New Program</button></div><div id="program-list-container"></div></div></div></div>
+            <div class="main-content-column">
+                <div class="panel" id="member-schedule-section" style="display: none;">
+                    <h4 class="panel-header" id="member-schedule-header">Member Weekly Schedule</h4>
+                    <div class="panel-body pt-3">
+                        <div class="table-responsive">
+                            <table class="timetable">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                        <th>Sunday</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="timetable-body">
+                                    <!-- Timetable will be generated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modals (unchanged) -->
+    <!-- Modals -->
     <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Trainer Login Required</h5></div><div class="modal-body"><form id="loginForm"><div class="mb-3"><label for="loginUsername" class="form-label">Username</label><input type="text" class="form-control" id="loginUsername" required></div><div class="mb-3"><label for="loginPassword" class="form-label">Password</label><input type="password" class="form-control" id="loginPassword" required></div><div id="login-error-message" class="text-danger mb-3" style="display: none;"></div><button type="submit" class="btn btn-primary w-100">Login</button></form></div></div></div></div>
-    <div class="modal fade" id="editProgramDayModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Program Day</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form><input type="hidden" id="currentProgramId"><div class="mb-3"><label for="programDaySelect" class="form-label">Day of Week</label><select class="form-select" id="programDaySelect" required><option value="">Select Day</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option><option value="Unassigned">Unassigned</option></select></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-primary" id="saveProgramDayBtn">Save</button></div></div></div></div>
-    <div class="modal fade" id="addWorkoutModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Add Workout to Program</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addWorkoutForm"><input type="hidden" id="addWorkoutProgramId"><div class="mb-3"><label for="workoutTypeSelect" class="form-label">Workout Type</label><select class="form-select" id="workoutTypeSelect" required></select></div><div class="row gx-2"><div class="col"><label for="workoutSetsInput" class="form-label">Sets</label><input type="number" class="form-control" id="workoutSetsInput" placeholder="e.g., 3" required></div><div class="col"><label for="workoutRepsInput" class="form-label">Reps</label><input type="number" class="form-control" id="workoutRepsInput" placeholder="e.g., 10" required></div></div><div class="mb-3 mt-3"><label for="workoutWeightInput" class="form-label">Weight (Optional)</label><input type="text" class="form-control" id="workoutWeightInput" placeholder="e.g., 50kg or bodyweight"></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveWorkoutBtn">Add Workout</button></div></div></div></div>
-    <div class="modal fade" id="viewEditWorkoutsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="viewEditWorkoutsModalLabel">Workouts for [Day]</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="currentProgramWorkoutsId"><div id="workouts-for-program-list"></div><div class="d-flex justify-content-end mt-3"><button class="btn btn-secondary" id="add-workout-to-program-modal-btn">Add New Workout</button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
@@ -99,7 +127,7 @@
         const removeToken = (key) => localStorage.removeItem(key);
         const BASE_URL = 'https://triple-j.onrender.com/api';
         
-        let loginModalInstance, editProgramDayModal, addWorkoutModal, viewEditWorkoutsModal;
+        let loginModalInstance;
         let selectedMemberId = null, selectedMemberUsername = null;
         
         async function request(endpoint, method = 'GET', body = null) {
@@ -137,14 +165,6 @@
         function validateLoginInfo(username, password) { return fetch(`${BASE_URL}/account/token`, { method: "POST", body: JSON.stringify({ username, password }), headers: { "Content-Type": "application/json" } }); }
         async function checkIfTrainer() { return request(`/account/members`, 'GET'); }
         async function getMemberInfo(username) { return request(`/account/member/${username}`, 'GET'); }
-        async function getProgram(userId) { return request(`/gym/programs?user=${userId}`, "GET"); }
-        async function addProgram(userId) { return request(`/gym/programs?user=${userId}`, "POST"); }
-        async function deleteProgram(programId, userId) { return request(`/gym/program/${programId}?user=${userId}`, "DELETE"); }
-        async function updateProgram(programId, dayValue, userId) { return request(`/gym/program/${programId}?user=${userId}`, "PUT", { 'day': dayValue }); }
-        async function getWorkout(programId) { return request(`/gym/workout/${programId}`, "GET"); }
-        async function getAvailableWorkouts() { return request("/gym/workouts", "GET"); }
-        async function addWorkout(programId, workoutType, mainDetails) { return request(`/gym/workout/${programId}`, "POST", { 'workout': workoutType, 'details': mainDetails }); }
-        async function deleteWorkout(programId, workoutId) { return request(`/gym/workout/${programId}/delete/${workoutId}`, "DELETE"); }
         async function updateMemberProfile(username, data) { return request(`/account/member/${username}`, 'PUT', data); }
         // --- End API Functions ---
 
@@ -186,39 +206,33 @@
         }
 
         function populateTimeSelects() {
-            const timeSelects = [document.getElementById('new-schedule-start'), document.getElementById('new-schedule-end')];
+            const timeSelects = [
+                document.getElementById('new-schedule-start'),
+                document.getElementById('new-schedule-end')
+            ];
             timeSelects.forEach(select => {
                 if (select.options.length > 1) return;
                 select.innerHTML = '<option value="">Select</option>';
-                for (let i = 6; i <= 22; i++) { 
-                    ['00', '30'].forEach(min => {
-                        if (i === 22 && min === '30') return;
-                        const hour24 = i;
-                        const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-                        const ampm = hour24 < 12 ? 'AM' : 'PM';
-                        const timeString = `${hour12}:${min} ${ampm}`;
-                        const option = new Option(timeString, timeString);
-                        select.appendChild(option);
-                    });
+                for (let i = 5; i <= 23; i++) { // Hourly increments only
+                    const hour24 = i;
+                    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+                    const ampm = hour24 < 12 ? 'AM' : 'PM';
+                    const timeString = `${hour12}:00 ${ampm}`;
+                    const option = new Option(timeString, timeString);
+                    select.appendChild(option);
                 }
             });
         }
 
+
         async function initializeDashboard() {
             document.querySelector('.main-app-container').style.display = 'block';
-            editProgramDayModal = new bootstrap.Modal(document.getElementById('editProgramDayModal'));
-            addWorkoutModal = new bootstrap.Modal(document.getElementById('addWorkoutModal'));
-            viewEditWorkoutsModal = new bootstrap.Modal(document.getElementById('viewEditWorkoutsModal'));
             
             populateTimeSelects();
             await loadMembersForTrainer();
 
             document.getElementById('logout-btn').addEventListener('click', () => handleLogout("You have been logged out."));
             document.getElementById('member-select').addEventListener('change', handleMemberSelection);
-            document.getElementById('add-program-btn').addEventListener('click', onAddProgramClick);
-            document.getElementById('saveProgramDayBtn').addEventListener('click', onSaveProgramDayClick);
-            document.getElementById('add-workout-to-program-modal-btn').addEventListener('click', onAddWorkoutToProgramClick);
-            document.getElementById('saveWorkoutBtn').addEventListener('click', onSaveWorkoutClick);
             document.getElementById('save-client-schedule-btn').addEventListener('click', onSaveClientSchedule);
             document.getElementById('add-schedule-slot-btn').addEventListener('click', onAddScheduleSlotClick);
         }
@@ -229,36 +243,6 @@
             window.location.reload();
         }
 
-        const mapDayValueToString = (dayValue) => {
-            const dayMap = { "0": "Monday", "1": "Tuesday", "2": "Wednesday", "3": "Thursday", "4": "Friday", "5": "Saturday", "6": "Sunday" };
-            return dayMap[String(dayValue)] || dayValue || "Unassigned";
-        };
-        const mapDayStringToValue = (dayString) => {
-            const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
-            return dayMap[dayString] === undefined ? null : dayMap[dayString];
-        };
-        
-        async function loadMembersForTrainer() {
-            const memberSelect = document.getElementById('member-select');
-            memberSelect.innerHTML = '<option value="">Loading...</option>';
-            try {
-                const members = await checkIfTrainer();
-                memberSelect.innerHTML = '<option value="">Select a Member</option>';
-                if (members && Array.isArray(members) && members.length > 0) {
-                    members.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member.id; 
-                        option.textContent = member.name || member.username;
-                        option.dataset.username = member.username;
-                        memberSelect.appendChild(option);
-                    });
-                } else { memberSelect.innerHTML = '<option value="">No members found</option>'; }
-            } catch (error) {
-                memberSelect.innerHTML = `<option value="">Error loading members</option>`;
-                alert(`Could not load members. Server says: "${error.message}".`);
-            }
-        }
-        
         function createScheduleListItem(day, start, end) {
             const item = document.createElement('div');
             item.className = 'schedule-item';
@@ -272,6 +256,7 @@
             `;
             item.querySelector('.schedule-item-delete-btn').addEventListener('click', (e) => {
                 e.target.closest('.schedule-item').remove();
+                updateTimetable(); // Update timetable when a slot is removed
             });
             return item;
         }
@@ -296,6 +281,124 @@
             } else {
                 listContainer.innerHTML = '<p class="text-muted small text-center">No schedule set.</p>';
             }
+            
+            updateTimetable(); // Update timetable with the new schedule
+        }
+
+        function generateTimetable() {
+            const timetableBody = document.getElementById('timetable-body');
+            timetableBody.innerHTML = '';
+            
+            // Create time slots from 5:00 AM to 11:00 PM in 1-hour increments
+            for (let hour = 5; hour <= 23; hour++) {
+                for (let minute = 0; minute < 60; minute += 60) {
+                    if (hour === 23 && minute === 30) break; // Skip 11:30 PM
+                    
+                    const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+                    const ampm = hour < 12 ? 'AM' : 'PM';
+                    const timeDisplay = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td class="time-header">${timeDisplay}</td>
+                                     <td data-day="Monday" data-time="${time24}"></td>
+                                     <td data-day="Tuesday" data-time="${time24}"></td>
+                                     <td data-day="Wednesday" data-time="${time24}"></td>
+                                     <td data-day="Thursday" data-time="${time24}"></td>
+                                     <td data-day="Friday" data-time="${time24}"></td>
+                                     <td data-day="Saturday" data-time="${time24}"></td>
+                                     <td data-day="Sunday" data-time="${time24}"></td>`;
+                    timetableBody.appendChild(row);
+                }
+            }
+        }
+
+        function updateTimetable() {
+            // Clear all existing time slots
+            document.querySelectorAll('.timetable td[data-day]').forEach(td => {
+                td.innerHTML = '';
+                td.classList.remove('has-slot');
+            });
+            
+            // Get all schedule items
+            const scheduleItems = document.querySelectorAll('#client-schedule-list .schedule-item');
+            if (scheduleItems.length === 0) return;
+            
+            // Process each schedule item
+            scheduleItems.forEach(item => {
+                const day = item.dataset.day;
+                const startTime = item.dataset.start;
+                const endTime = item.dataset.end;
+                
+                // Convert times to 24-hour format for comparison
+                const start24 = convertTo24Hour(startTime);
+                const end24 = convertTo24Hour(endTime);
+                
+                if (!start24 || !end24) return;
+                
+                // Find all time slots that fall within this schedule
+                document.querySelectorAll(`.timetable td[data-day="${day}"]`).forEach(td => {
+                    const slotTime = td.dataset.time;
+                    if (slotTime >= start24 && slotTime < end24) {
+                        td.classList.add('has-slot');
+                        if (td.innerHTML === '') {
+                            // Only add the time slot text to the first cell of the block
+                            if (!document.querySelector(`.timetable td[data-day="${day}"][data-time="${getPreviousTime(slotTime)}"]`)?.classList.contains('has-slot')) {
+                                td.innerHTML = `<div class="time-slot">${startTime} - ${endTime}</div>`;
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function convertTo24Hour(time12) {
+            if (!time12) return null;
+            const [time, period] = time12.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            
+            if (period === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (period === 'AM' && hours === 12) {
+                hours = 0;
+            }
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        function getPreviousTime(time24) {
+            const [hours, minutes] = time24.split(':').map(Number);
+            let prevHours = hours;
+            let prevMinutes = minutes - 30;
+            
+            if (prevMinutes < 0) {
+                prevHours -= 1;
+                prevMinutes = 30;
+            }
+            
+            return `${prevHours.toString().padStart(2, '0')}:${prevMinutes.toString().padStart(2, '0')}`;
+        }
+
+        async function loadMembersForTrainer() {
+            const memberSelect = document.getElementById('member-select');
+            memberSelect.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const members = await checkIfTrainer();
+                memberSelect.innerHTML = '<option value="">Select a Member</option>';
+                if (members && Array.isArray(members) && members.length > 0) {
+                    members.forEach(member => {
+                        //console.log('member:', member);
+                        const option = document.createElement('option');
+                        option.value = member.id; 
+                        option.textContent = member.name || member.username;
+                        option.dataset.username = member.username;
+                        memberSelect.appendChild(option);
+                    });
+                } else { memberSelect.innerHTML = '<option value="">No members found</option>'; }
+            } catch (error) {
+                memberSelect.innerHTML = `<option value="">Error loading members</option>`;
+                alert(`Could not load members. Server says: "${error.message}".`);
+            }
         }
 
         async function handleMemberSelection() {
@@ -304,32 +407,33 @@
             const selectedOption = memberSelect.options[memberSelect.selectedIndex];
             selectedMemberUsername = selectedOption ? selectedOption.dataset.username : null;
             const infoPanel = document.getElementById('selected-member-info-panel');
-            const programsSection = document.getElementById('member-programs-section');
+            const scheduleSection = document.getElementById('member-schedule-section');
             
             document.getElementById('client-schedule-list').innerHTML = '';
             document.getElementById('client-schedule-status').textContent = '';
 
             if (selectedMemberId) {
                 infoPanel.style.display = 'block';
-                programsSection.style.display = 'block';
+                scheduleSection.style.display = 'block';
                 try {
                     const memberInfo = await getMemberInfo(selectedMemberUsername);
                     document.getElementById('selected-member-name').textContent = memberInfo.first_name +' '+ memberInfo.last_name || 'N/A';
                     document.getElementById('selected-member-username').textContent = memberInfo.username || 'N/A';
                     document.getElementById('selected-member-height').textContent = memberInfo.height || 'N/A';
                     document.getElementById('selected-member-weight').textContent = memberInfo.weight || 'N/A';
-                    document.getElementById('member-programs-header').textContent = `Workout Schedule for ${memberInfo.first_name +' '+ memberInfo.last_name || memberInfo.username}`;
+                    document.getElementById('member-schedule-header').textContent = `Weekly Schedule for ${memberInfo.first_name +' '+ memberInfo.last_name || memberInfo.username}`;
                     
                     renderScheduleList(memberInfo.schedule);
+                    generateTimetable(); // Initialize the timetable structure
+                    updateTimetable(); // Populate with schedule data
 
                 } catch (error) { 
-                    document.getElementById('member-programs-header').textContent = `Workout Schedule (Error loading details)`;
+                    document.getElementById('member-schedule-header').textContent = `Weekly Schedule (Error loading details)`;
                     document.getElementById('client-schedule-list').innerHTML = '<p class="text-danger small">Could not load schedule.</p>';
                 }
-                await loadMemberPrograms(selectedMemberId, selectedMemberUsername);
             } else {
                 infoPanel.style.display = 'none';
-                programsSection.style.display = 'none';
+                scheduleSection.style.display = 'none';
             }
         }
         
@@ -342,8 +446,15 @@
                 alert('Please select a day, start time, and end time.');
                 return;
             }
-
             
+            // Validate end time is after start time
+            const start24 = convertTo24Hour(start);
+            const end24 = convertTo24Hour(end);
+            if (start24 >= end24) {
+                alert('End time must be after start time.');
+                return;
+            }
+
             const listContainer = document.getElementById('client-schedule-list');
             if (listContainer.querySelector('p')) { // remove "No schedule set" message
                 listContainer.innerHTML = '';
@@ -356,6 +467,8 @@
             document.getElementById('new-schedule-day').value = '';
             document.getElementById('new-schedule-start').value = '';
             document.getElementById('new-schedule-end').value = '';
+            
+            updateTimetable(); // Update the timetable with the new slot
         }
 
         async function onSaveClientSchedule() {
@@ -390,168 +503,6 @@
                 statusEl.style.color = 'var(--accent-red-danger)';
             }
         }
-
-        async function onAddProgramClick() {
-            if (!selectedMemberId) { alert('Please select a member first.'); return; }
-            if (confirm(`Are you sure you want to add a new, empty program for ${selectedMemberUsername}?`)) {
-                try { await addProgram(selectedMemberId); await loadMemberPrograms(selectedMemberId, selectedMemberUsername); } 
-                catch (error) { alert(`Failed to add program: ${error.message}`); }
-            }
-        }
-        
-        async function loadMemberPrograms(memberId, memberUsername) {
-            const container = document.getElementById('program-list-container');
-            container.innerHTML = `<p class="text-center text-muted">Loading programs...</p>`;
-            try {
-                const programs = await getProgram(parseInt(memberId));
-                container.innerHTML = '';
-                if (programs && programs.length > 0) {
-                    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Unassigned"];
-                    programs.sort((a, b) => {
-                        const dayA = daysOrder.indexOf(mapDayValueToString(a.day));
-                        const dayB = daysOrder.indexOf(mapDayValueToString(b.day));
-                        return (dayA === -1 ? 99 : dayA) - (dayB === -1 ? 99 : dayB);
-                    });
-
-                    programs.forEach(program => {
-                        const dayString = mapDayValueToString(program.day);
-                        const card = document.createElement('div');
-                        card.className = 'program-day-card';
-                        const workoutsSummaryHtml = program.workouts && program.workouts.length > 0 ? program.workouts.map(workout => {
-                            for (const key in workout) {
-                                if (key !== 'type' && key !== 'id' && typeof workout[key] === 'object' && workout[key] !== null) {
-                                    const workoutName = key; const data = workout[key];
-                                    let detailsText = `Sets: ${data.sets || 'N/A'}, Reps: ${data.reps || 'N/A'}`;
-                                    if (data.weight) detailsText += `, Weight: ${data.weight}`;
-                                    return `<div class="program-workout-item"><span class="workout-name">${workoutName}</span><span class="workout-details">${detailsText}</span></div>`;
-                                }
-                            } return '';
-                        }).join('') : `<p class="text-muted small">No workouts assigned yet.</p>`;
-                        card.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">${dayString}</h5><div><button class="btn btn-sm btn-info edit-program-day-btn" data-program-id="${program.id}" data-current-day="${dayString}" title="Edit Day"><i class="fas fa-calendar-alt"></i></button> <button class="btn btn-sm btn-info view-edit-workouts-btn" data-program-id="${program.id}" data-program-day="${dayString}" title="View/Edit Workouts"><i class="fas fa-dumbbell"></i></button> <button class="btn btn-sm btn-danger delete-program-btn" data-program-id="${program.id}" title="Delete Program"><i class="fas fa-trash"></i></button></div></div><div class="workouts-summary">${workoutsSummaryHtml}</div>`;
-                        container.appendChild(card);
-                    });
-                    container.querySelectorAll('.delete-program-btn').forEach(b => b.addEventListener('click', handleDeleteProgram));
-                    container.querySelectorAll('.edit-program-day-btn').forEach(b => b.addEventListener('click', handleEditProgramDay));
-                    container.querySelectorAll('.view-edit-workouts-btn').forEach(b => b.addEventListener('click', handleViewEditWorkouts));
-                } else { container.innerHTML = `<p class="text-center text-muted">No workout programs found for ${memberUsername}.</p>`; }
-            } catch (error) { container.innerHTML = '<p class="text-center text-danger">Error loading programs.</p>'; }
-        }
-        async function handleDeleteProgram(event) {
-            const programId = event.currentTarget.dataset.programId;
-            if (confirm(`Are you sure you want to delete this entire program schedule? This cannot be undone.`)) {
-                try { await deleteProgram(parseInt(programId), parseInt(selectedMemberId)); await loadMemberPrograms(selectedMemberId, selectedMemberUsername); } 
-                catch (error) { alert(`Failed to delete program: ${error.message}`); }
-            }
-        }
-        function handleEditProgramDay(event) {
-            const { programId, currentDay } = event.currentTarget.dataset;
-            document.getElementById('currentProgramId').value = programId;
-            document.getElementById('programDaySelect').value = currentDay;
-            editProgramDayModal.show();
-        }
-        async function onSaveProgramDayClick() {
-            const programId = document.getElementById('currentProgramId').value;
-            const dayString = document.getElementById('programDaySelect').value;
-            if (!dayString) { alert("Please select a day."); return; }
-            const dayValue = mapDayStringToValue(dayString);
-            try { 
-                await updateProgram(parseInt(programId), dayValue, parseInt(selectedMemberId)); 
-                editProgramDayModal.hide(); 
-                await loadMemberPrograms(selectedMemberId, selectedMemberUsername); 
-            } 
-            catch (error) { alert(`Failed to update program day: ${error.message}`); }
-        }
-        async function handleViewEditWorkouts(event) {
-            const { programId, programDay } = event.currentTarget.dataset;
-            document.getElementById('currentProgramWorkoutsId').value = programId;
-            document.getElementById('viewEditWorkoutsModalLabel').textContent = `Workouts for ${programDay}`;
-            await showWorkoutsForProgram(parseInt(programId));
-            viewEditWorkoutsModal.show();
-        }
-        async function showWorkoutsForProgram(programId) {
-            const listDiv = document.getElementById('workouts-for-program-list');
-            listDiv.innerHTML = '<p class="text-center text-muted">Loading workouts...</p>';
-            try {
-                const workouts = await getWorkout(programId);
-                listDiv.innerHTML = '';
-                if (workouts && workouts.length > 0) {
-                    workouts.forEach(workout => {
-                        let workoutName = 'Unknown', detailsText = '';
-                        for (const key in workout) {
-                            if (key !== 'type' && key !== 'id' && typeof workout[key] === 'object' && workout[key] !== null) {
-                                workoutName = key; const data = workout[key];
-                                detailsText = `Sets: ${data.sets || 'N/A'}, Reps: ${data.reps || 'N/A'}`;
-                                if (data.weight) detailsText += `, Weight: ${data.weight}`;
-                                break;
-                            }
-                        }
-                        const item = document.createElement('div');
-                        item.className = 'program-workout-item';
-                        item.innerHTML = `<div><span class="workout-name">${workoutName}</span><p class="workout-details">${detailsText}</p></div><button class="btn btn-sm btn-danger delete-single-workout-btn" data-program-id="${programId}" data-workout-id="${workout.id}" title="Delete Workout"><i class="fas fa-times"></i></button>`;
-                        listDiv.appendChild(item);
-                    });
-                    listDiv.querySelectorAll('.delete-single-workout-btn').forEach(b => b.addEventListener('click', handleDeleteSingleWorkout));
-                } else { listDiv.innerHTML = '<p class="text-center text-muted">No workouts added to this program yet.</p>'; }
-            } catch (error) { listDiv.innerHTML = '<p class="text-danger">Error loading workouts.</p>'; }
-        }
-        async function handleDeleteSingleWorkout(event) {
-            const { programId, workoutId } = event.currentTarget.dataset;
-            if (confirm(`Are you sure you want to delete this specific workout?`)) {
-                try { await deleteWorkout(parseInt(programId), parseInt(workoutId)); await showWorkoutsForProgram(parseInt(programId)); await loadMemberPrograms(selectedMemberId, selectedMemberUsername); } 
-                catch (error) { alert(`Failed to delete a workout: ${error.message}`); }
-            }
-        }
-        function onAddWorkoutToProgramClick() {
-            const viewModalEl = document.getElementById('viewEditWorkoutsModal');
-            const showNextModal = async () => {
-                const programId = document.getElementById('currentProgramWorkoutsId').value;
-                document.getElementById('addWorkoutProgramId').value = programId;
-                document.getElementById('addWorkoutForm').reset();
-                await populateAvailableWorkouts();
-                addWorkoutModal.show();
-                viewModalEl.removeEventListener('hidden.bs.modal', showNextModal);
-            };
-            viewModalEl.addEventListener('hidden.bs.modal', showNextModal);
-            viewEditWorkoutsModal.hide();
-        }
-        async function populateAvailableWorkouts() {
-            const select = document.getElementById('workoutTypeSelect');
-            select.innerHTML = '<option value="">Loading workouts...</option>';
-            try {
-                const workouts = await getAvailableWorkouts();
-                select.innerHTML = '<option value="">Select Workout Type</option>';
-                if (workouts && Array.isArray(workouts) && workouts.length > 0) {
-                    workouts.forEach(w => {
-                        const option = document.createElement('option');
-                        option.value = w.id;
-                        option.textContent = w.name;
-                        select.appendChild(option);
-                    });
-                } else {
-                    select.innerHTML = '<option value="">No workouts available</option>';
-                }
-            } catch (error) {
-                select.innerHTML = '<option value="">Error loading workouts</option>';
-                alert(`Could not load preset workouts. Server says: "${error.message}"`);
-            }
-        }
-        async function onSaveWorkoutClick() {
-            const programId = document.getElementById('addWorkoutProgramId').value;
-            const workoutTypeId = document.getElementById('workoutTypeSelect').value;
-            const sets = document.getElementById('workoutSetsInput').value;
-            const reps = document.getElementById('workoutRepsInput').value;
-            const weight = document.getElementById('workoutWeightInput').value;
-            if (!programId || !workoutTypeId || !sets || !reps) { alert('Please fill all required fields (Type, Sets, Reps).'); return; }
-            const details = { sets, reps };
-            if (weight) { details.weight = weight; }
-            try {
-                await addWorkout(parseInt(programId), parseInt(workoutTypeId), details);
-                addWorkoutModal.hide();
-                await showWorkoutsForProgram(parseInt(programId));
-                await loadMemberPrograms(selectedMemberId, selectedMemberUsername);
-            } catch (error) { alert(`Failed to add workout: ${error.message}`); }
-        }
-
     </script>
 </body>
 </html>
