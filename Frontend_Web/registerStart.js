@@ -1,6 +1,6 @@
 const tripleJ_URL = "https://triple-j.onrender.com";
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
+const regexUsername= /^[a-zA-Z0-9]+$/;
 
 
 async function checkmem() {
@@ -72,6 +72,13 @@ function continueRegister(){
      if (!regexEmail.test(email)) {
     throw new Error("Invalid email format.");
     }
+
+    console.log("Username Format Check: " + regexUsername.test(username));
+     if (!regexUsername.test(username)) {
+    throw new Error("Invalid username format.");
+    }
+
+
     
     localStorage.setItem("username", username);
     localStorage.setItem("email", email);
@@ -100,7 +107,7 @@ function continueRegister(){
 
   }catch(err){
     console.log(err)
-    alert("Incorrect Credentials, please try again");
+    alert(`Incorrect Credentials, ${err}`);
   }
    }else{
     alert("Incorrect Credentials, please try again");
