@@ -595,7 +595,6 @@ export async function setMemberHW(newHeight,newWeight) {
   try {
     let accessToken = await getToken("accessToken");
     let username = await getToken("username");
-    let membershipType = await getToken("membershipType");
     
     let response = await fetch(tripleJ_URL + `/api/account/member/${username}`, {
       method: "PUT",
@@ -607,7 +606,6 @@ export async function setMemberHW(newHeight,newWeight) {
         'height':newHeight,
         'weight':newWeight,
         'username': username,
-        'membershipType':membershipType,
       }),
     });
 
@@ -967,4 +965,41 @@ export async function fetchLatestAnnouncement()  {
     } catch (error) {
       console.error("Error:", error);
     }
+}
+
+export async function nextSchedule() {
+  try {
+    let accessToken = await getToken("accessToken");
+
+    let response = await fetch(tripleJ_URL + "/api/scheduling/schedule/next", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken.access}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken(accessToken.access);
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(tripleJ_URL + "/api/scheduling/schedule/next", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    
+    const data = await response.json();
+    console.log("Data is successfully next:", data);
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }

@@ -6,10 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
-import { router} from 'expo-router';
+import { router } from 'expo-router';
 import colors from '../../constants/globalStyles';
 
 import { fetchCurrentProgram, fetchGymPopulation, fetchQrCode, generateNewQrCode, fetchLatestAnnouncement, fetchAllAnnouncements } from '../../components/generalFetchFunction';
+import { getToken, refreshAccessToken } from '../../components/storageComponent'; // Added missing imports
 
 import heartIcon from '@/assets/images/Cardio-Workout-icon.png';
 import treadmillIcon from '@/assets/images/Lower-Workout-icon.png';
@@ -28,6 +29,46 @@ const exerciseIconMap = {
   'PL': pull,  
 };
 
+const tripleJ_URL = "https://triple-j.onrender.com";
+
+async function nextSchedule() {
+  try {
+    let accessToken = await getToken("accessToken");
+
+    let response = await fetch(tripleJ_URL + "/api/scheduling/schedule/next", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.log("Access token expired");
+      accessToken = await refreshAccessToken();
+      console.log("New access token: " + accessToken);
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token");
+      }
+      
+      response = await fetch(tripleJ_URL + "/api/scheduling/schedule/next", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    
+    const data = await response.json();
+    console.log("Next session data:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching next schedule:", error);
+    throw error;
+  }
+}
+
 const HomeScreen = () => {
   // Network state
   const [isConnected, setIsConnected] = useState(null);
@@ -35,21 +76,16 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-    //  console.log("Network state changed:", state);
       setIsConnected(state.isConnected);
       setConnectionType(state.type);
 
       if (state.isConnected === false) {
         router.push('/');
-      //  console.log("Device is offline!");
-      } else if (state.isConnected === true) {
-      //  console.log("Device is back online!");
       }
     });
 
     return () => {
       unsubscribe();
-    //  console.log("NetInfo listener unsubscribed.");
     };
   }, []);
 
@@ -60,6 +96,10 @@ const HomeScreen = () => {
   // State for UI data
   const [currentFormattedDate, setCurrentFormattedDate] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [nextSession, setNextSession] = useState(null);
+  const [trainerId, settrainerId] = useState("");
+  const [nextSessionLoading, setNextSessionLoading] = useState(false);
+  const [nextSessionError, setNextSessionError] = useState(null);
 
   // Announcement State
   const [announcement, setAnnouncement] = useState(null);
@@ -67,7 +107,6 @@ const HomeScreen = () => {
   const [announcementModal, setannouncementModal] = useState(false);
   const [announcementAll, setAnnouncementAll] = useState([]);
   
-
   // Program and Coach State
   const [exercises, setExercises] = useState([]);
   const [coachInfo, setCoachInfo] = useState(null);
@@ -83,6 +122,21 @@ const HomeScreen = () => {
   const [qrData, setQrData] = useState(null);
   const [qrModalVisible, setQrModalVisible] = useState(false);
 
+  const fetchNextSession = async () => {
+    try {
+      setNextSessionLoading(true);
+      setNextSessionError(null);
+      const session = await nextSchedule();
+      setNextSession(session);
+      const trainerGet = await getToken("gymTrainerId");
+      settrainerId(trainerGet);
+    } catch (error) {
+      setNextSessionError(error.message || 'Failed to load next session');
+    } finally {
+      setNextSessionLoading(false);
+    }
+  };
+
   const updateDisplayedDate = useCallback(() => {
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -90,39 +144,31 @@ const HomeScreen = () => {
     setCurrentFormattedDate(formattedDate);
   }, []);
 
-
-  useEffect ( () => {
-    
-   async function getLatestAnn(){
-    const response = await fetchAllAnnouncements()
-    return response;
-   }
-
-   getLatestAnn().then(data => {console.log("NEWW ANNOUNCMENETS: " + JSON.stringify(data));
-    
-      setAnnouncementAll(data);
-
-   });
-
-  }, []);
-
-
-  useEffect ( async () => {
-  //  console.log("chawdioajwdjoaw");
-    setAnnouncementLoading(true);
-    try {
-        let announcementData = await fetchLatestAnnouncement();
-      //  console.log("ANNOUNCEMENTANDHOIAHIODHAWH: "+ announcementData)
-        setAnnouncement(announcementData); 
-    } catch (error) {
-        console.error("HomeScreen: Failed to load announcement:", error);
-        setAnnouncement(null); 
-    } finally {
-        setAnnouncementLoading(false);
+  useEffect(() => {
+    async function getLatestAnn() {
+      const response = await fetchAllAnnouncements();
+      setAnnouncementAll(response);
     }
+    getLatestAnn();
   }, []);
-  
-    const loadProgramData = useCallback(async () => {
+
+  useEffect(() => {
+    const loadAnnouncement = async () => {
+      setAnnouncementLoading(true);
+      try {
+        let announcementData = await fetchLatestAnnouncement();
+        setAnnouncement(announcementData); 
+      } catch (error) {
+        console.error("Failed to load announcement:", error);
+        setAnnouncement(null); 
+      } finally {
+        setAnnouncementLoading(false);
+      }
+    };
+    loadAnnouncement();
+  }, []);
+
+  const loadProgramData = useCallback(async () => {
     setProgramLoading(true);
     setProgramError(false);
     setErrorMessage('');
@@ -132,7 +178,6 @@ const HomeScreen = () => {
       const programPayload = await fetchCurrentProgram(exerciseIconMap);
       
       if (programPayload && Array.isArray(programPayload.exercises)) {
-        console.log("Correct payload format received.");
         setExercises(programPayload.exercises);
         setCoachInfo(programPayload.coach); 
 
@@ -144,7 +189,6 @@ const HomeScreen = () => {
         }
       } 
       else if (programPayload && Array.isArray(programPayload)) {
-        console.log("Adapting to direct array payload.");
         setExercises(programPayload);
         setCoachInfo(null);
 
@@ -156,13 +200,12 @@ const HomeScreen = () => {
         }
       }
       else {
-        console.warn("HomeScreen: fetchCurrentProgram did not return a valid payload. Received:", programPayload);
         setExercises([]);
         setErrorMessage('Workout data is not in the expected format or none found for today.');
       }
 
     } catch (error) {
-      console.error("HomeScreen: Error in loadProgramData:", error);
+      console.error("Error in loadProgramData:", error);
       if (error.message.includes("log in again")) {
       }
       setProgramError(true);
@@ -179,7 +222,7 @@ const HomeScreen = () => {
       setGymPopCount(data || { Number: 0 });
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("HomeScreen: Failed to load gym population:", error);
+      console.error("Failed to load gym population:", error);
       setGymPopCount({ Number: 0 });
     }
   }, []); 
@@ -187,10 +230,9 @@ const HomeScreen = () => {
   const loadQrData = useCallback(async () => {
     try {
       const data = await fetchQrCode();
-      console.log ("gumana yata pre: " + data)
       setQrData(data);
     } catch (error) {
-      console.error("HomeScreen: Failed to load QR code:", error);
+      console.error("Failed to load QR code:", error);
       setQrData(null); 
     }
   }, []); 
@@ -222,29 +264,28 @@ const HomeScreen = () => {
       await loadProgramData();
       await loadGymPopulation();
       await loadQrData();
+      await fetchNextSession();
     };
 
     if (fontsLoaded) {
       updateDisplayedDate();
       fetchInitialData();
     } else if (fontError) {
-        console.error("HomeScreen: Font loading error:", fontError);
+      console.error("Font loading error:", fontError);
     }
   }, [fontsLoaded, fontError]);
 
   const onRefresh = useCallback(async () => {
-    console.log("Refreshing data...");
-    await fetchLatestAnnouncement().then(data => {setAnnouncement(data)}), 
     setRefreshing(true);
     updateDisplayedDate();
     await Promise.all([
-        loadProgramData(),
-        loadGymPopulation(),
-        loadQrData(),
-
+      loadProgramData(),
+      loadGymPopulation(),
+      loadQrData(),
+      fetchNextSession(),
+      fetchLatestAnnouncement().then(data => setAnnouncement(data))
     ]);
     setRefreshing(false);
-    console.log("Refreshing data finished.");
   }, []);
 
   const toggleExercise = (index) => {
@@ -309,10 +350,7 @@ const HomeScreen = () => {
                   <ActivityIndicator color="#FFFFFF" />
               </View>
           ) : announcement ? (
-            <TouchableOpacity onPress = {() => {
-              console.log("openn sesdami");
-                setannouncementModal(true);
-            }}>
+            <TouchableOpacity onPress={() => setannouncementModal(true)}>
               <View style={styles.announcementCard}>
                   <Text style={styles.announcementTitle}>{announcement.title}</Text>
                   <Text style={styles.announcementContent}>{announcement.content}</Text>
@@ -391,16 +429,47 @@ const HomeScreen = () => {
             </View>
           </View>
 
-          {/* Trainer/Profile Section */}
+          {/* Trainer/Profile Section with Next Session */}
           <View style={styles.profileContainer}>
+            <View>
             <Image 
               source={coachInfo && coachInfo.profile_image_url ? { uri: `https://triple-j.onrender.com${coachInfo.profile_image_url}` } : kotsIcon} 
               style={styles.profileImage}
               onError={() => console.log("Failed to load coach image.")}
             />
+
+            <Text style={styles.textTrainerInfo}>{coachInfo?.name || trainerId}</Text>
+            <Text style={styles.details}>{coachInfo?.title || 'Fitness Coach'}</Text>
+            </View>
             <View style={styles.profileTextContainer}>
-              <Text style={styles.text}>{coachInfo?.name || 'Your Coach'}</Text>
-              <Text style={styles.details}>{coachInfo?.title || 'Fitness Coach'}</Text>
+              
+              {/* Next Session Display */}
+              {nextSessionLoading ? (
+                <ActivityIndicator size="small" color="#4CAF50" style={{marginVertical: 10}} />
+              ) : nextSessionError ? (
+                <View style={{marginVertical: 10, alignItems: 'center'}}>
+                  <Text style={[styles.details, {color: 'red', marginBottom: 5}]}>
+                    Failed to load session info
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.button, {paddingHorizontal: 15, paddingVertical: 5}]}
+                    onPress={fetchNextSession}
+                  >
+                    <Text style={styles.buttonText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : nextSession ? (
+                <View style={{marginVertical: 10, alignItems: 'center'}}>
+                  <Text style={[styles.details, {fontWeight: 'bold'}]}>Next Session:</Text>
+                  <Text style={styles.details}>
+                    {new Date(nextSession.datetime).toLocaleDateString()} at {new Date(nextSession.datetime).toLocaleTimeString()}
+                  </Text>
+                  <Text style={styles.details}>{nextSession.type || 'Training Session'}</Text>
+                </View>
+              ) : (
+                <Text style={[styles.details, {marginVertical: 10}]}>No upcoming sessions</Text>
+              )}
+
               <TouchableOpacity 
                 style={[styles.button, !coachInfo?.contact_url && {backgroundColor: '#555'}]} 
                 disabled={!coachInfo?.contact_url}
@@ -439,68 +508,60 @@ const HomeScreen = () => {
               </TouchableOpacity>
           </Modal>
 
-              <Modal visible={announcementModal} transparent={true} animationType="fade">
-   <View style={styles.modalOverlay}>
-    
-{/* Close Button at Upper Left */}
-      <TouchableOpacity 
-        style={styles.closeButton}
-        onPress={() => setannouncementModal(false)}
-      >
-        <Text style={styles.closeButtonText}>✕</Text>
-      </TouchableOpacity>
+          <Modal visible={announcementModal} transparent={true} animationType="fade">
+            <View style={styles.modalOverlay}>
+              {/* Close Button at Upper Right */}
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setannouncementModal(false)}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
 
-    <View>
-      <Text style = {styles.announcementHeader}>
+              <View>
+                <Text style={styles.announcementHeader}>
                   Announcements
-      </Text>
-    </View> 
-    <View style={styles.modalContainer}>
-      
-      
+                </Text>
+              </View> 
+              <View style={styles.modalContainer}>
+                {/* Announcements Scroll List */}
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                  {announcementAll && announcementAll.length > 0 ? (
+                    announcementAll.map((announcement, index) => {
+                      // Format date and time
+                      const dateObj = new Date(announcement.updated_at);
+                      const formattedDate = dateObj.toISOString().split('T')[0];
 
-      {/* Announcements Scroll List */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-  {announcementAll && announcementAll.length > 0 ? (
-    announcementAll.map((announcement, index) => {
-      // Format date and time
-      const dateObj = new Date(announcement.updated_at);
-      const formattedDate = dateObj.toISOString().split('T')[0];
+                      let hours = dateObj.getHours();
+                      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                      const ampm = hours >= 12 ? 'PM' : 'AM';
+                      hours = hours % 12 || 12;
 
-      let hours = dateObj.getHours();
-      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
+                      const formattedTime = `${hours}:${minutes} ${ampm}`;
 
-      const formattedTime = `${hours}:${minutes} ${ampm}`;
+                      return (
+                        <View key={index} style={styles.announcementCard}>
+                          <Text style={styles.announcementTitle}>{announcement.title}</Text>
 
-      return (
-        <View key={index} style={styles.announcementCard}>
-          <Text style={styles.announcementTitle}>{announcement.title}</Text>
-
-          <Text style={styles.announcementDate}>
-            {formattedDate} | {formattedTime}
-          </Text>
-          
-          <View style={styles.announcementDivider} />
-          
-          <Text style={styles.announcementContent}>{announcement.content}</Text>
-        </View>
-      );
-    })
-  ) : (
-    <View style={styles.noAnnouncements}>
-      <Text style={styles.noAnnouncementsText}>No announcements available.</Text>
-    </View>
-  )}
-</ScrollView>
-
-
-    </View>
-  </View>
-</Modal>
-
-
+                          <Text style={styles.announcementDate}>
+                            {formattedDate} | {formattedTime}
+                          </Text>
+                          
+                          <View style={styles.announcementDivider} />
+                          
+                          <Text style={styles.announcementContent}>{announcement.content}</Text>
+                        </View>
+                      );
+                    })
+                  ) : (
+                    <View style={styles.noAnnouncements}>
+                      <Text style={styles.noAnnouncementsText}>No announcements available.</Text>
+                    </View>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -511,7 +572,6 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     backgroundColor: '#1E1E1E',
-    //////////////////////////
   },
   container: {
     flex: 1,
@@ -538,7 +598,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'KeaniaOne',
     textAlign: 'center',
-  
   },
   card: {
     backgroundColor: '#2D2D2D',
@@ -561,7 +620,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   details: {
-    color: 'gray',
+    color: 'white',
     fontSize: 14,
     fontFamily: 'KeaniaOne',
     textAlign: 'center',
@@ -722,156 +781,65 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: 'red',
   },
-  announcementModal: {
-    width: '100%',
-    minHeight: '100%',
-    flexDirection: 'column',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  announcementBtn: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'blue'
+  modalContainer: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '1E1E1E',
+    borderRadius: 12,
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  announcementText: {
-    fontSize: 10,
-    color: 'black'
+  closeButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: '#eee',
+    borderRadius: 20,
+    width: 35,
+    height: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  buttonBorder: {
-    width: '100%'
+  closeButtonText: {
+    fontSize: 18,
+    color: '#333',
   },
-  textBorder: {
-    width: '100%',
-    backgroundColor: 'red'
+  scrollContent: {
+    paddingVertical: 10,
   },
-  announcementInfo: {
-    width: '100%',
-    backgroundColor: 'red'
+  announcementDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    marginBottom: 10,
   },
-  announcementModal: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.5)', // semi-transparent dark overlay
-  justifyContent: 'center',
-  alignItems: 'center',
-  paddingTop: 50,
-},
+  noAnnouncements: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  noAnnouncementsText: {
+    fontSize: 14,
+    color: 'white',
+  },
+  announcementHeader: {
+    fontSize: 35,
+    fontFamily: 'KeaniaOne',
+    color: colors.redAccent
+  },
 
-closeButton: {
-  position: 'absolute',
-  top: 40,
-  left: 20,
-  padding: 10,
-  backgroundColor: '#fff',
-  borderRadius: 5,
-},
-announcementContainer: {
-  width: '90%',
-  backgroundColor: 'white',
-  borderRadius: 10,
-  padding: 20,
-  alignItems: 'center',
-},
-announcementContent: {
-  width: '100%',
-  // further styling for the innermost view
-},
-announcementText: {
-  fontSize: 16,
-  color: 'black',
-},
-///////////////////////////////
-
-modalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.8)', // dimmed background
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-modalContainer: {
-  width: '90%',
-  maxHeight: '80%',
-  backgroundColor: '1E1E1E',
-  borderRadius: 12,
-  paddingTop: 50,
-  paddingHorizontal: 20,
-  paddingBottom: 20,
-},
-
-closeButton: {
-  position: 'absolute',
-  top: 15,
-  right: 15,
-  backgroundColor: '#eee',
-  borderRadius: 20,
-  width: 35,
-  height: 35,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-closeButtonText: {
-  fontSize: 18,
-  color: '#333',
-},
-
-scrollContent: {
-  paddingVertical: 10,
-},
-
-announcementCard: {
-  backgroundColor: '#3D3D3D',
-  borderRadius: 8,
-  padding: 15,
-  marginBottom: 15,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.1,
-  shadowRadius: 2,
-  elevation: 2,
-},
-
-announcementTitle: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: 'white',
-  marginBottom: 5,
-},
-
-announcementDate: {
-  fontSize: 12,
-  color: 'white',
-  marginBottom: 10,
-},
-
-announcementDivider: {
-  borderBottomWidth: 1,
-  borderBottomColor: '#e0e0e0',
-  marginBottom: 10,
-},
-
-announcementContent: {
-  fontSize: 14,
-  color: 'white',
-},
-
-noAnnouncements: {
-  alignItems: 'center',
-  marginTop: 20,
-},
-
-noAnnouncementsText: {
-  fontSize: 14,
-  color: 'white',
-},
-//////////
-announcementHeader: {
-  fontSize: 35,
-  fontFamily: 'KeaniaOne',
-  color: colors.redAccent
-}
-
+  textTrainerInfo: {
+    color: 'white',
+    fontSize: 20,
+    fontFamily: 'KeaniaOne',
+    textAlign: 'center',
+    marginTop: 5,
+  }
 
 });
 

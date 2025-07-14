@@ -79,7 +79,7 @@ export default function HomeScreen() {
     try{
       const member_data = await getMemberInfo();
 
-    //  console.log("Member Information: ",member_data);
+    console.log("Member Information: ",member_data);
 
       await saveToken("address", member_data.address ? member_data.address.toString() : "");
       await saveToken("birthDate", member_data.birthDate ? member_data.birthDate.toString() : "");

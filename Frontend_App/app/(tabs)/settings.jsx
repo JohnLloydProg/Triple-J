@@ -232,6 +232,7 @@ export default function Settings() {
               setisLoading(true);
               const response = await setMemberHW(memberHeight, memberWeight);
 
+              console.log("CHECKING:::"+ response)
               await saveToken("weight", response.weight.toString());
               await saveToken("height", response.height.toString());
               await handlegetMemberInfo();
